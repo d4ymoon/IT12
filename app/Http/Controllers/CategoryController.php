@@ -3,16 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Exception;
 
 class CategoryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Category::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        $categories = $query->latest()->paginate(10);
+        return view('categories.index', compact('categories'));
     }
 
     /**
@@ -28,7 +41,26 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $request->validate([
+                'name' => 'required|string|max:50|unique:categories,name',
+                'description' => 'nullable|string|max:255',
+            ]);
+
+            $capitalizedName = ucwords(strtolower($request->name));
+
+            Category::create([
+                'name' => $capitalizedName,
+                'description' => $request->description,
+            ]);
+    
+
+
+            return redirect()->route('categories.index')->with('success', 'Category added successfully.');
+            
+        } catch (Exception $e) {
+            return redirect()->route('categories.index')->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -36,7 +68,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        return response()->json($category);
     }
 
     /**
@@ -44,7 +76,7 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return response()->json($category);
     }
 
     /**
@@ -52,7 +84,25 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        //
+        try {
+            $request->validate([
+                'name' => 'required|string|max:50|unique:categories,name,' . $category->id,
+                'description' => 'nullable|string|max:255',
+            ]);
+
+            $capitalizedName = ucwords(strtolower($request->name));
+
+            $category->update([
+                'name' => $capitalizedName,
+                'description' => $request->description,
+            ]);
+
+
+            return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
+            
+        } catch (Exception $e) {
+            return redirect()->route('categories.index')->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -60,6 +110,17 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        try {
+            if ($category->products()->exists()) {
+                return redirect()->route('categories.index')->with('error', 'Cannot delete category. There are products associated with this category.');
+            }
+
+            $category->delete();
+
+            return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+            
+        } catch (Exception $e) {
+            return redirect()->route('categories.index')->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 }

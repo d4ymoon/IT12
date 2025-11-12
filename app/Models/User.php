@@ -18,7 +18,15 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'username',
+        'f_name',
+        'm_name',
+        'l_name',
+        'contactNo',
+        'role_id',
+        'is_active',
+        'date_disabled',
+        'disabled_by_user_id',
         'email',
         'password',
     ];
@@ -44,5 +52,32 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function disabledBy()
+    {
+        return $this->belongsTo(User::class, 'disabled_by_user_id');
+    }
+
+    // Helper methods
+    public function getFullNameAttribute()
+    {
+        $middle = $this->m_name ? " {$this->m_name} " : ' ';
+        return "{$this->f_name}{$middle}{$this->l_name}";
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('is_active', false);
     }
 }
