@@ -7,31 +7,46 @@
     @include('components.alerts')
 
     <div class="page-header">
-        <h2 class="mb-0">
-            <b>Role Management</b>
-        </h2>
-    </div>
-
-    <!-- Roles Table -->
-    <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <!-- Search Bar -->
-            <form action="{{ route('roles.index') }}" method="GET" class="d-flex">
-                <div class="input-group search-box">
-                    <input type="text" class="form-control" name="search" placeholder="Search roles..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-    
-            <!-- Add New Role Button -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <b>Roles</b>
+            </h2>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal">
                 <i class="bi bi-plus-circle me-1"></i>
                 Add New Role
             </button>
         </div>
-    
+    </div>
+
+    <!-- Search Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <!-- Search & Clear -->
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 align-items-center">
+                        <form action="{{ route('roles.index') }}" method="GET" class="d-flex w-90">
+                            <div class="input-group search-box w-100">
+                                <input type="text" class="form-control" name="search" placeholder="Search roles..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(request('search'))
+                            <a href="{{ route('roles.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Table -->
+    <div class="table-container"> 
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -50,7 +65,6 @@
                         <th>Role Name</th>
                         <th>Description</th>
                         <th>Created Date</th>
-                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -61,8 +75,10 @@
                         <td>{{ $role->name }}</td>
                         <td class="description-cell" title="{{ $role->description }}">{{ $role->description ?? 'No description' }}</td>
                         <td>{{ $role->created_at->format('Y-m-d') }}</td>
-                        <td>{{ $role->updated_at->format('Y-m-d') }}</td>
                         <td>
+                            <button class="btn btn-sm btn-outline-info btn-action view-role" data-id="{{ $role->id }}" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-warning btn-action edit-role" data-id="{{ $role->id }}" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -121,6 +137,49 @@
             </div>
         </div>
     </div>
+
+    <!-- View Role Modal -->
+    <div class="modal fade" id="viewRoleModal" tabindex="-1" aria-labelledby="viewRoleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewRoleModalLabel">
+                        <i class="bi bi-eye me-2"></i>
+                        Role Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">ID</small>
+                            <span class="fw-semibold" id="viewRoleId"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Role Name</small>
+                            <span class="fw-semibold" id="viewRoleName"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Description</small>
+                            <span class="fw-semibold" id="viewRoleDescription" style="word-wrap: break-word; word-break: break-word;"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Created</small>
+                            <span class="fw-semibold" id="viewRoleCreatedAt"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Last Updated</small>
+                            <span class="fw-semibold" id="viewRoleUpdatedAt"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Edit Role Modal -->
     <div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
@@ -207,6 +266,29 @@
                         
                         const modal = new bootstrap.Modal(document.getElementById('editRoleModal'));
                         modal.show();
+                    });
+            });
+        });
+
+        // View Role
+        document.querySelectorAll('.view-role').forEach(button => {
+            button.addEventListener('click', function() {
+                const roleId = this.getAttribute('data-id');
+                
+                fetch(`/roles/${roleId}`)
+                    .then(response => response.json())
+                    .then(role => {
+                        document.getElementById('viewRoleId').textContent = role.id;
+                        document.getElementById('viewRoleName').textContent = role.name;
+                        document.getElementById('viewRoleDescription').textContent = role.description || 'No description';
+                        document.getElementById('viewRoleCreatedAt').textContent = new Date(role.created_at).toLocaleString();
+                        document.getElementById('viewRoleUpdatedAt').textContent = new Date(role.updated_at).toLocaleString();
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('viewRoleModal'));
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching role:', error);
                     });
             });
         });

@@ -49,7 +49,7 @@
                         <li class="nav-item">
                             <a href="{{ route('roles.index') }}" class="nav-link {{ request()->is('roles*') ? 'active' : '' }}">
                                 <i class="bi bi-person-badge me-3"></i>
-                                <span>Role</span>
+                                <span>Roles</span>
                             </a>
                         </li>
                     </ul>

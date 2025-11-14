@@ -8,47 +8,73 @@
     
     <!-- Page Header -->
     <div class="page-header">
-        <h2 class="mb-0">
-            <b>Suppliers Management</b>
-        </h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <b>Suppliers Management</b>
+                @if($showArchived)
+                    <span class="text-secondary small ms-2">(Archive View)</span>
+                @endif
+            </h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                <i class="bi bi-plus-circle me-1"></i>
+                Add New Supplier
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & Archive Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <!-- Search & Clear -->
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex w-90 me-2">
+                            @if($showArchived)
+                                <input type="hidden" name="archived" value="true">
+                            @endif
+                            <div class="input-group search-box w-100">
+                                <input type="text" class="form-control" name="search" placeholder="Search suppliers..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(request('search'))
+                            @if($showArchived)
+                                <a href="{{ route('suppliers.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @else
+                                <a href="{{ route('suppliers.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @endif
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                
+                <!-- Archive Toggle -->
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 justify-content-end">
+                        @if($showArchived)
+                            <a href="{{ route('suppliers.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Active
+                            </a>
+                        @else
+                            <a href="{{ route('suppliers.index', ['archived' => true]) }}" class="btn btn-outline-warning">
+                                <i class="bi bi-archive me-1"></i>
+                                View Archive
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Suppliers Table -->
-    <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-
-            <!-- Search Bar -->
-            <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex flex-grow-1 me-3" style="max-width: 400px;">
-                <input type="hidden" name="archived" value="{{ $showArchived ? 'true' : '' }}">
-                <div class="input-group search-box w-100">
-                    <input type="text" class="form-control" name="search" placeholder="Search suppliers..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-    
-            <!-- Action Buttons (Archive / Add) -->
-            <div class="d-flex justify-content-end align-items-center gap-2">
-                @if($showArchived)
-                    <a href="{{ route('suppliers.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>
-                        Back to Active Suppliers
-                    </a>
-                @else
-                    <a href="{{ route('suppliers.index', ['archived' => true]) }}" class="btn btn-outline-warning">
-                        <i class="bi bi-archive me-1"></i>
-                        Archive
-                    </a>
-                @endif
-    
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    Add New Supplier
-                </button>
-            </div>
-        </div>
-        
+    <div class="table-container">    
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -79,7 +105,9 @@
                             <strong>{{ $supplier->supplier_name }}</strong>
                         </td>
                         <td>{{ $supplier->contact_info ?? 'N/A' }}</td>
-                        <td>{{ $supplier->address ?? 'N/A' }}</td>
+                        <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
+                            {{ $supplier->address ?? 'N/A' }}
+                        </td>
                         <td>{{ $supplier->updated_at->format('Y-m-d') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-supplier" data-id="{{ $supplier->id }}" title="View Details">
@@ -217,7 +245,7 @@
                         </div>
                         <div class="list-group-item d-flex justify-content-between px-0">
                             <small class="text-muted">Address:</small>
-                            <span class="fw-semibold" id="viewAddress">N/A</span>
+                            <span class="fw-semibold text-break text-end" style="max-width: 60%; word-wrap: break-word;" id="viewAddress">N/A</span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between px-0">
                             <small class="text-muted">Status:</small>

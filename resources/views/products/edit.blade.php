@@ -31,7 +31,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="mb-0">
                 <a href="{{ route('products.index') }}" class="text-decoration-none text-dark">
-                    <b>Products</b>
+                    <b class="underline">Products</b>
                 </a> 
                 > Edit Product
             </h2>
@@ -78,8 +78,10 @@
 
                         <div class="mb-3">
                             <label for="manufacturer_barcode" class="form-label">Manufacturer Barcode</label>
-                            <input type="text" class="form-control" id="manufacturer_barcode" name="manufacturer_barcode" value="{{ old('manufacturer_barcode', $product->manufacturer_barcode) }}" maxlength="30" placeholder="Scan or type the barcode number here..." 
-                            title="Scan the physical product's UPC or EAN code, or manually enter the 12- or 13-digit number.">
+                            <input type="text" class="form-control" id="manufacturer_barcode" name="manufacturer_barcode" value="{{ old('manufacturer_barcode', $product->manufacturer_barcode) }}" maxlength="20" 
+                                placeholder="Scan or type the barcode number here..." inputmode="numeric" pattern="[0-9]{12,20}"
+                                title="Scan the physical product's UPC or EAN code, or manually enter the 12- to 20-digit number."
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
 
                         <div class="mb-3">
@@ -103,7 +105,8 @@
                             <label for="price" class="form-label">Selling Price <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $product->price) }}" step="0.01" min="0" required title="The price at which this product is sold to the customer.">
+                                <input type="number" class="form-control" id="price" name="price" value="{{ old('price', $product->price) }}" step="0.01" min="0" required
+                                title="The price at which this product is sold to the customer."  max="9999999.99">
                             </div>
                         </div>
 
@@ -111,18 +114,19 @@
                             <label for="last_unit_cost" class="form-label">Last Unit Cost <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="last_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost', $product->last_unit_cost) }}" step="0.01" min="0" required title="The most recent cost at which this product was purchased from a supplier.">
+                                <input type="number" class="form-control" id="last_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost', $product->last_unit_cost) }}" step="0.01" min="0" required
+                                title="The most recent cost at which this product was purchased from a supplier." max="9999999.99">
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="quantity_in_stock" class="form-label">Quantity in Stock <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="quantity_in_stock" name="quantity_in_stock" value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}" min="0" required>
+                            <input type="number" class="form-control" id="quantity_in_stock" name="quantity_in_stock" value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}" min="0" required max="99999">                        
                         </div>
 
                         <div class="mb-3">
                             <label for="reorder_level" class="form-label">Reorder Level <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="reorder_level" name="reorder_level" value="{{ old('reorder_level', $product->reorder_level) }}" min="0" required>
+                            <input type="number" class="form-control" id="reorder_level" name="reorder_level" value="{{ old('reorder_level', $product->reorder_level) }}" min="0" max="99999" required>
                             <div class="form-text">Alert when stock falls below this level</div>
                         </div>
                     </div>
@@ -231,7 +235,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select class="form-select" name="suppliers[${supplierCount}][id]" required>
+                                <select class="form-select" name="suppliers[${supplierCount}][id]">
                                     <option value="">Select Supplier</option>
                                     @foreach($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}" ${supplierId == {{ $supplier->id }} ? 'selected' : ''}>{{ $supplier->supplier_name }}</option>
@@ -244,7 +248,7 @@
                                 <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" name="suppliers[${supplierCount}][default_unit_cost]" value="${unitCost}" step="0.01" min="0" required>
+                                    <input type="number" class="form-control" name="suppliers[${supplierCount}][default_unit_cost]" value="${unitCost}" step="0.01" min="0">
                                 </div>
                             </div>
                         </div>
@@ -327,6 +331,20 @@
                 addSupplierRow();
             }
         });
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const noLeadingZeroInputs = ["quantity_in_stock", "reorder_level"];
+
+            noLeadingZeroInputs.forEach(id => {
+                const input = document.getElementById(id);
+
+                input.addEventListener("input", function () {
+                    // Remove leading zeros, but allow "0"
+                    this.value = this.value.replace(/^0+(?=\d)/, '');
+                });
+            });
+        });
+
     </script>
     @endpush
 @endsection

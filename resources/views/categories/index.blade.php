@@ -7,30 +7,46 @@
     @include('components.alerts')
 
     <div class="page-header">
-        <h2 class="mb-0">
-            <b>Categories Management</b>
-        </h2>
-    </div>
-
-    <!-- Categories Table -->
-    <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <!-- Search Bar -->
-            <form action="{{ route('categories.index') }}" method="GET" class="d-flex">
-                <div class="input-group search-box">
-                    <input type="text" class="form-control" name="search" placeholder="Search categories..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-    
-            <!-- Add New Category Button -->
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <b>Categories Management</b>
+            </h2>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                 <i class="bi bi-plus-circle me-1"></i>
                 Add New Category
             </button>
         </div>
+    </div>
+
+    <!-- Search Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <!-- Search & Clear -->
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex w-90 me-2">
+                            <div class="input-group search-box w-90">
+                                <input type="text" class="form-control" name="search" placeholder="Search categories..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(request('search'))
+                            <a href="{{ route('categories.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Table -->
+    <div class="table-container">
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -49,7 +65,6 @@
                         <th>Category Name</th>
                         <th>Description</th>
                         <th>Created Date</th>
-                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -60,8 +75,10 @@
                         <td>{{ $category->name }}</td>
                         <td class="description-cell" title="{{ $category->description }}">{{ $category->description ?? 'No description' }}</td>
                         <td>{{ $category->created_at->format('Y-m-d') }}</td>
-                        <td>{{ $category->updated_at->format('Y-m-d') }}</td>
                         <td>
+                            <button class="btn btn-sm btn-outline-info btn-action view-category" data-id="{{ $category->id }}" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-warning btn-action edit-category" data-id="{{ $category->id }}" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -117,6 +134,48 @@
                         <button type="submit" class="btn btn-primary">Add Category</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Category Modal -->
+    <div class="modal fade" id="viewCategoryModal" tabindex="-1" aria-labelledby="viewCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewCategoryModalLabel">
+                        <i class="bi bi-eye me-2"></i>
+                        Category Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">ID</small>
+                            <span class="fw-semibold" id="viewCategoryId"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Category Name</small>
+                            <span class="fw-semibold" id="viewCategoryName"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Description</small>
+                            <span class="fw-semibold" id="viewCategoryDescription" style="word-wrap: break-word; word-break: break-word;"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Created</small>
+                            <span class="fw-semibold" id="viewCategoryCreatedAt"></span>
+                        </div>
+                        <div class="list-group-item">
+                            <small class="text-muted d-block">Last Updated</small>
+                            <span class="fw-semibold" id="viewCategoryUpdatedAt"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -206,6 +265,29 @@
                         
                         const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
                         modal.show();
+                    });
+            });
+        });
+
+        // View Category
+        document.querySelectorAll('.view-category').forEach(button => {
+            button.addEventListener('click', function() {
+                const categoryId = this.getAttribute('data-id');
+                
+                fetch(`/categories/${categoryId}`)
+                    .then(response => response.json())
+                    .then(category => {
+                        document.getElementById('viewCategoryId').textContent = category.id;
+                        document.getElementById('viewCategoryName').textContent = category.name;
+                        document.getElementById('viewCategoryDescription').textContent = category.description || 'No description';
+                        document.getElementById('viewCategoryCreatedAt').textContent = new Date(category.created_at).toLocaleString();
+                        document.getElementById('viewCategoryUpdatedAt').textContent = new Date(category.updated_at).toLocaleString();
+                        
+                        const modal = new bootstrap.Modal(document.getElementById('viewCategoryModal'));
+                        modal.show();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching category:', error);
                     });
             });
         });

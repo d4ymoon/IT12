@@ -22,110 +22,168 @@
     
     <!-- Page Header -->
     <div class="page-header">
-        <h2 class="mb-0">
-            <b>Products</b>
-        </h2>
-    </div>
-
-    <!-- Products Table -->
-    <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-
-            <!-- Search and Sort Controls -->
-            <div class="d-flex flex-grow-1 me-3 gap-2 flex-wrap" style="max-width: 600px;">
-                <!-- Search Bar -->
-                <form action="{{ route('products.index') }}" method="GET" class="d-flex flex-grow-1" style="max-width: 400px;">
-                    <input type="hidden" name="archived" value="{{ $showArchived ? 'true' : '' }}">
-                    <input type="hidden" name="sort" value="{{ $sort }}">
-                    <input type="hidden" name="direction" value="{{ $direction }}">
-                    <div class="input-group search-box w-100">
-                        <input type="text" class="form-control" name="search" placeholder="Search products..." value="{{ request('search') }}">
-                        <button class="btn btn-outline-secondary" type="submit">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Sort Dropdown -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-sort-down me-1"></i>
-                        Sort
-                        @if($sort)
-                            <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
-                        @endif
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                            <i class="bi bi-hash me-2"></i>ID
-                            @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                        </a></li>
-                        
-                        <li><a class="dropdown-item {{ $sort == 'name' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => $sort == 'name' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                            <i class="bi bi-fonts me-2"></i>Name
-                            @if($sort == 'name') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                        </a></li>
-                        
-                        <li><a class="dropdown-item {{ $sort == 'price' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => $sort == 'price' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                            <i class="bi bi-currency-dollar me-2"></i>Price
-                            @if($sort == 'price') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                        </a></li>
-                        
-                        <li><a class="dropdown-item {{ $sort == 'quantity_in_stock' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'quantity_in_stock', 'direction' => $sort == 'quantity_in_stock' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                            <i class="bi bi-box me-2"></i>Stock
-                            @if($sort == 'quantity_in_stock') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                        </a></li>
-                        
-                        <li><a class="dropdown-item {{ $sort == 'last_unit_cost' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'last_unit_cost', 'direction' => $sort == 'last_unit_cost' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                            <i class="bi bi-cash-coin me-2"></i>Cost
-                            @if($sort == 'last_unit_cost') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                        </a></li>
-                    </ul>
-                </div>
-            </div>
-    
-            <!-- Action Buttons (Archive / Add) -->
-            <div class="d-flex justify-content-end align-items-center gap-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <b>Products</b>
                 @if($showArchived)
-                    <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>
-                        Back to Active Products
-                    </a>
-                @else
-                    <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
-                        <i class="bi bi-archive me-1"></i>
-                        Archive
-                    </a>
+                    <span class="text-secondary small ms-2">(Archive View)</span>
                 @endif
+            </h2>
+            <a href="{{ route('products.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>
+                Add New Product
+            </a>
+        </div>
+    </div>
     
-                <a href="{{ route('products.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    Add New Product
-                </a>
+
+    <!-- Search & Filter Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <!-- Search & Clear -->
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <form action="{{ route('products.index') }}" method="GET" class="d-flex flex-grow-1 me-2">
+                            @if($showArchived)
+                                <input type="hidden" name="archived" value="true">
+                            @endif
+                            <input type="hidden" name="sort" value="{{ $sort }}">
+                            <input type="hidden" name="direction" value="{{ $direction }}">
+                            <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                            <input type="hidden" name="min_price" value="{{ request('min_price') }}">
+                            <input type="hidden" name="max_price" value="{{ request('max_price') }}">
+                            <div class="input-group search-box w-100">
+                                <input type="text" class="form-control" name="search" placeholder="Search products..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(request('search'))
+                            @if($showArchived)
+                                <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @else
+                                <a href="{{ route('products.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @endif
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-md-2">
+                    <select class="form-select" onchange="window.location.href=this.value">
+                        <option value="{{ request()->fullUrlWithQuery(['category_id' => null]) }}">All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ request()->fullUrlWithQuery(['category_id' => $category->id]) }}" 
+                                    {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Price Range -->
+                <div class="col-md-3">
+                    <form action="{{ route('products.index') }}" method="GET" class="d-flex gap-2 bg-light p-2 rounded">
+                        @if($showArchived)
+                            <input type="hidden" name="archived" value="true">
+                        @endif
+                        <input type="hidden" name="sort" value="{{ $sort }}">
+                        <input type="hidden" name="direction" value="{{ $direction }}">
+                        <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                        
+                        <input type="number" class="form-control" name="min_price" placeholder="Min price" 
+                            value="{{ request('min_price') }}" step="0.01" min="0">
+                        <input type="number" class="form-control" name="max_price" placeholder="Max price" 
+                            value="{{ request('max_price') }}" step="0.01" min="0">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-filter"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Archive Toggle & Sort -->
+                <div class="col-md-3">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <!-- Sort Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-sort-down me-1"></i>Sort
+                                @if($sort)
+                                    <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" 
+                                    href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    ID @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                                <li><a class="dropdown-item {{ $sort == 'name' ? 'active' : '' }}" 
+                                    href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'direction' => $sort == 'name' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Name @if($sort == 'name') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                                <li><a class="dropdown-item {{ $sort == 'price' ? 'active' : '' }}" 
+                                    href="{{ request()->fullUrlWithQuery(['sort' => 'price', 'direction' => $sort == 'price' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Price @if($sort == 'price') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                                <li><a class="dropdown-item {{ $sort == 'quantity_in_stock' ? 'active' : '' }}" href="{{ request()->fullUrlWithQuery(['sort' => 'quantity_in_stock', 'direction' => $sort == 'quantity_in_stock' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Stock @if($sort == 'quantity_in_stock') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                            </ul>
+                        </div>
+                        <!-- Archive Toggle -->
+                        @if($showArchived)
+                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Back to Active
+                        </a>
+                    @else
+                        <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
+                            <i class="bi bi-archive me-1"></i>
+                            View Archive
+                        </a>
+                    @endif
+                    </div>
+                </div>
             </div>
         </div>
-        
+    </div>
+    
+
+    <!-- Products Table -->
+    <div class="table-container">    
         <div class="table-responsive">
             <!-- Results Count and Current Sort -->
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="text-muted">
-                    @if(request('search'))
-                        Displaying {{ $products->count() }} of {{ $products->total() }} results for "{{ request('search') }}"
-                    @else
-                        Displaying {{ $products->count() }} of {{ $products->total() }} {{ $showArchived ? 'archived' : 'active' }} products
+            <div class="text-muted">
+                @if(request('search'))
+                    Displaying {{ $products->count() }} of {{ $products->total() }} results for "{{ request('search') }}"
+                    @if(request('category_id'))
+                        in {{ $categories->where('id', request('category_id'))->first()->name ?? 'Unknown' }} category
                     @endif
-                </div>
-                @if($sort)
-                    <div class="text-muted small">
-                        Sorted by: 
-                        @if($sort == 'id') ID
-                        @elseif($sort == 'name') Name
-                        @elseif($sort == 'price') Price
-                        @elseif($sort == 'quantity_in_stock') Stock
-                        @elseif($sort == 'last_unit_cost') Cost
-                        @endif
-                        ({{ $direction == 'asc' ? 'Ascending' : 'Descending' }})
-                    </div>
+                    @if(request('min_price') || request('max_price'))
+                        (Price: 
+                        @if(request('min_price'))₱{{ number_format(request('min_price'), 2) }}@endif
+                        @if(request('min_price') && request('max_price')) - @endif
+                        @if(request('max_price'))₱{{ number_format(request('max_price'), 2) }}@endif
+                        )
+                    @endif
+                @else
+                    Displaying {{ $products->count() }} of {{ $products->total() }} {{ $showArchived ? 'archived' : 'active' }} products
+                    @if(request('category_id'))
+                        in {{ $categories->where('id', request('category_id'))->first()->name ?? 'Unknown' }} category
+                    @endif
+                    @if(request('min_price') || request('max_price'))
+                        (Price range: 
+                        @if(request('min_price'))₱{{ number_format(request('min_price'), 2) }}@endif
+                        @if(request('min_price') && request('max_price')) - @endif
+                        @if(request('max_price'))₱{{ number_format(request('max_price'), 2) }}@endif
+                        )
+                    @endif
                 @endif
             </div>
             <table class="table table-hover">
@@ -152,25 +210,25 @@
                         <td>
                             <strong>{{ $product->name }}</strong>
                             @if($product->manufacturer_barcode)
-                                <br><small class="text-muted">Barcode: {{ $product->manufacturer_barcode }}</small>
+                                <br><small class="text-muted">{{ $product->manufacturer_barcode }}</small>
                             @endif
                         </td>
                         <td>{{ $product->category->name }}</td>
                         <td>₱{{ number_format($product->price, 2) }}</td>
                         <td>
-                            <span class="text-{{ $product->quantity_in_stock == 0 ? 'danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'warning' : 'success') }} fw-semibold">
+                            <span class="text-{{ $product->quantity_in_stock == 0 ? 'danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'danger' : 'success') }} fw-semibold">
                                 {{ $product->quantity_in_stock }}
                             </span>
                         
                             @if($product->quantity_in_stock <= $product->reorder_level)
                                 <br>
-                                <small class="text-muted">
-                                    Reorder: {{ $product->reorder_level }}
+                                <small class="text-danger fw-bold">
+                                    LOW STOCK
                                 </small>
                             @endif
                         </td>                        
                         <td>
-                            <span class="text-{{ $product->suppliers->count() > 0 ? 'primary' : 'secondary' }} fw-semibold">
+                            <span>
                                 {{ $product->suppliers->count() }} supplier{{ $product->suppliers->count() != 1 ? 's' : '' }}
                             </span>
                         </td>
@@ -239,7 +297,6 @@
                                 <div class="col-7">
                                     <span class="fw-semibold text-break" id="viewProductName"></span>
                                 </div>
-                                
                                 <div class="col-5">
                                     <small class="text-muted">Description:</small>
                                 </div>

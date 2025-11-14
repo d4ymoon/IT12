@@ -32,6 +32,17 @@ class ProductController extends Controller
             $query->search($request->search);
         }
 
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
         // Sorting
         $sort = $request->get('sort', 'id');
         $direction = $request->get('direction', 'asc');
@@ -77,8 +88,8 @@ class ProductController extends Controller
                 'reorder_level' => 'required|integer|min:0',
                 'last_unit_cost' => 'required|numeric|min:0',
                 'suppliers' => 'nullable|array',
-                'suppliers.*.id' => 'required|exists:suppliers,id',
-                'suppliers.*.default_unit_cost' => 'required|numeric|min:0',
+                'suppliers.*.id' => 'nullable|exists:suppliers,id', 
+                'suppliers.*.default_unit_cost' => 'nullable|numeric|min:0', 
             ]);
 
             // Handle image upload
@@ -99,7 +110,7 @@ class ProductController extends Controller
             }
 
             $product = Product::create([
-                'name' => $request->name,
+                'name' => ucfirst($request->name),
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'image_path' => $imagePath,
@@ -114,12 +125,13 @@ class ProductController extends Controller
             // Attach suppliers
             if ($request->suppliers) {
                 foreach ($request->suppliers as $supplierData) {
-                    $product->suppliers()->attach($supplierData['id'], [
-                        'default_unit_cost' => $supplierData['default_unit_cost']
-                    ]);
+                    if (!empty($supplierData['id']) && !empty($supplierData['default_unit_cost'])) {
+                        $product->suppliers()->attach($supplierData['id'], [
+                            'default_unit_cost' => $supplierData['default_unit_cost']
+                        ]);
+                    }
                 }
             }
-
             return redirect()->route('products.index')->with('success', 'Product added successfully.');
             
         } catch (Exception $e) {
@@ -164,8 +176,8 @@ class ProductController extends Controller
                 'reorder_level' => 'required|integer|min:0',
                 'last_unit_cost' => 'required|numeric|min:0',
                 'suppliers' => 'nullable|array',
-                'suppliers.*.id' => 'required|exists:suppliers,id',
-                'suppliers.*.default_unit_cost' => 'required|numeric|min:0',
+                'suppliers.*.id' => 'nullable|exists:suppliers,id',
+                'suppliers.*.default_unit_cost' => 'nullable|numeric|min:0',
             ]);
 
             // Handle image upload
@@ -191,7 +203,7 @@ class ProductController extends Controller
             }
 
             $product->update([
-                'name' => $request->name,
+                'name' => ucfirst($request->name),
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'image_path' => $imagePath,
@@ -206,9 +218,11 @@ class ProductController extends Controller
             $suppliersData = [];
             if ($request->suppliers) {
                 foreach ($request->suppliers as $supplierData) {
-                    $suppliersData[$supplierData['id']] = [
-                        'default_unit_cost' => $supplierData['default_unit_cost']
-                    ];
+                    if (!empty($supplierData['id']) && !empty($supplierData['default_unit_cost'])) {
+                        $suppliersData[$supplierData['id']] = [
+                            'default_unit_cost' => $supplierData['default_unit_cost']
+                        ];
+                    }
                 }
             }
             $product->suppliers()->sync($suppliersData);

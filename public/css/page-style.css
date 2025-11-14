@@ -7,7 +7,7 @@ html, body {
 
 .page-header {
     border-radius: 10px;
-    padding: 25px;
+    padding: 16px;
     margin-bottom: 5px;}
 
 .table-container {
@@ -44,4 +44,11 @@ html, body {
     overflow-y: auto;
     word-wrap: break-word;
     word-break: break-word;
+}
+
+.underline {
+    text-decoration: none;
+}
+.underline:hover {
+    text-decoration: underline;
 }

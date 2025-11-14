@@ -8,47 +8,73 @@
     
     <!-- Page Header -->
     <div class="page-header">
-        <h2 class="mb-0">
-            <b>Users Management</b>
-        </h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <b>Users Management</b>
+                @if($showArchived)
+                    <span class="text-secondary small ms-2">(Archive View)</span>
+                @endif
+            </h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="bi bi-plus-circle me-1"></i>
+                Add New User
+            </button>
+        </div>
+    </div>
+
+    <!-- Search & View Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <!-- Search & Clear -->
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 align-items-center">
+                        <form action="{{ route('users.index') }}" method="GET" class="d-flex w-90">
+                            @if($showArchived)
+                                <input type="hidden" name="archived" value="true">
+                            @endif
+                            <div class="input-group search-box w-100">
+                                <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ request('search') }}">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                        
+                        @if(request('search'))
+                            @if($showArchived)
+                                <a href="{{ route('users.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @else
+                                <a href="{{ route('users.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            @endif
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                
+                <!-- Archive Toggle -->
+                <div class="col-md-6">
+                    <div class="d-flex gap-2 justify-content-end">
+                        @if($showArchived)
+                            <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Active Users
+                            </a>
+                        @else
+                            <a href="{{ route('users.index', ['archived' => true]) }}" class="btn btn-outline-warning" title="View archived users">
+                                <i class="bi bi-archive me-1"></i>
+                                View Archive
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Users Table -->
     <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-
-            <!-- Search Bar -->
-            <form action="{{ route('users.index') }}" method="GET" class="d-flex flex-grow-1 me-3" style="max-width: 400px;">
-                <input type="hidden" name="archived" value="{{ $showArchived ? 'true' : '' }}">
-                <div class="input-group search-box w-100">
-                    <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ request('search') }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-            </form>
-    
-            <!-- Action Buttons (Archive / Add) -->
-            <div class="d-flex justify-content-end align-items-center gap-2">
-                @if($showArchived)
-                    <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-1"></i>
-                        Back to Active Users
-                    </a>
-                @else
-                    <a href="{{ route('users.index', ['archived' => true]) }}" class="btn btn-outline-warning">
-                        <i class="bi bi-archive me-1"></i>
-                        Archive
-                    </a>
-                @endif
-    
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    Add New User
-                </button>
-            </div>
-        </div>
-        
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
