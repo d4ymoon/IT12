@@ -109,7 +109,7 @@
 
                 <!-- Archive Toggle & Sort -->
                 <div class="col-md-3">
-                    <div class="d-flex gap-2 justify-content-end">
+                    <div class="d-flex gap-2 justify-content-between">
                         <!-- Sort Dropdown -->
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -138,16 +138,16 @@
                         </div>
                         <!-- Archive Toggle -->
                         @if($showArchived)
-                        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left me-1"></i>
-                            Back to Active
-                        </a>
-                    @else
-                        <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
-                            <i class="bi bi-archive me-1"></i>
-                            View Archive
-                        </a>
-                    @endif
+                            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Active
+                            </a>
+                        @else
+                            <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
+                                <i class="bi bi-archive me-1"></i>
+                                View Archive
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -273,114 +273,126 @@
     </div>
 
     <!-- View Product Modal -->
-    <div class="modal fade" id="viewProductModal" tabindex="-1" aria-labelledby="viewProductModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewProductModalLabel">
-                        <i class="bi bi-box me-2"></i>
-                        Product Details
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            <img id="viewProductImage" src="" alt="Product Image" class="img-fluid rounded mb-3" style="max-height: 200px;">
-                        </div>
-                        <div class="col-md-8">
-                            <!-- Compact grid layout -->
-                            <div class="row g-2">
-                                <div class="col-5">
-                                    <small class="text-muted">Product Name:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold text-break" id="viewProductName"></span>
-                                </div>
-                                <div class="col-5">
-                                    <small class="text-muted">Description:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold text-break" id="viewProductDescription">N/A</span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Category:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductCategory"></span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Barcode:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductBarcode">N/A</span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Price:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductPrice"></span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Stock:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductStock"></span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Reorder Level:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductReorder"></span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Last Unit Cost:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductCost"></span>
-                                </div>
-                                
-                                <div class="col-5">
-                                    <small class="text-muted">Suppliers:</small>
-                                </div>
-                                <div class="col-7">
-                                    <span class="fw-semibold" id="viewProductSuppliers">0</span>
-                                </div>
+    <!-- View Product Modal -->
+<div class="modal fade" id="viewProductModal" tabindex="-1" aria-labelledby="viewProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewProductModalLabel">
+                    <i class="bi bi-box me-2"></i>
+                    Product Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img id="viewProductImage" src="" alt="Product Image" class="img-fluid rounded mb-3" style="max-height: 200px;">
+                    </div>
+                    <div class="col-md-8">
+                        <!-- Compact grid layout -->
+                        <div class="row g-2">
+                            <div class="col-5">
+                                <small class="text-muted">Product Name:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold text-break" id="viewProductName"></span>
+                            </div>
+                            <div class="col-5">
+                                <small class="text-muted">Description:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold text-break" id="viewProductDescription">N/A</span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Category:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductCategory"></span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Barcode:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductBarcode">N/A</span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Price:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductPrice"></span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Stock:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductStock"></span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Reorder Level:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductReorder"></span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Last Unit Cost:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewProductCost"></span>
+                            </div>
+                            
+                            <div class="col-5">
+                                <small class="text-muted">Primary Supplier:</small>
+                            </div>
+                            <div class="col-7">
+                                <span class="fw-semibold" id="viewPrimarySupplier">N/A</span>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Archive Info -->
-                    <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
-                        <small class="text-muted d-block">Archive Information</small>
-                        <div class="row g-2">
-                            <div class="col-3">
-                                <small>Date:</small>
-                            </div>
-                            <div class="col-9">
-                                <small class="fw-semibold" id="viewDateDisabled"></small>
-                            </div>
-                            <div class="col-3">
-                                <small>By:</small>
-                            </div>
-                            <div class="col-9">
-                                <small class="fw-semibold" id="viewDisabledBy"></small>
-                            </div>
+                <!-- Suppliers Section -->
+                <div class="mt-4">
+                    <h6 class="border-bottom pb-2">
+                        <i class="bi bi-truck me-2"></i>
+                        Suppliers (<span id="viewSuppliersCount">0</span>)
+                    </h6>
+                    <div id="viewSuppliersList" class="mt-2">
+                        <!-- Suppliers will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Archive Info -->
+                <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
+                    <small class="text-muted d-block">Archive Information</small>
+                    <div class="row g-2">
+                        <div class="col-3">
+                            <small>Date:</small>
                         </div>
-                    </div>               
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                </div>
+                        <div class="col-9">
+                            <small class="fw-semibold" id="viewDateDisabled"></small>
+                        </div>
+                        <div class="col-3">
+                            <small>By:</small>
+                        </div>
+                        <div class="col-9">
+                            <small class="fw-semibold" id="viewDisabledBy"></small>
+                        </div>
+                    </div>
+                </div>               
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Archive Confirmation Modal -->
     <div class="modal fade" id="archiveProductModal" tabindex="-1" aria-labelledby="archiveProductModalLabel" aria-hidden="true">
@@ -467,7 +479,6 @@
                         document.getElementById('viewProductStock').textContent = product.quantity_in_stock;
                         document.getElementById('viewProductReorder').textContent = product.reorder_level;
                         document.getElementById('viewProductCost').textContent = '₱' + parseFloat(product.last_unit_cost).toFixed(2);
-                        document.getElementById('viewProductSuppliers').textContent = product.suppliers.length;
                         
                         const imageElement = document.getElementById('viewProductImage');
                         if (product.image_url) {
@@ -477,6 +488,51 @@
                         } else {
                             imageElement.src = '/images/no-image.jpg';
                             imageElement.alt = 'No image available';
+                        }
+                        
+                        // Handle suppliers display
+                        const suppliersList = document.getElementById('viewSuppliersList');
+                        const suppliersCount = document.getElementById('viewSuppliersCount');
+                        const primarySupplier = document.getElementById('viewPrimarySupplier');
+                        
+                        if (product.suppliers && product.suppliers.length > 0) {
+                            suppliersCount.textContent = product.suppliers.length;
+                            
+                            // Find primary supplier
+                            const primary = product.suppliers.find(supplier => supplier.id === product.default_supplier_id);
+                            if (primary) {
+                                primarySupplier.textContent = `${primary.supplier_name} (₱${parseFloat(primary.pivot.default_unit_cost).toFixed(2)})`;
+                                primarySupplier.innerHTML;
+                            } else {
+                                primarySupplier.textContent = 'Not set';
+                            }
+                            
+                            // Build suppliers list
+                            let suppliersHtml = '';
+                            product.suppliers.forEach(supplier => {
+                                const isPrimary = supplier.id === product.default_supplier_id;
+                                suppliersHtml += `
+                                    <div class="supplier-item border rounded p-2 mb-2 ${isPrimary ? 'bg-success bg-opacity-10 border-success' : ''}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>${supplier.supplier_name}</strong>
+                                                ${isPrimary ? '<span>(Primary)</span>' : ''}
+                                                <br>
+                                                <small class="text-muted">Unit Cost: ₱${parseFloat(supplier.pivot.default_unit_cost).toFixed(2)}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                ${supplier.contactNO ? `<small class="text-muted d-block">${supplier.contactNO}</small>` : ''}
+                                                ${supplier.address ? `<small class="text-muted">${supplier.address}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            suppliersList.innerHTML = suppliersHtml;
+                        } else {
+                            suppliersCount.textContent = '0';
+                            primarySupplier.textContent = 'No suppliers';
+                            suppliersList.innerHTML = '<div class="text-center text-muted py-3">No suppliers assigned to this product</div>';
                         }
                         
                         // Handle archive info

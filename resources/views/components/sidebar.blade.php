@@ -92,7 +92,13 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
+                <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('orders*') ? 'active' : '' }}">
+                    <i class="bi bi-cart me-3"></i>
+                    <span>Stock In</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
                     <i class="bi bi-file-text me-3"></i>
                     <span>Reports</span>
                 </a>

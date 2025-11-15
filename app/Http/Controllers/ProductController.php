@@ -84,8 +84,8 @@ class ProductController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'manufacturer_barcode' => 'nullable|string|max:30|unique:products,manufacturer_barcode',
                 'price' => 'required|numeric|min:0',
-                'quantity_in_stock' => 'required|integer|min:0',
                 'reorder_level' => 'required|integer|min:0',
+                'default_supplier_id' => 'required|exists:suppliers,id',
                 'last_unit_cost' => 'required|numeric|min:0',
                 'suppliers' => 'nullable|array',
                 'suppliers.*.id' => 'nullable|exists:suppliers,id', 
@@ -109,6 +109,7 @@ class ProductController extends Controller
                 $imagePath = 'images/products/' . $filename;
             }
 
+            // Create the product with mandatory supplier fields
             $product = Product::create([
                 'name' => ucfirst($request->name),
                 'description' => $request->description,
@@ -116,22 +117,31 @@ class ProductController extends Controller
                 'image_path' => $imagePath,
                 'manufacturer_barcode' => $request->manufacturer_barcode,
                 'price' => $request->price,
-                'quantity_in_stock' => $request->quantity_in_stock,
                 'reorder_level' => $request->reorder_level,
+                'default_supplier_id' => $request->default_supplier_id,
                 'last_unit_cost' => $request->last_unit_cost,
                 'is_active' => true,
             ]);
 
-            // Attach suppliers
+            // Attach the default supplier first (mandatory)
+            $product->suppliers()->attach($request->default_supplier_id, [
+                'default_unit_cost' => $request->last_unit_cost
+            ]);
+
+            // Attach additional suppliers (optional)
             if ($request->suppliers) {
                 foreach ($request->suppliers as $supplierData) {
                     if (!empty($supplierData['id']) && !empty($supplierData['default_unit_cost'])) {
-                        $product->suppliers()->attach($supplierData['id'], [
-                            'default_unit_cost' => $supplierData['default_unit_cost']
-                        ]);
+                        // Skip if it's the same as default supplier (already attached)
+                        if ($supplierData['id'] != $request->default_supplier_id) {
+                            $product->suppliers()->attach($supplierData['id'], [
+                                'default_unit_cost' => $supplierData['default_unit_cost']
+                            ]);
+                        }
                     }
                 }
             }
+
             return redirect()->route('products.index')->with('success', 'Product added successfully.');
             
         } catch (Exception $e) {
@@ -172,8 +182,8 @@ class ProductController extends Controller
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'manufacturer_barcode' => 'nullable|string|max:30|unique:products,manufacturer_barcode,' . $product->id,
                 'price' => 'required|numeric|min:0',
-                'quantity_in_stock' => 'required|integer|min:0',
                 'reorder_level' => 'required|integer|min:0',
+                'default_supplier_id' => 'required|exists:suppliers,id',
                 'last_unit_cost' => 'required|numeric|min:0',
                 'suppliers' => 'nullable|array',
                 'suppliers.*.id' => 'nullable|exists:suppliers,id',
@@ -209,13 +219,19 @@ class ProductController extends Controller
                 'image_path' => $imagePath,
                 'manufacturer_barcode' => $request->manufacturer_barcode,
                 'price' => $request->price,
-                'quantity_in_stock' => $request->quantity_in_stock,
                 'reorder_level' => $request->reorder_level,
+                'default_supplier_id' => $request->default_supplier_id,
                 'last_unit_cost' => $request->last_unit_cost,
             ]);
 
-            // Sync suppliers
-            $suppliersData = [];
+            // Sync suppliers - start with default supplier
+            $suppliersData = [
+                $request->default_supplier_id => [
+                    'default_unit_cost' => $request->last_unit_cost
+                ]
+            ];
+
+            // Add additional suppliers
             if ($request->suppliers) {
                 foreach ($request->suppliers as $supplierData) {
                     if (!empty($supplierData['id']) && !empty($supplierData['default_unit_cost'])) {
@@ -225,6 +241,7 @@ class ProductController extends Controller
                     }
                 }
             }
+
             $product->suppliers()->sync($suppliersData);
 
             return redirect()->route('products.index')->with('success', 'Product updated successfully.');
@@ -235,22 +252,22 @@ class ProductController extends Controller
     }
 
     public function archive(Product $product)
-{
-    try {
-        $currentUserId = session('user_id');
+    {
+        try {
+            $currentUserId = session('user_id');
 
-        $product->update([
-            'is_active' => false,
-            'date_disabled' => now(),
-            'disabled_by_user_id' => $currentUserId,
-        ]);
+            $product->update([
+                'is_active' => false,
+                'date_disabled' => now(),
+                'disabled_by_user_id' => $currentUserId,
+            ]);
 
-        return redirect()->route('products.index')->with('success', 'Product archived successfully.');
-        
-    } catch (Exception $e) {
-        return redirect()->route('products.index')->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->route('products.index')->with('success', 'Product archived successfully.');
+            
+        } catch (Exception $e) {
+            return redirect()->route('products.index')->with('error', 'Error: ' . $e->getMessage());
+        }
     }
-}
 
     public function restore(Product $product)
     {

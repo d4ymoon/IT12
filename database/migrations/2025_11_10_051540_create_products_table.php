@@ -24,13 +24,19 @@ return new class extends Migration
             
             // Barcode: Unique, but nullable
             $table->string('manufacturer_barcode', 30)->unique()->nullable();
+
+            $table->unsignedBigInteger('default_supplier_id');
+            $table->foreign('default_supplier_id')
+                ->references('id')
+                ->on('suppliers')
+                ->onDelete('restrict');
                    
             // Financial Data
             $table->decimal('price', 10, 2); // Selling Price
             $table->integer('quantity_in_stock')->default(0);
             $table->integer('reorder_level');
-            $table->decimal('last_unit_cost', 10, 2);
-            
+            $table->decimal('last_unit_cost', 10, 2)->nullable();
+
             // Soft Delete / Audit Fields
             $table->boolean('is_active')->default(true);
             $table->dateTime('date_disabled')->nullable();

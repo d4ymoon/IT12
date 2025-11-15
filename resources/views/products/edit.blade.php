@@ -10,6 +10,10 @@
         margin-bottom: 15px;
         background-color: #f8f9fa;
     }
+    .primary-supplier {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
     .remove-supplier {
         color: #dc3545;
         cursor: pointer;
@@ -20,6 +24,11 @@
         border: 1px solid #dee2e6;
         border-radius: 5px;
         padding: 5px;
+    }
+    .set-primary-btn {
+        font-size: 0.8em;
+        padding: 4px 8px;
+        margin-right: 8px;
     }
 </style>
 @endpush
@@ -45,7 +54,7 @@
     <!-- Product Form -->
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data" id="productForm">
                 @csrf
                 @method('PUT')
                 
@@ -111,24 +120,14 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="last_unit_cost" class="form-label">Last Unit Cost <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="last_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost', $product->last_unit_cost) }}" step="0.01" min="0" required
-                                title="The most recent cost at which this product was purchased from a supplier." max="9999999.99">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="quantity_in_stock" class="form-label">Quantity in Stock <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="quantity_in_stock" name="quantity_in_stock" value="{{ old('quantity_in_stock', $product->quantity_in_stock) }}" min="0" required max="99999">                        
-                        </div>
-
-                        <div class="mb-3">
                             <label for="reorder_level" class="form-label">Reorder Level <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="reorder_level" name="reorder_level" value="{{ old('reorder_level', $product->reorder_level) }}" min="0" max="99999" required>
                             <div class="form-text">Alert when stock falls below this level</div>
                         </div>
+
+                        <!-- Hidden field for primary supplier -->
+                        <input type="hidden" id="default_supplier_id" name="default_supplier_id" value="{{ old('default_supplier_id', $product->default_supplier_id) }}">
+                        <input type="hidden" id="last_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost', $product->last_unit_cost) }}">
                     </div>
                 </div>
 
@@ -136,14 +135,41 @@
                 <div class="row mt-4">
                     <div class="col-12">
                         <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Suppliers</h5>
+                        
+                        <!-- Primary Supplier Display -->
+                        <div class="row supplier-item primary-supplier mb-3 g-0">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Primary Supplier:</strong>
+                                        <span id="primarySupplierName" class="ms-2">
+                                            @if($product->defaultSupplier)
+                                                {{ $product->defaultSupplier->supplier_name }}
+                                            @else
+                                                Not set
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <strong>Unit Cost:</strong>
+                                        <span id="primarySupplierCost" class="ms-2">₱{{ number_format($product->last_unit_cost, 2) }}</span>
+                                    </div>
+                                </div>
+                                <div class="form-text text-muted mt-1">
+                                    The primary supplier cannot be removed. To change the primary supplier, set another supplier as primary first.
+                                </div>
+                            </div>
+                        </div>
+
+                        <h6 class="mb-3">Alternate Suppliers</h6>
                         <div id="suppliers-container">
-                            <!-- Suppliers will be populated dynamically -->
+                            <!-- Alternate suppliers will be populated dynamically -->
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <button type="button" class="btn btn-outline-primary" id="add-supplier">
                                 <i class="bi bi-plus-circle me-1"></i>
-                                Add Supplier
+                                Add Alternate Supplier
                             </button>
                             
                             <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
@@ -167,51 +193,77 @@
         </div>
     </div>
 
-    <!-- Add Supplier Modal (same as create page) -->
+    <!-- Add Supplier Modal -->
     <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="quickSupplierForm">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addSupplierModalLabel">
-                            <i class="bi bi-building me-2"></i>
-                            Quick Add Supplier
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSupplierModalLabel">
+                        <i class="bi bi-building me-2"></i>
+                        Quick Add Supplier
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickSupplierForm">
+                        @csrf
                         <div class="mb-3">
                             <label for="quick_supplier_name" class="form-label">Supplier Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="quick_supplier_name" name="supplier_name" required maxlength="150">
                         </div>
                         <div class="mb-3">
-                            <label for="quick_contact_info" class="form-label">Contact Information</label>
-                            <input type="text" class="form-control" id="quick_contact_info" name="contact_info" maxlength="50">
+                            <label for="quick_contactNO" class="form-label">Contact Information</label>
+                            <input type="text" class="form-control" id="quick_contactNO" name="contactNO" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label for="quick_address" class="form-label">Address</label>
                             <textarea class="form-control" id="quick_address" name="address" rows="3" maxlength="255"></textarea>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Supplier</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitQuickSupplier">Add Supplier</button>
+                </div>
             </div>
         </div>
     </div>
 
     @push('scripts')
     <script>
+        const ALL_SUPPLIERS = @json($suppliers->map(function($s) {
+        return ['id' => $s->id, 'supplier_name' => $s->supplier_name];
+    }));
+        let sharedSupplierOptions = [];
         let supplierCount = 0;
-
+        let currentSupplierModalContext = null;
+    
+        // Set primary supplier
+        function setPrimarySupplier(supplierId, supplierName, unitCost) {
+            document.getElementById('default_supplier_id').value = supplierId;
+            document.getElementById('last_unit_cost').value = unitCost;
+            document.getElementById('primarySupplierName').textContent = supplierName;
+            document.getElementById('primarySupplierCost').textContent = '₱' + parseFloat(unitCost).toFixed(2);
+    
+            document.querySelectorAll('.set-primary-btn').forEach(btn => {
+                if (btn.dataset.supplierId == supplierId) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="bi bi-star-fill me-1"></i>Primary';
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-success');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-star me-1"></i>Set Primary';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }
+            });
+        }
+    
         // Image preview
         document.getElementById('image').addEventListener('change', function(e) {
             const preview = document.getElementById('imagePreview');
             preview.innerHTML = '';
-            
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -219,28 +271,33 @@
                     img.src = e.target.result;
                     img.className = 'image-preview';
                     preview.appendChild(img);
-                }
+                };
                 reader.readAsDataURL(this.files[0]);
             }
         });
-
+    
         // Add supplier row
-        function addSupplierRow(supplierId = '', unitCost = '') {
+        function addSupplierRow(supplierId = '', unitCost = '', isPrimary = false) {
             supplierCount++;
             const container = document.getElementById('suppliers-container');
-            
+    
             const supplierHtml = `
                 <div class="supplier-item" id="supplier-${supplierCount}">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <div class="mb-3">
                                 <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select class="form-select" name="suppliers[${supplierCount}][id]">
-                                    <option value="">Select Supplier</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}" ${supplierId == {{ $supplier->id }} ? 'selected' : ''}>{{ $supplier->supplier_name }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="input-group">
+                                    <select class="form-select supplier-select" name="suppliers[${supplierCount}][id]" data-supplier-id="${supplierCount}">
+                                        <!-- Options filled by JS -->
+                                    </select>
+                                    <button type="button" class="btn btn-outline-success quick-add-supplier"
+                                            data-bs-toggle="modal" data-bs-target="#addSupplierModal"
+                                            data-context="alternate-${supplierCount}"
+                                            title="Quickly create a new supplier">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -248,45 +305,107 @@
                                 <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" name="suppliers[${supplierCount}][default_unit_cost]" value="${unitCost}" step="0.01" min="0">
+                                    <input type="number" class="form-control unit-cost-input"
+                                           name="suppliers[${supplierCount}][default_unit_cost]"
+                                           value="${unitCost}"
+                                           step="0.01" min="0"
+                                           onchange="updateSetPrimaryButton(${supplierCount})">
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div class="mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger w-100 remove-supplier" onclick="removeSupplier(${supplierCount})">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <label class="form-label">Actions</label>
+                                <div class="d-flex gap-1">
+                                    <button type="button"
+                                            class="btn btn-success set-primary-btn"
+                                            data-supplier-id="${supplierCount}"
+                                            onclick="setPrimaryFromRow(${supplierCount})"
+                                            ${isPrimary ? 'disabled' : ''}>
+                                        <i class="bi ${isPrimary ? 'bi-star-fill' : 'bi-star'} me-1"></i>
+                                        ${isPrimary ? 'Primary' : 'Set Primary'}
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger remove-supplier" 
+                                            onclick="removeSupplier(${supplierCount})" ${isPrimary ? 'disabled' : ''}>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-            
+    
             container.insertAdjacentHTML('beforeend', supplierHtml);
+    
+            // Set modal context
+            const quickBtn = document.querySelector(`[data-context="alternate-${supplierCount}"]`);
+            quickBtn.addEventListener('click', () => {
+                currentSupplierModalContext = quickBtn.getAttribute('data-context');
+            });
+    
+            // Change event for supplier select
+            const select = document.querySelector(`select[data-supplier-id="${supplierCount}"]`);
+            select.addEventListener('change', () => updateSetPrimaryButton(supplierCount));
+    
+            // Style primary
+            if (isPrimary) {
+                document.getElementById(`supplier-${supplierCount}`).classList.add('primary-supplier');
+            }
+    
+            // Populate dropdown from shared list
+            const newSelect = document.querySelector(`select[data-supplier-id="${supplierCount}"]`);
+            newSelect.innerHTML = '<option value="">Select Supplier</option>';
+            sharedSupplierOptions.forEach(opt => {
+                const isSelected = String(opt.value) === String(supplierId);
+                newSelect.add(new Option(opt.text, opt.value, false, isSelected));
+            });
         }
-
-        // Remove supplier row
-        function removeSupplier(id) {
-            const element = document.getElementById(`supplier-${id}`);
-            if (element) {
-                element.remove();
+    
+        // Update set primary button
+        function updateSetPrimaryButton(rowId) {
+            const select = document.querySelector(`select[data-supplier-id="${rowId}"]`);
+            const costInput = document.querySelector(`#supplier-${rowId} .unit-cost-input`);
+            const primaryBtn = document.querySelector(`#supplier-${rowId} .set-primary-btn`);
+            primaryBtn.disabled = !(select.value && costInput.value);
+        }
+    
+        // Set primary from row
+        function setPrimaryFromRow(rowId) {
+            const select = document.querySelector(`select[data-supplier-id="${rowId}"]`);
+            const costInput = document.querySelector(`#supplier-${rowId} .unit-cost-input`);
+            if (select.value && costInput.value) {
+                setPrimarySupplier(select.value, select.options[select.selectedIndex].text, costInput.value);
             }
         }
-
+    
+        // Remove supplier
+        function removeSupplier(id) {
+            const currentPrimaryId = document.getElementById('default_supplier_id').value;
+            const select = document.querySelector(`select[data-supplier-id="${id}"]`);
+            if (select.value === currentPrimaryId) {
+                alert('Cannot remove the primary supplier. Set another supplier as primary first.');
+                return;
+            }
+            document.getElementById(`supplier-${id}`)?.remove();
+        }
+    
         // Add supplier button
-        document.getElementById('add-supplier').addEventListener('click', function() {
-            addSupplierRow();
-        });
-
-        // Quick add supplier (same as create page)
-        document.getElementById('quickSupplierForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            fetch('/suppliers', {
+        document.getElementById('add-supplier').addEventListener('click', () => addSupplierRow());
+    
+        // Collect shared options from first dropdown
+        function collectSharedSupplierOptions() {
+    // Use Laravel-passed data instead of DOM
+    sharedSupplierOptions = ALL_SUPPLIERS.map(s => ({
+        value: s.id,
+        text: s.supplier_name
+    }));
+}
+    
+        // Quick add supplier
+        document.getElementById('submitQuickSupplier').addEventListener('click', function() {
+            const formData = new FormData(document.getElementById('quickSupplierForm'));
+            fetch('{{ route("suppliers.store") }}', {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -294,57 +413,89 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(`HTTP ${response.status}: ${text}`); });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    const select = document.createElement('option');
-                    select.value = data.supplier.id;
-                    select.textContent = data.supplier.supplier_name;
-                    
-                    document.querySelectorAll('select[name^="suppliers"]').forEach(dropdown => {
-                        dropdown.appendChild(select.cloneNode(true));
+                    // 1. Add to shared list
+                    sharedSupplierOptions.push({
+                        value: data.supplier.id,
+                        text: data.supplier.supplier_name
                     });
-                    
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
-                    modal.hide();
-                    this.reset();
-                    
+    
+                    // 2. Update all existing dropdowns
+                    document.querySelectorAll('.supplier-select').forEach(select => {
+                        if (!Array.from(select.options).some(opt => opt.value == data.supplier.id)) {
+                            select.add(new Option(data.supplier.supplier_name, data.supplier.id));
+                        }
+                    });
+    
+                    // 3. Auto-select in correct row
+                    if (currentSupplierModalContext?.startsWith('alternate-')) {
+                        const rowId = currentSupplierModalContext.split('-')[1];
+                        const targetSelect = document.querySelector(`select[data-supplier-id="${rowId}"]`);
+                        if (targetSelect) {
+                            targetSelect.value = data.supplier.id;
+                            updateSetPrimaryButton(rowId);
+                        }
+                    }
+    
+                    // 4. Close modal & reset
+                    bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
+                    document.getElementById('quickSupplierForm').reset();
+                    currentSupplierModalContext = null;
                     alert('Supplier added successfully!');
-                } else {
-                    alert('Error: ' + data.message);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error adding supplier');
+                console.error('Fetch error:', error);
+                alert('Error adding supplier: ' + error.message);
             });
         });
-
-        // Load existing suppliers when page loads
+    
+        // Page load: Initialize everything
         document.addEventListener('DOMContentLoaded', function() {
+            collectSharedSupplierOptions();
+            // Load existing alternate suppliers
             @foreach($product->suppliers as $supplier)
-                addSupplierRow({{ $supplier->id }}, {{ $supplier->pivot->default_unit_cost }});
+                @if($supplier->id != $product->default_supplier_id)
+                    addSupplierRow({{ $supplier->id }}, {{ $supplier->pivot->default_unit_cost }}, false);
+                @endif
             @endforeach
-            
-            // If no suppliers, add one empty row
+    
+            // Add empty row if none
             if (supplierCount === 0) {
                 addSupplierRow();
             }
+    
+            // Collect all supplier options from first dropdown
+    
+            // Set primary supplier name
+            const primarySupplierId = document.getElementById('default_supplier_id').value;
+            if (primarySupplierId) {
+                @foreach($suppliers as $supplier)
+                    if ({{ $supplier->id }} == primarySupplierId) {
+                        document.getElementById('primarySupplierName').textContent = '{{ $supplier->supplier_name }}';
+                    }
+                @endforeach
+            }
         });
-        
+    
+        // Prevent leading zeros in reorder level
         document.addEventListener("DOMContentLoaded", function () {
-            const noLeadingZeroInputs = ["quantity_in_stock", "reorder_level"];
-
-            noLeadingZeroInputs.forEach(id => {
+            ["reorder_level"].forEach(id => {
                 const input = document.getElementById(id);
-
-                input.addEventListener("input", function () {
-                    // Remove leading zeros, but allow "0"
-                    this.value = this.value.replace(/^0+(?=\d)/, '');
-                });
+                if (input) {
+                    input.addEventListener("input", function () {
+                        this.value = this.value.replace(/^0+(?=\d)/, '');
+                    });
+                }
             });
         });
-
     </script>
     @endpush
 @endsection

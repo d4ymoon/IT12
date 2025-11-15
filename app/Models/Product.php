@@ -19,6 +19,7 @@ class Product extends Model
         'quantity_in_stock',
         'reorder_level',
         'last_unit_cost',
+        'default_supplier_id', // <--- ADD THIS LINE
         'is_active',
         'date_disabled',
         'disabled_by_user_id',
@@ -40,6 +41,12 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function defaultSupplier()
+    {
+        // This links the default_supplier_id column to the Supplier model.
+        return $this->belongsTo(Supplier::class, 'default_supplier_id');
     }
 
     public function disabledBy()

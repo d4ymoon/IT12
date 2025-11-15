@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('supplier_name', 150);
-            $table->string('contact_info', 50)->nullable();
+            $table->string('contactNO', 50)->nullable();
             $table->string('address', 255)->nullable();
             
             // Soft Delete / Audit Fields

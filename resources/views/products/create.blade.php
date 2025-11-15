@@ -44,7 +44,7 @@
     <!-- Product Form -->
     <div class="card">
         <div class="card-body">
-            <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" id="productForm">
                 @csrf
                 
                 <div class="row">
@@ -104,20 +104,6 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="last_unit_cost" class="form-label">Last Unit Cost <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="last_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost') }}" step="0.01" min="0" required
-                                title="The most recent cost at which this product was purchased from a supplier." max="9999999.99">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="quantity_in_stock" class="form-label">Quantity in Stock <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="quantity_in_stock" name="quantity_in_stock" value="{{ old('quantity_in_stock', 0) }}" min="0" required max="99999">                        
-                        </div>
-
-                        <div class="mb-3">
                             <label for="reorder_level" class="form-label">Reorder Level <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="reorder_level" name="reorder_level" value="{{ old('reorder_level', 10) }}" min="0" max="99999" required>
                             <div class="form-text">Alert when stock falls below this level</div>
@@ -128,15 +114,49 @@
                 <!-- Suppliers Section -->
                 <div class="row mt-4">
                     <div class="col-12">
-                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Suppliers</h5>
+                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Primary Supplier & Cost</h5>
+                        
+                        <div class="row supplier-item bg-light border-success g-0">
+                            <div class="col-md-6 mb-3">
+                                <label for="default_supplier_id" class="form-label">Primary Supplier <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select supplier-select" id="default_supplier_id" name="default_supplier_id" required>
+                                        <option value="">Select Primary Supplier</option>
+                                        @foreach($suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}" {{ old('default_supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                                {{ $supplier->supplier_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal" title="Quickly create a new supplier">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">This supplier is mandatory for tracking initial cost.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="initial_unit_cost" class="form-label">Initial Unit Cost <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="initial_unit_cost" name="last_unit_cost" value="{{ old('last_unit_cost') }}" step="0.01" min="0" max="9999999.99" required>
+                                </div>
+                                <div class="form-text">The cost from the primary supplier for the first stock-in.</div>
+                            </div>
+                        </div>
+                
+                        <hr class="my-4">
+                
+                        <h5 class="mb-3"><i class="bi bi-list-columns-reverse me-2"></i>Alternate Suppliers (Optional)</h5>
+                        
                         <div id="suppliers-container">
-                            <!-- Suppliers will be added here dynamically -->
+                            <!-- Alternate suppliers will be added here -->
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mt-3">
                             <button type="button" class="btn btn-outline-primary" id="add-supplier">
                                 <i class="bi bi-plus-circle me-1"></i>
-                                Add Supplier
+                                Add Alternate Supplier
                             </button>
                             
                             <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
@@ -164,170 +184,287 @@
     <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="quickSupplierForm">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addSupplierModalLabel">
-                            <i class="bi bi-building me-2"></i>
-                            Quick Add Supplier
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSupplierModalLabel">
+                        <i class="bi bi-building me-2"></i>
+                        Quick Add Supplier
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickSupplierForm">
+                        @csrf
                         <div class="mb-3">
                             <label for="quick_supplier_name" class="form-label">Supplier Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="quick_supplier_name" name="supplier_name" required maxlength="150">
                         </div>
                         <div class="mb-3">
-                            <label for="quick_contact_info" class="form-label">Contact Information</label>
-                            <input type="text" class="form-control" id="quick_contact_info" name="contact_info" maxlength="50">
+                            <label for="quick_contactNO" class="form-label">Contact Information</label>
+                            <input type="text" class="form-control" id="quick_contactNO" name="contactNO" maxlength="50">
                         </div>
                         <div class="mb-3">
                             <label for="quick_address" class="form-label">Address</label>
                             <textarea class="form-control" id="quick_address" name="address" rows="3" maxlength="255"></textarea>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Supplier</button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitQuickSupplier">Add Supplier</button>
+                </div>
             </div>
         </div>
     </div>
 
     @push('scripts')
-    <script>
-        let supplierCount = 0;
+    @push('scripts')
+<script>
+    // PASS SUPPLIERS FROM LARAVEL TO JS (CRITICAL!)
+    const ALL_SUPPLIERS = @json($suppliers->map(function($s) {
+        return ['id' => $s->id, 'supplier_name' => $s->supplier_name];
+    }));
 
-        // Image preview
-        document.getElementById('image').addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
-            
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.className = 'image-preview';
-                    preview.appendChild(img);
-                }
-                reader.readAsDataURL(this.files[0]);
+    let sharedSupplierOptions = [];
+    let supplierCount = 0;
+    let currentSupplierModalContext = null;
+
+    // Save form data to localStorage
+    function saveFormData() {
+        const formData = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
+            category_id: document.getElementById('category_id').value,
+            manufacturer_barcode: document.getElementById('manufacturer_barcode').value,
+            price: document.getElementById('price').value,
+            reorder_level: document.getElementById('reorder_level').value,
+            default_supplier_id: document.getElementById('default_supplier_id').value,
+            last_unit_cost: document.getElementById('initial_unit_cost').value,
+            alternate_suppliers: []
+        };
+
+        document.querySelectorAll('[id^="supplier-"]').forEach(div => {
+            const select = div.querySelector('select');
+            const costInput = div.querySelector('input[type="number"]');
+            if (select && costInput && (select.value || costInput.value)) {
+                formData.alternate_suppliers.push({
+                    id: select.value,
+                    default_unit_cost: costInput.value
+                });
             }
         });
 
-        // Add supplier row
-        document.getElementById('add-supplier').addEventListener('click', function() {
-            supplierCount++;
-            const container = document.getElementById('suppliers-container');
-            
-            const supplierHtml = `
-                <div class="supplier-item" id="supplier-${supplierCount}">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select class="form-select" name="suppliers[${supplierCount}][id]">
-                                    <option value="">Select Supplier</option>
-                                    @foreach($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->supplier_name }}</option>
-                                    @endforeach
+        localStorage.setItem('productFormData', JSON.stringify(formData));
+    }
+
+    // Load form data
+    function loadFormData() {
+        const saved = localStorage.getItem('productFormData');
+        if (!saved) return;
+
+        const data = JSON.parse(saved);
+        document.getElementById('name').value = data.name || '';
+        document.getElementById('description').value = data.description || '';
+        document.getElementById('category_id').value = data.category_id || '';
+        document.getElementById('manufacturer_barcode').value = data.manufacturer_barcode || '';
+        document.getElementById('price').value = data.price || '';
+        document.getElementById('reorder_level').value = data.reorder_level || '';
+        document.getElementById('default_supplier_id').value = data.default_supplier_id || '';
+        document.getElementById('initial_unit_cost').value = data.last_unit_cost || '';
+
+        if (data.alternate_suppliers?.length > 0) {
+            data.alternate_suppliers.forEach(s => addSupplierRow(s.id, s.default_unit_cost));
+        }
+    }
+
+    function clearFormData() {
+        localStorage.removeItem('productFormData');
+    }
+
+    // Add alternate supplier row
+    function addSupplierRow(supplierId = '', unitCost = '') {
+        supplierCount++;
+        const container = document.getElementById('suppliers-container');
+
+        const html = `
+            <div class="supplier-item" id="supplier-${supplierCount}">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-select supplier-select" name="suppliers[${supplierCount}][id]" data-supplier-id="${supplierCount}">
                                 </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control" name="suppliers[${supplierCount}][default_unit_cost]" step="0.01" min="0" max="9999999.99">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger w-100 remove-supplier" onclick="removeSupplier(${supplierCount})">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn btn-outline-success quick-add-supplier"
+                                        data-bs-toggle="modal" data-bs-target="#addSupplierModal"
+                                        data-context="alternate-${supplierCount}">
+                                    <i class="bi bi-plus-lg"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₱</span>
+                                <input type="number" class="form-control" name="suppliers[${supplierCount}][default_unit_cost]"
+                                       value="${unitCost}" step="0.01" min="0" max="9999999.99">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-outline-danger w-100" onclick="removeSupplier(${supplierCount})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            `;
-            
-            container.insertAdjacentHTML('beforeend', supplierHtml);
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', html);
+
+        // Set modal context
+        const btn = document.querySelector(`[data-context="alternate-${supplierCount}"]`);
+        btn.addEventListener('click', () => currentSupplierModalContext = btn.getAttribute('data-context'));
+
+        // Populate dropdown
+        const select = document.querySelector(`select[data-supplier-id="${supplierCount}"]`);
+        select.innerHTML = '<option value="">Select Supplier</option>';
+        sharedSupplierOptions.forEach(opt => {
+            const selected = String(opt.value) === String(supplierId);
+            select.add(new Option(opt.text, opt.value, false, selected));
         });
 
-        // Remove supplier row
-        function removeSupplier(id) {
-            const element = document.getElementById(`supplier-${id}`);
-            if (element) {
-                element.remove();
+        saveFormData();
+    }
+
+    // Remove row
+    function removeSupplier(id) {
+        document.getElementById(`supplier-${id}`)?.remove();
+        saveFormData();
+    }
+
+    // Image preview
+    document.getElementById('image').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        if (this.files?.[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'image-preview';
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Add supplier button
+    document.getElementById('add-supplier').addEventListener('click', () => addSupplierRow());
+
+    // Primary supplier quick add context
+    document.querySelector('#default_supplier_id').closest('.input-group').querySelector('.btn')
+        .addEventListener('click', () => currentSupplierModalContext = 'primary');
+
+    // Quick add supplier
+    document.getElementById('submitQuickSupplier').addEventListener('click', function() {
+        const formData = new FormData(document.getElementById('quickSupplierForm'));
+        fetch('{{ route("suppliers.store") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
+        })
+        .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t); }))
+        .then(data => {
+            if (data.success) {
+                const newSupplier = { value: data.supplier.id, text: data.supplier.supplier_name };
+                sharedSupplierOptions.push(newSupplier);
+
+                // Update primary dropdown
+                const primarySelect = document.getElementById('default_supplier_id');
+                if (!Array.from(primarySelect.options).some(o => o.value == data.supplier.id)) {
+                    primarySelect.add(new Option(data.supplier.supplier_name, data.supplier.id));
+                }
+
+                // Update all alternate dropdowns
+                document.querySelectorAll('.supplier-select').forEach(select => {
+                    if (!Array.from(select.options).some(o => o.value == data.supplier.id)) {
+                        select.add(new Option(data.supplier.supplier_name, data.supplier.id));
+                    }
+                });
+
+                // Auto-select
+                if (currentSupplierModalContext === 'primary') {
+                    primarySelect.value = data.supplier.id;
+                } else if (currentSupplierModalContext?.startsWith('alternate-')) {
+                    const rowId = currentSupplierModalContext.split('-')[1];
+                    const target = document.querySelector(`select[data-supplier-id="${rowId}"]`);
+                    if (target) target.value = data.supplier.id;
+                }
+
+                bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
+                document.getElementById('quickSupplierForm').reset();
+                currentSupplierModalContext = null;
+                saveFormData();
+                alert('Supplier added successfully!');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error: ' + err.message);
+        });
+    });
+
+    // Auto-save on input
+    document.querySelectorAll('#productForm input, #productForm select, #productForm textarea')
+        .forEach(el => el.addEventListener('input', saveFormData));
+    document.querySelectorAll('#productForm input, #productForm select, #productForm textarea')
+        .forEach(el => el.addEventListener('change', saveFormData));
+
+    // Clear on submit
+    document.getElementById('productForm').addEventListener('submit', clearFormData);
+
+    // PAGE LOAD
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Load all suppliers from Laravel
+        sharedSupplierOptions = ALL_SUPPLIERS.map(s => ({
+            value: s.id,
+            text: s.supplier_name
+        }));
+
+        // 2. Populate primary dropdown
+        const primarySelect = document.getElementById('default_supplier_id');
+        primarySelect.innerHTML = '<option value="">Select Primary Supplier</option>';
+        sharedSupplierOptions.forEach(opt => {
+            primarySelect.add(new Option(opt.text, opt.value));
+        });
+
+        // 3. Load saved form data
+        loadFormData();
+
+        // 4. Add one empty row if no saved alternate suppliers
+        if (document.querySelectorAll('[id^="supplier-"]').length === 0) {
+            addSupplierRow();
         }
 
-        // Quick add supplier
-        document.getElementById('quickSupplierForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            
-            fetch('/suppliers', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Add the new supplier to the dropdown
-                    const select = document.createElement('option');
-                    select.value = data.supplier.id;
-                    select.textContent = data.supplier.supplier_name;
-                    
-                    // Add to all supplier dropdowns
-                    document.querySelectorAll('select[name^="suppliers"]').forEach(dropdown => {
-                        dropdown.appendChild(select.cloneNode(true));
-                    });
-                    
-                    // Close modal and reset form
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
-                    modal.hide();
-                    this.reset();
-                    
-                    alert('Supplier added successfully!');
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error adding supplier');
-            });
-        });
-
-        // Add one supplier row by default when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('add-supplier').click();
-        });
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const noLeadingZeroInputs = ["quantity_in_stock", "reorder_level"];
-
-            noLeadingZeroInputs.forEach(id => {
-                const input = document.getElementById(id);
-
-                input.addEventListener("input", function () {
-                    // Remove leading zeros, but allow "0"
+        // 5. Prevent leading zeros
+        ['reorder_level'].forEach(id => {
+            const input = document.getElementById(id);
+            if (input) {
+                input.addEventListener('input', function() {
                     this.value = this.value.replace(/^0+(?=\d)/, '');
                 });
-            });
+            }
         });
-    </script>
+    });
+</script>
+@endpush
     @endpush
 @endsection

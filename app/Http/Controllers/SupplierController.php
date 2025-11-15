@@ -28,7 +28,7 @@ class SupplierController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('supplier_name', 'like', '%' . $search . '%')
-                  ->orWhere('contact_info', 'like', '%' . $search . '%')
+                  ->orWhere('contactNO', 'like', '%' . $search . '%')
                   ->orWhere('address', 'like', '%' . $search . '%');
             });
         }
@@ -46,20 +46,39 @@ class SupplierController extends Controller
         try {
             $request->validate([
                 'supplier_name' => 'required|string|max:150|unique:suppliers,supplier_name',
-                'contact_info' => 'nullable|string|max:50',
+                'contactNO' => 'nullable|string|max:50',
                 'address' => 'nullable|string|max:255',
             ]);
 
-            Supplier::create([
+            $supplier = Supplier::create([
                 'supplier_name' => $request->supplier_name,
-                'contact_info' => $request->contact_info,
+                'contactNO' => $request->contactNO,
                 'address' => $request->address,
                 'is_active' => true,
             ]);
+        
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'supplier' => [
+                        'id' => $supplier->id,
+                        'supplier_name' => $supplier->supplier_name
+                    ]
+                ]);
+            }
 
             return redirect()->route('suppliers.index')->with('success', 'Supplier added successfully.');
             
         } catch (Exception $e) {
+            // Return JSON error for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Error: ' . $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->route('suppliers.index')->with('error', 'Error: ' . $e->getMessage());
         }
     }
@@ -89,13 +108,13 @@ class SupplierController extends Controller
         try {
             $request->validate([
                 'supplier_name' => 'required|string|max:150|unique:suppliers,supplier_name,' . $supplier->id,
-                'contact_info' => 'nullable|string|max:50',
+                'contactNO' => 'nullable|string|max:50',
                 'address' => 'nullable|string|max:255',
             ]);
 
             $supplier->update([
                 'supplier_name' => $request->supplier_name,
-                'contact_info' => $request->contact_info,
+                'contactNO' => $request->contactNO,
                 'address' => $request->address,
             ]);
 
@@ -156,33 +175,22 @@ class SupplierController extends Controller
         //
     }
 
-    public function quickStore(Request $request)
-    {
-        try {
-            $request->validate([
-                'supplier_name' => 'required|string|max:150|unique:suppliers,supplier_name',
-                'contact_info' => 'nullable|string|max:50',
-                'address' => 'nullable|string|max:255',
-            ]);
+    public function quickAdd(Request $request)
+{
+    $request->validate([
+        'supplier_name' => 'required|string|max:150',
+        'contactNO' => 'nullable|string|max:50',
+        'address' => 'nullable|string|max:255',
+    ]);
 
-            $supplier = Supplier::create([
-                'supplier_name' => $request->supplier_name,
-                'contact_info' => $request->contact_info,
-                'address' => $request->address,
-                'is_active' => true,
-            ]);
+    $supplier = Supplier::create($request->only(['supplier_name', 'contactNO', 'address']));
 
-            return response()->json([
-                'success' => true,
-                'supplier' => $supplier,
-                'message' => 'Supplier added successfully.'
-            ]);
-            
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+    return response()->json([
+        'success' => true,
+        'supplier' => [
+            'id' => $supplier->id,
+            'supplier_name' => $supplier->supplier_name
+        ]
+    ]);
+}
 }

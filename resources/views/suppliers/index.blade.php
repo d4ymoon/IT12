@@ -91,7 +91,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Supplier Name</th>
-                        <th>Contact Info</th>
+                        <th>Contact No.</th>
                         <th>Address</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
@@ -104,7 +104,7 @@
                         <td>
                             <strong>{{ $supplier->supplier_name }}</strong>
                         </td>
-                        <td>{{ $supplier->contact_info ?? 'N/A' }}</td>
+                        <td>{{ $supplier->contactNO ?? 'N/A' }}</td>
                         <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
                             {{ $supplier->address ?? 'N/A' }}
                         </td>
@@ -168,8 +168,8 @@
                             <input type="text" class="form-control" id="supplier_name" name="supplier_name" placeholder="Enter supplier name" maxlength="150" required>
                         </div>
                         <div class="mb-3">
-                            <label for="contact_info" class="form-label">Contact Number</label>
-                            <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control" id="contact_info" name="contact_info" placeholder="Enter contact number" maxlength="11">
+                            <label for="contactNO" class="form-label">Contact Number</label>
+                            <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control" id="contactNO" name="contactNO" placeholder="Enter contact number" maxlength="11">
                         </div>
                         <div class="mb-3">
                             <label for="address" class="form-label">Address</label>
@@ -206,7 +206,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="editContactInfo" class="form-label">Contact Number</label>
-                            <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control" id="editContactInfo" name="contact_info" maxlength="11">
+                            <input type="number" pattern="[0-9]*" inputmode="numeric" class="form-control" id="editContactInfo" name="contactNO" maxlength="11">
                         </div>
                         <div class="mb-3">
                             <label for="editAddress" class="form-label">Address</label>
@@ -240,7 +240,7 @@
                             <span class="fw-semibold" id="viewSupplierName"></span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between px-0">
-                            <small class="text-muted">Contact Info:</small>
+                            <small class="text-muted">Contact No:</small>
                             <span class="fw-semibold" id="viewContactInfo">N/A</span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between px-0">
@@ -374,7 +374,7 @@
                     .then(response => response.json())
                     .then(supplier => {
                         document.getElementById('editSupplierName').value = supplier.supplier_name;
-                        document.getElementById('editContactInfo').value = supplier.contact_info || '';
+                        document.getElementById('editContactInfo').value = supplier.contactNO || '';
                         document.getElementById('editAddress').value = supplier.address || '';
                         
                         document.getElementById('editSupplierForm').action = `/suppliers/${supplierId}`;
@@ -394,7 +394,7 @@
                     .then(response => response.json())
                     .then(supplier => {                
                         document.getElementById('viewSupplierName').textContent = supplier.supplier_name;
-                        document.getElementById('viewContactInfo').textContent = supplier.contact_info || 'N/A';
+                        document.getElementById('viewContactInfo').textContent = supplier.contactNO || 'N/A';
                         document.getElementById('viewAddress').textContent = supplier.address || 'N/A';
                         document.getElementById('viewCreatedAt').textContent = new Date(supplier.created_at).toLocaleString();
                         document.getElementById('viewUpdatedAt').textContent = new Date(supplier.updated_at).toLocaleString();
