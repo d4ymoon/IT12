@@ -8,6 +8,12 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockInController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
+
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SaleController;
+use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -45,8 +51,11 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::get('/products/suggest-sku/{categoryId}', [ProductController::class, 'suggestSku']);
         Route::post('/suppliers/quick-store', [SupplierController::class, 'quickStore'])->name('suppliers.quick-store');
-        Route::post('/suppliers/quick-add', [SupplierController::class, 'quickAdd'])
-    ->name('suppliers.quick-add');
+        Route::post('/suppliers/quick-add', [SupplierController::class, 'quickAdd'])->name('suppliers.quick-add');
+
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export-pdf/{module}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+
 
         Route::resource('stock-ins', StockInController::class);
         Route::get('/api/suppliers/{supplier}/products', function($supplier) {
@@ -58,6 +67,11 @@ Route::middleware(['auth.simple'])->group(function () {
             $products = $supplier->products()->active()->get();
             return response()->json($products);
         });
+
+        Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+Route::get('/sales/{id}', [SaleController::class, 'show'])->name('sales.show');
+Route::get('/sales/{id}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
+Route::get('/sales/{id}/details', [SaleController::class, 'details'])->name('sales.details');
     });
 
     // Both admin and employee can access these
@@ -72,7 +86,9 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::delete('/remove-item/{itemId}', [POSController::class, 'removeItem']);
         Route::get('/sale-items/{saleId}', [POSController::class, 'getSaleItems']);
         Route::post('/process-payment', [POSController::class, 'processPayment']);
-    });
+        Route::get('/receipt/{sale}/pdf', [POSController::class, 'downloadReceiptPDF']);
+        
+        });
 
     
 });

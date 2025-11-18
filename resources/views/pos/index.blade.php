@@ -1,7 +1,5 @@
 @extends('layouts.app')
-
-@section('title', 'Point of Sale')
-
+@section('title', 'Categories - ATIN Admin')
 @push('styles')
 <style>
     .pos-container {
@@ -71,12 +69,17 @@
     }
     
     .total-display {
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        margin: 20px 0;
-        color: #28a745;
-    }
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 20px 0;
+    color: #28a745;
+}
+
+.total-label {
+    color: #495057;
+    margin-right: 10px;
+}
     
     .payment-section {
         margin-top: auto;
@@ -120,6 +123,50 @@
     .order-info-value {
         color: #6c757d;
     }
+
+    /* Receipt Preview */
+    .receipt-preview {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        background: white;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-top: 15px;
+        display: none;
+    }
+
+    .receipt-header {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .receipt-line {
+        border-top: 1px dashed #000;
+        margin: 5px 0;
+    }
+
+    .receipt-items {
+        margin: 10px 0;
+    }
+
+    .receipt-item-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3px;
+    }
+
+    .receipt-footer {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .qty-input {
+    width: 70px;
+    text-align: center;
+    padding: 2px 4px;
+    margin: 0 5px;
+}
 </style>
 @endpush
 
@@ -180,8 +227,11 @@
         </div>
         
         <!-- Total Display -->
-        <div class="total-display" id="totalDisplay">
-            ₱0.00
+        <div class="total-section">
+            <div class="total-label">Total:</div>
+            <div class="total-display" id="totalDisplay">
+                ₱0.00
+            </div>
         </div>
         
         <!-- Payment Section -->
@@ -217,6 +267,52 @@
                 <div class="form-text" id="digitalAmountInfo"></div>
             </div>
             
+            <!-- Receipt Preview -->
+            <div class="receipt-preview" id="receiptPreview">
+                <div class="receipt-header">
+                    <strong>ATIN Industrial Hardware Supply Incorporated</strong><br>
+                    Door 3 Corner Guerrero St., Ramon Magsaysay Ave.<br>
+                    Poblacion District, Davao City, 8000 Davao del Sur<br>
+                    (082) 286 6300
+                </div>
+                <div class="receipt-line"></div>
+                <div style="text-align: center; margin: 8px 0;">
+                    <strong>S A L E S &nbsp; R E C E I P T</strong>
+                </div>
+                <div class="receipt-line"></div>
+                
+                <div id="receiptTransactionInfo"></div>
+                
+                <div class="receipt-line"></div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 5px;">
+                    <span>QTY</span>
+                    <span style="flex: 1; text-align: center;">DESCRIPTION</span>
+                    <span>UNIT PRICE</span>
+                    <span>TOTAL</span>
+                </div>
+                <div class="receipt-line"></div>
+                
+                <div class="receipt-items" id="receiptItems"></div>
+                
+                <div class="receipt-line"></div>
+                <div id="receiptTotals"></div>
+                
+                <div class="receipt-line"></div>
+                <div style="text-align: center; margin: 8px 0;">
+                    <strong>P A Y M E N T &nbsp; I N F O</strong>
+                </div>
+                <div class="receipt-line"></div>
+                
+                <div id="receiptPaymentInfo"></div>
+                
+                <div class="receipt-line"></div>
+                <div class="receipt-footer">
+                    Thank You For Shopping With Us!<br>
+                    Please Come Again.
+                </div>
+                <div class="receipt-line"></div>
+            </div>
+            
             <!-- Complete Sale Button -->
             <button class="btn btn-success btn-lg w-100 mt-3" id="completeSale" disabled>
                 Complete Sale
@@ -240,11 +336,9 @@
             await this.initializeSale();
             this.setupEventListeners();
             this.startClock();
-            // Don't load items initially - we'll manage locally
         }
 
         startClock() {
-            // Update time every second
             setInterval(() => {
                 const now = new Date();
                 document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', {
@@ -297,15 +391,106 @@
             document.getElementById('amountTendered').addEventListener('input', () => {
                 this.calculateChange();
                 this.updateCompleteButton();
+                this.updateReceiptPreview();
             });
     
             document.getElementById('referenceNo').addEventListener('input', () => {
                 this.updateCompleteButton();
+                this.updateReceiptPreview();
+            });
+    
+            document.getElementById('customerName').addEventListener('input', () => {
+                this.updateReceiptPreview();
+            });
+    
+            document.getElementById('customerContact').addEventListener('input', () => {
+                this.updateReceiptPreview();
             });
     
             document.getElementById('completeSale').addEventListener('click', () => {
                 this.processPayment();
             });
+        }
+
+        updateReceiptPreview() {
+            if (this.items.length === 0) {
+                document.getElementById('receiptPreview').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('receiptPreview').style.display = 'block';
+            
+            const cashierName = document.querySelector('.pos-container').dataset.cashierName;
+            const customerName = document.getElementById('customerName').value;
+            const customerContact = document.getElementById('customerContact').value;
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const amountTendered = parseFloat(document.getElementById('amountTendered').value) || 0;
+            const referenceNo = document.getElementById('referenceNo').value;
+            const change = amountTendered - this.total;
+
+            // Update transaction info
+            document.getElementById('receiptTransactionInfo').innerHTML = `
+                Transaction #: ${this.saleId}<br>
+                Date: ${new Date().toLocaleDateString()}<br>
+                Time: ${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}<br>
+                Cashier: ${cashierName}<br>
+                ${customerName ? `Customer: ${customerName}<br>` : ''}
+                ${customerContact ? `Contact: ${customerContact}<br>` : ''}
+            `;
+
+            // Update items
+            const receiptItems = document.getElementById('receiptItems');
+            receiptItems.innerHTML = '';
+            
+            this.items.forEach(item => {
+                const lineTotal = item.quantity_sold * parseFloat(item.unit_price);
+                const itemRow = document.createElement('div');
+                itemRow.className = 'receipt-item-row';
+                itemRow.innerHTML = `
+                    <span>${item.quantity_sold}</span>
+                    <span style="flex: 1; text-align: left; padding: 0 5px;">${item.product.name}</span>
+                    <span>₱${parseFloat(item.unit_price).toFixed(2)}</span>
+                    <span>₱${lineTotal.toFixed(2)}</span>
+                `;
+                receiptItems.appendChild(itemRow);
+            });
+
+            // Update totals
+            document.getElementById('receiptTotals').innerHTML = `
+                <div class="receipt-item-row">
+                    <span></span>
+                    <span style="flex: 1; text-align: right; padding: 0 5px;">Grand Total:</span>
+                    <span></span>
+                    <span>₱${this.total.toFixed(2)}</span>
+                </div>
+            `;
+
+            // Update payment info
+            let paymentInfo = `
+                <div class="receipt-item-row">
+                    <span style="flex: 1;">Method:</span>
+                    <span>${paymentMethod}</span>
+                </div>
+                <div class="receipt-item-row">
+                    <span style="flex: 1;">Tendered:</span>
+                    <span>₱${amountTendered.toFixed(2)}</span>
+                </div>
+                <div class="receipt-item-row">
+                    <span style="flex: 1;">Change:</span>
+                    <span>₱${change > 0 ? change.toFixed(2) : '0.00'}</span>
+                </div>
+            `;
+
+            if (paymentMethod !== 'Cash' && referenceNo) {
+                paymentInfo += `
+                    <div class="receipt-item-row">
+                        <span style="flex: 1;">Reference No:</span>
+                        <span>${referenceNo}</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('receiptPaymentInfo').innerHTML = paymentInfo;
         }
     
         async searchAndAddProduct() {
@@ -316,10 +501,9 @@
             if (!searchTerm) return;
     
             errorDiv.style.display = 'none';
-            searchInput.disabled = true; // Prevent multiple searches
+            searchInput.disabled = true;
     
             try {
-                // Search product
                 const searchResponse = await fetch('/pos/search-product', {
                     method: 'POST',
                     headers: {
@@ -338,19 +522,14 @@
                     return;
                 }
     
-                // Check if product already exists in local items
                 const existingItemIndex = this.items.findIndex(item => item.product_id === searchData.product.id);
                 
                 if (existingItemIndex !== -1) {
-                    // Update quantity locally first for instant feedback
                     this.items[existingItemIndex].quantity_sold++;
                     this.renderItems();
                     this.updateTotal();
-                    
-                    // Then sync with server in background
                     this.syncItemQuantity(this.items[existingItemIndex].id, this.items[existingItemIndex].quantity_sold);
                 } else {
-                    // Add new item to server
                     const addResponse = await fetch('/pos/add-item', {
                         method: 'POST',
                         headers: {
@@ -368,7 +547,6 @@
                     
                     const addData = await addResponse.json();
                     if (addData.success) {
-                        // Add to local items array
                         this.items.push(addData.item);
                         this.renderItems();
                         this.updateTotal();
@@ -389,32 +567,53 @@
             }
         }
     
-        // Optimized quantity update - update locally first, then sync
         async updateQuantity(itemId, newQuantity) {
-            // Update locally first for instant response
             const itemIndex = this.items.findIndex(item => item.id === itemId);
             if (itemIndex === -1) return;
     
             if (newQuantity <= 0) {
-                // Remove item locally first
                 this.items.splice(itemIndex, 1);
                 this.renderItems();
                 this.updateTotal();
-                
-                // Then remove from server
                 this.removeItemFromServer(itemId);
             } else {
-                // Update quantity locally first
                 this.items[itemIndex].quantity_sold = newQuantity;
                 this.renderItems();
                 this.updateTotal();
-                
-                // Then sync with server
                 this.syncItemQuantity(itemId, newQuantity);
             }
         }
+
+        async setQuantity(itemId, newQuantity) {
+            newQuantity = parseInt(newQuantity);
+
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                alert("Quantity must be at least 1");
+                return;
+            }
+
+            const itemIndex = this.items.findIndex(item => item.id === itemId);
+            if (itemIndex === -1) return;
+
+            this.items[itemIndex].quantity_sold = newQuantity;
+            this.renderItems();
+            this.updateTotal();
+
+            // Sync with backend
+            try {
+                await fetch(`/pos/update-item/${itemId}`, {
+                    method: "PUT",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ quantity: newQuantity })
+                });
+            } catch (error) {
+                console.error('Error updating quantity:', error);
+            }
+        }
     
-        // Background sync with server - doesn't block UI
         async syncItemQuantity(itemId, quantity) {
             try {
                 await fetch(`/pos/update-item/${itemId}`, {
@@ -425,14 +624,11 @@
                     },
                     body: JSON.stringify({ quantity: quantity })
                 });
-                // Don't wait for response - fire and forget for better performance
             } catch (error) {
                 console.error('Background sync failed:', error);
-                // Could show a subtle notification here
             }
         }
     
-        // Background remove from server
         async removeItemFromServer(itemId) {
             try {
                 await fetch(`/pos/remove-item/${itemId}`, {
@@ -449,21 +645,18 @@
         async removeItem(itemId) {
             if (!confirm('Remove this item from sale?')) return;
     
-            // Remove locally first
             this.items = this.items.filter(item => item.id !== itemId);
             this.renderItems();
             this.updateTotal();
-            
-            // Remove from server in background
             this.removeItemFromServer(itemId);
         }
     
-        // Optimized render - only update what changed
         renderItems() {
             const itemsList = document.getElementById('itemsList');
             
             if (this.items.length === 0) {
                 itemsList.innerHTML = '<div class="text-center text-muted py-4">No items added yet</div>';
+                document.getElementById('receiptPreview').style.display = 'none';
                 return;
             }
     
@@ -475,7 +668,13 @@
                     </div>
                     <div class="quantity-controls">
                         <button class="quantity-btn" onclick="pos.updateQuantity(${item.id}, ${item.quantity_sold - 1})">-</button>
-                        <span>${item.quantity_sold}</span>
+                         <input type="number" 
+       class="qty-input" 
+       min="1" 
+       max="99999" 
+       step="1"
+       value="${item.quantity_sold}" 
+       onchange="pos.setQuantity(${item.id}, this.value)">
                         <button class="quantity-btn" onclick="pos.updateQuantity(${item.id}, ${item.quantity_sold + 1})">+</button>
                         <span class="remove-btn" onclick="pos.removeItem(${item.id})">
                             <i class="bi bi-trash"></i>
@@ -483,9 +682,10 @@
                     </div>
                 </div>
             `).join('');
+
+            this.updateReceiptPreview();
         }
     
-        // Optimized total calculation
         updateTotal() {
             this.total = this.items.reduce((sum, item) => {
                 return sum + (item.quantity_sold * parseFloat(item.unit_price));
@@ -495,6 +695,7 @@
             document.getElementById('digitalAmountInfo').textContent = `Amount: ₱${this.total.toFixed(2)}`;
             this.calculateChange();
             this.updateCompleteButton();
+            this.updateReceiptPreview();
         }
     
         handlePaymentMethodChange(method) {
@@ -515,6 +716,7 @@
             }
     
             this.updateCompleteButton();
+            this.updateReceiptPreview();
         }
     
         calculateChange() {
@@ -548,7 +750,6 @@
         }
     
         async processPayment() {
-            // For payment, we need to ensure all syncs are complete
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
             const amountTendered = parseFloat(document.getElementById('amountTendered').value) || this.total;
             const referenceNo = document.getElementById('referenceNo').value;
@@ -575,6 +776,9 @@
                 const data = await response.json();
     
                 if (data.success) {
+                    // Download PDF receipt
+                    this.downloadReceiptPDF(data.sale.id);
+                    
                     this.showReceipt(data.sale, data.change_given);
                     await this.initializeSale();
                     this.resetUI();
@@ -586,34 +790,44 @@
                 alert('Error processing payment: ' + error.message);
             }
         }
+
+        downloadReceiptPDF(saleId) {
+            // Create a hidden iframe to download the PDF
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = `/pos/receipt/${saleId}/pdf`;
+            document.body.appendChild(iframe);
+            
+            // Remove the iframe after download
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }
     
         showReceipt(sale, changeGiven) {
-            // Get cashier name from data attribute
             const cashierName = document.querySelector('.pos-container').dataset.cashierName;
-            
-            // Safely get payment information
             const paymentMethod = sale.payment && sale.payment[0] ? sale.payment[0].payment_method : 'Unknown';
             const amountTendered = sale.payment && sale.payment[0] ? sale.payment[0].amount_tendered : this.total;
             
             const receipt = `
-        Receipt - Sale #${sale.id}
-        Date: ${new Date(sale.sale_date).toLocaleString()}
-        Cashier: ${cashierName}
+Receipt - Sale #${sale.id}
+Date: ${new Date(sale.sale_date).toLocaleString()}
+Cashier: ${cashierName}
 
-        Items:
-        ${sale.items.map(item => 
-            `${item.product.name} - ${item.quantity_sold} × ₱${parseFloat(item.unit_price).toFixed(2)} = ₱${(item.quantity_sold * parseFloat(item.unit_price)).toFixed(2)}`
-        ).join('\n')}
+Items:
+${sale.items.map(item => 
+    `${item.product.name} - ${item.quantity_sold} × ₱${parseFloat(item.unit_price).toFixed(2)} = ₱${(item.quantity_sold * parseFloat(item.unit_price)).toFixed(2)}`
+).join('\n')}
 
-        Total: ₱${this.total.toFixed(2)}
-        Payment Method: ${paymentMethod}
-        Amount Tendered: ₱${amountTendered.toFixed(2)}
-        ${changeGiven > 0 ? `Change Given: ₱${changeGiven.toFixed(2)}` : ''}
+Total: ₱${this.total.toFixed(2)}
+Payment Method: ${paymentMethod}
+Amount Tendered: ₱${amountTendered.toFixed(2)}
+${changeGiven > 0 ? `Change Given: ₱${changeGiven.toFixed(2)}` : ''}
 
-        Thank you for your purchase!
+Thank you for your purchase!
             `;
 
-            alert(receipt);
+            alert('Sale completed successfully! PDF receipt downloaded.');
         }
                 
         resetUI() {
@@ -623,6 +837,7 @@
             document.getElementById('amountTendered').value = '';
             document.getElementById('referenceNo').value = '';
             document.getElementById('changeDisplay').style.display = 'none';
+            document.getElementById('receiptPreview').style.display = 'none';
             this.items = [];
             this.total = 0;
             this.renderItems();

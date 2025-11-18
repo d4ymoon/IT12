@@ -13,6 +13,10 @@ class Sale extends Model
         'customer_name',
         'customer_contact'
     ];
+
+    protected $casts = [
+        'sale_date' => 'datetime',
+    ];
     
     public function items()
     {

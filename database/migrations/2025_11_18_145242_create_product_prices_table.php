@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('product_prices', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('product_id')
+                ->unique()
+                ->constrained('products') // Ensures it links to the products table
+                ->onDelete('cascade'); // If the product is deleted, its price record is too.
+            
+            // The current selling price that will be used by the POS/Sales system
+            $table->decimal('retail_price', 10, 2); 
+            
+            // Optional, but recommended: Reference the Stock In transaction that initiated this price change.
+            $table->foreignId('stock_in_id')
+                ->nullable()
+                ->constrained('stock_ins')
+                ->onDelete('set null');
+                
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('product_prices');
+    }
+};

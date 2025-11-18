@@ -86,9 +86,15 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
+                <a href="{{ route('reports.index') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
                     <i class="bi bi-file-text me-3"></i>
                     <span>Reports</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}">
+                    <i class="bi bi-file-text me-3"></i>
+                    <span>Sales</span>
                 </a>
             </li>
             <li class="nav-item mt-4">

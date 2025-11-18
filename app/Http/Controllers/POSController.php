@@ -6,6 +6,9 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Payment;
+use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -33,6 +36,9 @@ class POSController extends Controller
             ]);
 
             DB::commit();
+
+            $sale->refresh();   // Force reload from database
+            $sale->load('items.product', 'payment');
 
             return response()->json([
                 'success' => true,
@@ -349,4 +355,16 @@ class POSController extends Controller
             ], 400);
         }
     }
+
+    public function downloadReceiptPDF(Sale $sale)
+{
+    $sale->load(['items.product', 'payment', 'user']);
+
+    if (!$sale->payment) {
+        abort(404, "Payment not found.");
+    }
+
+    return PDF::loadView('pos.receipt', compact('sale'))
+            ->download("receipt-{$sale->id}.pdf");
+}
 }

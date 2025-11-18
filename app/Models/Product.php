@@ -20,7 +20,7 @@ class Product extends Model
         'quantity_in_stock',
         'reorder_level',
         'last_unit_cost',
-        'default_supplier_id', // <--- ADD THIS LINE
+        'default_supplier_id',
         'is_active',
         'date_disabled',
         'disabled_by_user_id',
