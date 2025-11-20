@@ -198,7 +198,7 @@
                                 <button class="btn btn-sm btn-outline-warning edit-price" 
                                         data-product-id="{{ $product->id }}"
                                         data-product-name="{{ $product->name }}"
-                                        data-current-price="{{ $product->productPrice ? $product->productPrice->retail_price : '' }}"
+                                        data-current-price="{{ $product->latestProductPrice ? $product->latestProductPrice->retail_price : '' }}"
                                         title="Edit Price">
                                     <i class="bi bi-pencil"></i>
                                 </button>

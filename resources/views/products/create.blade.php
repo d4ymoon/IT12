@@ -48,7 +48,7 @@
                 @csrf
                 
                 <div class="row">
-                    <!-- Left Column (Basic Info) -->
+                    <!-- Left Column -->
                     <div class="col-md-6">
                         <h5 class="mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
                 
@@ -67,11 +67,10 @@
                         </div>
                     </div>
                 
-                    <!-- Right Column (Product Details + Inventory) -->
+                    <!-- Right Column -->
                     <div class="col-md-6">
-                        <h5 class="mb-3"><i class="bi bi-box me-2"></i>Product Details & Inventory</h5>
+                        <h5 class="mb-3"><i class="bi bi-box me-2"></i>Product Details</h5>
                 
-                        <!-- Category -->
                         <div class="mb-3">
                             <label for="category_id" class="form-label">Category <span class="text-danger">*</span></label>
                             <select class="form-select" id="category_id" name="category_id" required>
@@ -85,7 +84,6 @@
                             </select>
                         </div>
                 
-                        <!-- SKU -->
                         <div class="mb-3">
                             <label for="sku_suffix" class="form-label">SKU <span class="text-danger">*</span></label>
                             <div class="input-group">
@@ -103,7 +101,6 @@
                             </div>
                         </div>
                 
-                        <!-- Manufacturer Barcode -->
                         <div class="mb-3">
                             <label for="manufacturer_barcode" class="form-label">Manufacturer Barcode</label>
                             <input type="text" class="form-control" id="manufacturer_barcode" 
@@ -112,7 +109,6 @@
                                    placeholder="Scan or type barcode..." oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                         </div>
                 
-                        <!-- Image -->
                         <div class="mb-3">
                             <label for="image" class="form-label">Product Image</label>
                             <input type="file" class="form-control" id="image" name="image" 
@@ -121,8 +117,10 @@
                             <div id="imagePreview" class="mt-2 position-relative" style="display: inline-block;"></div>
                             <div id="imageError" class="text-danger small mt-1"></div>
                         </div>
+
+                        <hr class="my-3">
+                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Inventory & Sourcing</h5>
                 
-                        <!-- Reorder Level -->
                         <div class="mb-3">
                             <label for="reorder_level" class="form-label">Reorder Level <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="reorder_level" 
@@ -132,52 +130,28 @@
                                 Alert when stock falls below this level.
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Suppliers Section -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Primary Supplier</h5>
-                        
-                        <div class="row supplier-item bg-light border-success g-0">
-                            <div class="col-md-6 mb-3 pe-3">
-                                <label for="default_supplier_id" class="form-label">Primary Supplier <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <select class="form-select supplier-select" id="default_supplier_id" name="default_supplier_id" required>
-                                        <option value="">Select Primary Supplier</option>
-                                        @foreach($suppliers as $supplier)
-                                            <option value="{{ $supplier->id }}" {{ old('default_supplier_id') == $supplier->id ? 'selected' : '' }}>
-                                                {{ $supplier->supplier_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal" title="Quickly create a new supplier">
-                                        <i class="bi bi-plus-lg"></i>
-                                    </button>
-                                </div>
-                                <div class="form-text">This supplier is mandatory for tracking initial cost.</div>
+    
+                        <div class="mb-3">
+                            <label for="default_supplier_id" class="form-label">Default Supplier <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <select class="form-select" id="default_supplier_id" name="default_supplier_id" required>
+                                    <option value="">Select Supplier</option>
+                                    @foreach($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" {{ old('default_supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                            {{ $supplier->supplier_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addSupplierModal" title="Quickly create a new supplier">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
                             </div>
-                        </div>
-                
-                        <hr class="my-4">
-                
-                        <h5 class="mb-3"><i class="bi bi-list-columns-reverse me-2"></i>Alternate Suppliers (Optional)</h5>
-                        
-                        <div id="suppliers-container">
-                            <!-- Alternate suppliers will be added here -->
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <button type="button" class="btn btn-outline-primary" id="add-supplier">
-                                <i class="bi bi-plus-circle me-1"></i>
-                                Add Alternate Supplier
-                            </button>
+                            <div class="form-text">This supplier is used for tracking product costs and inventory.</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Form Actions -->
+                
+                <!-- Submit buttons -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <div class="d-flex justify-content-end gap-2">
@@ -233,14 +207,12 @@
 
 @push('scripts')
 <script>
-    // PASS SUPPLIERS FROM LARAVEL TO JS (CRITICAL!)
+    // PASS SUPPLIERS FROM LARAVEL TO JS
     const ALL_SUPPLIERS = @json($suppliers->map(function($s) {
         return ['id' => $s->id, 'supplier_name' => $s->supplier_name];
     }));
 
-    let sharedSupplierOptions = [];
-    let supplierCount = 0;
-    let currentSupplierModalContext = null;
+    let currentSupplierModalContext = 'primary';
 
     // Save form data to localStorage
     function saveFormData() {
@@ -251,17 +223,7 @@
             manufacturer_barcode: document.getElementById('manufacturer_barcode').value,
             reorder_level: document.getElementById('reorder_level').value,
             default_supplier_id: document.getElementById('default_supplier_id').value,
-            alternate_suppliers: []
         };
-
-        document.querySelectorAll('[id^="supplier-"]').forEach(div => {
-            const select = div.querySelector('select');
-            if (select && select.value) {
-                formData.alternate_suppliers.push({
-                    id: select.value
-                });
-            }
-        });
 
         localStorage.setItem('productFormData', JSON.stringify(formData));
     }
@@ -316,11 +278,11 @@
     });
 
     function clearImage() {
-            document.getElementById('image').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('imageError').textContent = '';
-            saveFormData();
-        }
+        document.getElementById('image').value = '';
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('imageError').textContent = '';
+        saveFormData();
+    }
 
     // Also prevent form submission if there's a large file
     document.getElementById('productForm').addEventListener('submit', function(e) {
@@ -366,75 +328,11 @@
         document.getElementById('image').value = '';
         document.getElementById('imagePreview').innerHTML = '';
         document.getElementById('imageError').textContent = '';
-
-        if (data.alternate_suppliers?.length > 0) {
-            data.alternate_suppliers.forEach(s => addSupplierRow(s.id));
-        }
     }
 
     function clearFormData() {
         localStorage.removeItem('productFormData');
     }
-
-    // Add alternate supplier row
-    function addSupplierRow(supplierId = '') {
-        supplierCount++;
-        const container = document.getElementById('suppliers-container');
-
-        const html = `
-            <div class="supplier-item" id="supplier-${supplierCount}">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">Supplier</label>
-                            <div class="input-group">
-                                <select class="form-select supplier-select" name="suppliers[${supplierCount}][id]" data-supplier-id="${supplierCount}">
-                                </select>
-                                <button type="button" class="btn btn-outline-success quick-add-supplier"
-                                        data-bs-toggle="modal" data-bs-target="#addSupplierModal"
-                                        data-context="alternate-${supplierCount}">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="mb-3">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" class="btn btn-outline-danger w-100" onclick="removeSupplier(${supplierCount})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        container.insertAdjacentHTML('beforeend', html);
-
-        // Set modal context
-        const btn = document.querySelector(`[data-context="alternate-${supplierCount}"]`);
-        btn.addEventListener('click', () => currentSupplierModalContext = btn.getAttribute('data-context'));
-
-        // Populate dropdown
-        const select = document.querySelector(`select[data-supplier-id="${supplierCount}"]`);
-        select.innerHTML = '<option value="">Select Supplier</option>';
-        sharedSupplierOptions.forEach(opt => {
-            const selected = String(opt.value) === String(supplierId);
-            select.add(new Option(opt.text, opt.value, false, selected));
-        });
-
-        saveFormData();
-    }
-
-    // Remove row
-    function removeSupplier(id) {
-        document.getElementById(`supplier-${id}`)?.remove();
-        saveFormData();
-    }
-
-    // Add supplier button
-    document.getElementById('add-supplier').addEventListener('click', () => addSupplierRow());
 
     // Primary supplier quick add context
     document.querySelector('#default_supplier_id').closest('.input-group').querySelector('.btn')
@@ -454,29 +352,15 @@
         .then(r => r.ok ? r.json() : r.text().then(t => { throw new Error(t); }))
         .then(data => {
             if (data.success) {
-                const newSupplier = { value: data.supplier.id, text: data.supplier.supplier_name };
-                sharedSupplierOptions.push(newSupplier);
-
                 // Update primary dropdown
                 const primarySelect = document.getElementById('default_supplier_id');
                 if (!Array.from(primarySelect.options).some(o => o.value == data.supplier.id)) {
                     primarySelect.add(new Option(data.supplier.supplier_name, data.supplier.id));
                 }
 
-                // Update all alternate dropdowns
-                document.querySelectorAll('.supplier-select').forEach(select => {
-                    if (!Array.from(select.options).some(o => o.value == data.supplier.id)) {
-                        select.add(new Option(data.supplier.supplier_name, data.supplier.id));
-                    }
-                });
-
-                // Auto-select
+                // Auto-select if this was for the primary supplier
                 if (currentSupplierModalContext === 'primary') {
                     primarySelect.value = data.supplier.id;
-                } else if (currentSupplierModalContext?.startsWith('alternate-')) {
-                    const rowId = currentSupplierModalContext.split('-')[1];
-                    const target = document.querySelector(`select[data-supplier-id="${rowId}"]`);
-                    if (target) target.value = data.supplier.id;
                 }
 
                 bootstrap.Modal.getInstance(document.getElementById('addSupplierModal')).hide();
@@ -503,28 +387,10 @@
 
     // PAGE LOAD
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Load all suppliers from Laravel
-        sharedSupplierOptions = ALL_SUPPLIERS.map(s => ({
-            value: s.id,
-            text: s.supplier_name
-        }));
-
-        // 2. Populate primary dropdown
-        const primarySelect = document.getElementById('default_supplier_id');
-        primarySelect.innerHTML = '<option value="">Select Primary Supplier</option>';
-        sharedSupplierOptions.forEach(opt => {
-            primarySelect.add(new Option(opt.text, opt.value));
-        });
-
-        // 3. Load saved form data
+        // Load saved form data
         loadFormData();
 
-        // 4. Add one empty row if no saved alternate suppliers
-        if (document.querySelectorAll('[id^="supplier-"]').length === 0) {
-            addSupplierRow();
-        }
-
-        // 5. Prevent leading zeros
+        // Prevent leading zeros
         ['reorder_level'].forEach(id => {
             const input = document.getElementById(id);
             if (input) {

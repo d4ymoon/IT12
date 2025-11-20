@@ -53,10 +53,10 @@ class Product extends Model
     }
 
     public function latestProductPrice()
-{
-    return $this->hasOne(ProductPrice::class)
-                ->latest('created_at'); // get the most recent price
-}
+    {
+        return $this->hasOne(ProductPrice::class)
+                    ->latest('created_at'); // get the most recent price
+    }   
   
     public function getPriceAttribute()
     {
@@ -74,13 +74,6 @@ class Product extends Model
         return $this->belongsTo(User::class, 'disabled_by_user_id')->withDefault([
             'full_name' => 'System'
         ]);
-    }
-
-    // Many-to-many relationship with suppliers
-    public function suppliers()
-    {
-        return $this->belongsToMany(Supplier::class, 'product_suppliers')
-                    ->withTimestamps();
     }
 
     // Relationship with sale items
@@ -174,5 +167,4 @@ class Product extends Model
     {
         return !$this->exists; // Only editable for new products
     }
-    
 }

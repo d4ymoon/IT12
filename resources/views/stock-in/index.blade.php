@@ -93,7 +93,6 @@
                         <th>ID</th>
                         <th>Date</th>
                         <th>Reference No</th>
-                        <th>Supplier</th>
                         <th>Received By</th>
                         <th>Items</th>
                         <th>Total Quantity</th>
@@ -107,7 +106,6 @@
                         <td>{{ $stockIn->id }}</td>
                         <td>{{ $stockIn->stock_in_date->format('Y-m-d H:i') }}</td>
                         <td>{{ $stockIn->reference_no ?? 'N/A' }}</td>
-                        <td>{{ $stockIn->supplier->supplier_name ?? 'N/A' }}</td>
                         <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $stockIn->items->count() }}</td>
                         <td>{{ $stockIn->items->sum('quantity_received') }}</td>
@@ -188,7 +186,7 @@
 
                     <!-- Items Table -->
                     <div class="mt-4">
-                        <h6 class="mb-3">Items Received</h6>
+                        <h6 class="mb-3">Items Received:</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-bordered">
                                 <thead class="table-light">

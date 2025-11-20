@@ -19,7 +19,7 @@ class ProductController extends Controller
     {
         $showArchived = $request->has('archived');
         
-        $query = Product::with(['category', 'disabledBy', 'suppliers']);
+        $query = Product::with(['category', 'disabledBy', 'defaultSupplier']); // Changed from suppliers to defaultSupplier
 
         if ($showArchived) {
             $query->archived();
@@ -79,8 +79,7 @@ class ProductController extends Controller
                 'manufacturer_barcode' => 'nullable|string|max:30|unique:products,manufacturer_barcode',
                 'reorder_level' => 'required|integer|min:0',
                 'default_supplier_id' => 'required|exists:suppliers,id',
-                'suppliers' => 'nullable|array',
-                'suppliers.*.id' => 'nullable|exists:suppliers,id', 
+                // Removed suppliers array validation
             ]);
             
             $sku = Product::generateSku($request->category_id, $request->sku_suffix);
@@ -108,7 +107,7 @@ class ProductController extends Controller
                 $imagePath = 'images/products/' . $filename;
             }
 
-            // Create the product with mandatory supplier fields
+            // Create the product with mandatory supplier field
             $product = Product::create([
                 'sku' => $sku,
                 'name' => ucfirst($request->name),
@@ -122,19 +121,7 @@ class ProductController extends Controller
                 'is_active' => true,
             ]);
 
-            // Attach the default supplier first (mandatory)
-            $suppliersToAttach = [$request->default_supplier_id];   
-
-            // Attach additional suppliers (optional)
-            if ($request->suppliers) {
-                foreach ($request->suppliers as $supplierData) {
-                    if (!empty($supplierData['id']) && $supplierData['id'] != $request->default_supplier_id) {
-                        $suppliersToAttach[] = $supplierData['id'];
-                    }
-                }
-            }
-
-            $product->suppliers()->attach($suppliersToAttach);
+            // Removed supplier attachment logic since we only have default_supplier_id now
 
             return redirect()->route('products.index')->with('success', 'Product added successfully.');
             
@@ -148,7 +135,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        $product->load(['category', 'disabledBy', 'suppliers', 'saleItems']);
+        $product->load(['category', 'disabledBy', 'defaultSupplier']); // Changed from suppliers to defaultSupplier
         return response()->json($product);
     }
 
@@ -159,7 +146,7 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $suppliers = Supplier::active()->get();
-        $product->load('suppliers');
+        // Removed loading suppliers relationship
         return view('products.edit', compact('product', 'categories', 'suppliers'));
     }
 
@@ -177,8 +164,7 @@ class ProductController extends Controller
                 'manufacturer_barcode' => 'nullable|string|max:30|unique:products,manufacturer_barcode,' . $product->id,
                 'reorder_level' => 'required|integer|min:0',
                 'default_supplier_id' => 'required|exists:suppliers,id',
-                'suppliers' => 'nullable|array',
-                'suppliers.*.id' => 'nullable|exists:suppliers,id',
+                // Removed suppliers array validation
             ]);
 
             // Handle image upload
@@ -221,19 +207,7 @@ class ProductController extends Controller
                 'default_supplier_id' => $request->default_supplier_id,
             ]);
 
-            // Sync suppliers - start with default supplier
-            $suppliersData = [$request->default_supplier_id];
-
-            // Add additional suppliers
-            if ($request->suppliers) {
-                foreach ($request->suppliers as $supplierData) {
-                    if (!empty($supplierData['id']) && $supplierData['id'] != $request->default_supplier_id) {
-                        $suppliersData[] = $supplierData['id'];
-                    }
-                }
-            }
-
-            $product->suppliers()->sync($suppliersData);
+            // Removed supplier sync logic since we only have default_supplier_id now
 
             return redirect()->route('products.index')->with('success', 'Product updated successfully.');
             

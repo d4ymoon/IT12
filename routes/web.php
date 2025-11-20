@@ -10,6 +10,8 @@ use App\Http\Controllers\StockInController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 
+use App\Http\Controllers\DashboardController;
+
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StockAdjustmentController;
@@ -29,10 +31,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected routes - require login
 Route::middleware(['auth.simple'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
-
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
     // Admin only routes
     Route::middleware(['role:Administrator'])->group(function () {
         Route::resource('roles', RoleController::class);

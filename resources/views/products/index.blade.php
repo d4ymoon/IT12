@@ -149,7 +149,7 @@
                         <th>Product Name</th>
                         <th>Category</th>
                         <th>Stock</th>
-                        <th>Suppliers</th>
+                        <th>Supplier</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
@@ -181,9 +181,11 @@
                             @endif
                         </td>                        
                         <td>
-                            <span>
-                                {{ $product->suppliers->count() }} supplier{{ $product->suppliers->count() != 1 ? 's' : '' }}
-                            </span>
+                            @if($product->defaultSupplier)
+                                <span class="fw-semibold">{{ $product->defaultSupplier->supplier_name }}</span>
+                            @else
+                                <span class="text-muted">No supplier</span>
+                            @endif
                         </td>
                         <td>{{ $product->updated_at->format('Y-m-d') }}</td>
                         <td>
@@ -210,7 +212,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             No {{ $showArchived ? 'archived' : 'active' }} products found
                         </td>
                     </tr>
@@ -294,23 +296,12 @@
                                 </div>
                                 
                                 <div class="col-5">
-                                    <small class="text-muted">Primary Supplier:</small>
+                                    <small class="text-muted">Supplier:</small>
                                 </div>
                                 <div class="col-7">
-                                    <span class="fw-semibold" id="viewPrimarySupplier">N/A</span>
+                                    <span class="fw-semibold" id="viewSupplier">N/A</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Suppliers Section -->
-                    <div class="mt-4">
-                        <h6 class="border-bottom pb-2">
-                            <i class="bi bi-truck me-2"></i>
-                            Suppliers (<span id="viewSuppliersCount">0</span>)
-                        </h6>
-                        <div id="viewSuppliersList" class="mt-2">
-                            <!-- Suppliers will be populated here -->
                         </div>
                     </div>
 
@@ -435,49 +426,12 @@
                             imageElement.alt = 'No image available';
                         }
                         
-                        // Handle suppliers display
-                        const suppliersList = document.getElementById('viewSuppliersList');
-                        const suppliersCount = document.getElementById('viewSuppliersCount');
-                        const primarySupplier = document.getElementById('viewPrimarySupplier');
-                        
-                        if (product.suppliers && product.suppliers.length > 0) {
-                            suppliersCount.textContent = product.suppliers.length;
-                            
-                            // Find primary supplier
-                            const primary = product.suppliers.find(supplier => supplier.id === product.default_supplier_id);
-                            if (primary) {
-                                primarySupplier.textContent = `${primary.supplier_name}`;
-                                primarySupplier.innerHTML;
-                            } else {
-                                primarySupplier.textContent = 'Not set';
-                            }
-                            
-                            // Build suppliers list
-                            let suppliersHtml = '';
-                            product.suppliers.forEach(supplier => {
-                                const isPrimary = supplier.id === product.default_supplier_id;
-                                suppliersHtml += `
-                                    <div class="supplier-item border rounded p-2 mb-2 ${isPrimary ? 'bg-success bg-opacity-10 border-success' : ''}">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <strong>${supplier.supplier_name}</strong>
-                                                ${isPrimary ? '<span>(Primary)</span>' : ''}
-                                                <br>
-                                                <small class="text-muted">Supplier</small>
-                                            </div>
-                                            <div class="text-end">
-                                                ${supplier.contactNO ? `<small class="text-muted d-block">${supplier.contactNO}</small>` : ''}
-                                                ${supplier.address ? `<small class="text-muted">${supplier.address}</small>` : ''}
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            suppliersList.innerHTML = suppliersHtml;
+                        // Handle supplier display
+                        const supplierElement = document.getElementById('viewSupplier');
+                        if (product.default_supplier) {
+                            supplierElement.textContent = product.default_supplier.supplier_name;
                         } else {
-                            suppliersCount.textContent = '0';
-                            primarySupplier.textContent = 'No suppliers';
-                            suppliersList.innerHTML = '<div class="text-center text-muted py-3">No suppliers assigned to this product</div>';
+                            supplierElement.textContent = 'No supplier assigned';
                         }
                         
                         // Handle archive info

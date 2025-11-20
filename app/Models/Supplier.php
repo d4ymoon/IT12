@@ -32,14 +32,6 @@ class Supplier extends Model
         ]);
     }
 
-    // Relationship with products (many-to-many through product_suppliers)
-    public function products()
-    {
-        return $this->belongsToMany(Product::class, 'product_suppliers')
-                    ->withPivot('default_unit_cost')
-                    ->withTimestamps();
-    }
-
     // Relationship with stock ins
     public function stockIns()
     {

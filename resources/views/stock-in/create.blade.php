@@ -157,341 +157,344 @@
     </div>
 
     @push('scripts')
-    <script>
-        let itemCount = 0;
-        const addedProducts = new Set();
-    
-        // Product data from Laravel
-        const PRODUCTS_DATA = @php 
-        echo json_encode($products->map(function($product) {
+        <script>
+            let itemCount = 0;
+            const addedProducts = new Set();
+        
+            // Product data from Laravel
+            const PRODUCTS_DATA = @php 
+            echo json_encode($products->map(function($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'latest_unit_cost' => $product->latest_unit_cost,
+                    'default_supplier_id' => $product->default_supplier_id,
+                    'default_supplier_name' => $product->defaultSupplier ? $product->defaultSupplier->supplier_name : null,
+                    'current_retail_price' => $product->latestProductPrice ? $product->latestProductPrice->retail_price : null,
+                ];
+            }));
+        @endphp;
+
+        const ALL_SUPPLIERS = @json($suppliers->map(function($supplier) {
             return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'sku' => $product->sku,
-                'latest_unit_cost' => $product->latest_unit_cost,
-                'default_supplier_id' => $product->default_supplier_id,
-                'default_supplier_name' => $product->defaultSupplier ? $product->defaultSupplier->supplier_name : null,
-                'current_retail_price' => $product->productPrice ? $product->productPrice->retail_price : null,
-                'suppliers' => $product->suppliers->map(function($supplier) { // ADDED: suppliers array
-                    return [
-                        'id' => $supplier->id,
-                        'supplier_name' => $supplier->supplier_name
-                    ];
-                })
+                'id' => $supplier->id,
+                'supplier_name' => $supplier->supplier_name
             ];
         }));
-    @endphp;
+        
+            // Add item row
+            function addItemRow(productId = '') {
+                itemCount++;
+                const container = document.getElementById('items-container');
 
-    const ALL_SUPPLIERS = @json($suppliers->map(function($supplier) {
-        return [
-            'id' => $supplier->id,
-            'supplier_name' => $supplier->supplier_name
-        ];
-    }));
-    
-        // Add item row
-        function addItemRow(productId = '') {
-            itemCount++;
-            const container = document.getElementById('items-container');
-
-            const itemHtml = `
-                <div class="item-row" id="item-${itemCount}">
-                    <div class="row">
-                        <!-- Product Selection -->
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Product <span class="text-danger">*</span></label>
-                                <select class="form-select product-select" name="items[${itemCount}][product_id]" required>
-                                    <option value="">Select Product</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Supplier Selection -->
-                        <div class="col-md-3">
-                            <div class="mb-3">
-                                <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                                <select class="form-select supplier-select" name="items[${itemCount}][supplier_id]" required>
-                                    <option value="">Select Supplier</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Quantity -->
-                        <div class="col-md-1">
-                            <div class="mb-3">
-                                <label class="form-label">Qty <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" name="items[${itemCount}][quantity_received]" min="1" required>
-                            </div>
-                        </div>
-
-                        <!-- Unit Cost -->
-                        <div class="col-md-2">
-                            <div class="mb-3">
-                                <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control unit-cost" name="items[${itemCount}][actual_unit_cost]" step="0.01" min="0" required>
+                const itemHtml = `
+                    <div class="item-row" id="item-${itemCount}">
+                        <div class="row">
+                            <!-- Product Selection -->
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Product <span class="text-danger">*</span></label>
+                                    <select class="form-select product-select" name="items[${itemCount}][product_id]" required>
+                                        <option value="">Select Product</option>
+                                    </select>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Retail Price -->
-                        <div class="col-md-2">
-                            <div class="mb-3">
-                                <label class="form-label">Retail Price <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₱</span>
-                                    <input type="number" class="form-control retail-price" name="items[${itemCount}][retail_price]" step="0.01" min="0" required>
+                            <!-- Supplier Selection -->
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                                    <select class="form-select supplier-select" name="items[${itemCount}][supplier_id]" required>
+                                        <option value="">Select Supplier</option>
+                                    </select>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Remove Button -->
-                        <div class="col-md-1">
-                            <div class="mb-3">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="button" class="btn btn-outline-danger w-100" onclick="removeItem(${itemCount})">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                            <!-- Quantity -->
+                            <div class="col-md-1">
+                                <div class="mb-3">
+                                    <label class="form-label">Qty <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" name="items[${itemCount}][quantity_received]" min="1" required>
+                                </div>
+                            </div>
+
+                            <!-- Unit Cost -->
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="number" class="form-control unit-cost" name="items[${itemCount}][actual_unit_cost]" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Retail Price -->
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label class="form-label">Retail Price <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="number" class="form-control retail-price" name="items[${itemCount}][retail_price]" step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Remove Button -->
+                            <div class="col-md-1">
+                                <div class="mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-outline-danger w-100" onclick="removeItem(${itemCount})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            container.insertAdjacentHTML('beforeend', itemHtml);
+                container.insertAdjacentHTML('beforeend', itemHtml);
 
-            // Initialize Select2 for product dropdown
-            const productSelect = $(`#item-${itemCount} .product-select`);
-            productSelect.select2({
-                placeholder: "Search for a product...",
-                allowClear: true,
-                data: PRODUCTS_DATA.map(product => ({
-                    id: product.id,
-                    text: `${product.name} (${product.sku})`,
-                    cost: product.latest_unit_cost,
-                    supplier: product.default_supplier_id,
-                    price: product.current_retail_price,
-                    suppliers: product.suppliers // Include suppliers data
-                }))
-            });
+                // Initialize Select2 for product dropdown
+                const productSelect = $(`#item-${itemCount} .product-select`);
+                productSelect.select2({
+                    placeholder: "Search for a product...",
+                    allowClear: true,
+                    data: PRODUCTS_DATA.map(product => ({
+                        id: product.id,
+                        text: `${product.name} (${product.sku})`,
+                        cost: product.latest_unit_cost,
+                        supplier: product.default_supplier_id,
+                        price: product.current_retail_price
+                        // REMOVED: suppliers data
+                    }))
+                });
 
-            // Track the current product for this row
-            let currentProductId = null;
+                // Initialize Select2 for supplier dropdown (show ALL suppliers)
+                const supplierSelect = $(`#item-${itemCount} .supplier-select`);
+                supplierSelect.select2({
+                    placeholder: "Select supplier...",
+                    allowClear: true,
+                    data: ALL_SUPPLIERS.map(supplier => ({
+                        id: supplier.id,
+                        text: supplier.supplier_name
+                    }))
+                });
 
+                // Track the current product for this row
+                let currentProductId = null;
+
+                // Handle product selection change
+                const thisItemId = itemCount;
+
+                productSelect.on('change', function () {
+                    const newProductId = this.value;
+
+                    if (currentProductId) {
+                        addedProducts.delete(parseInt(currentProductId));
+                    }
+
+                    handleProductChange(thisItemId, newProductId);
+
+                    currentProductId = newProductId;
+                });
+
+                // Auto-select product if provided
+                if (productId) {
+                    productSelect.val(productId).trigger('change');
+                }
+            }
+        
             // Handle product selection change
-            productSelect.on('change', function() {
-                const newProductId = this.value;
+            function handleProductChange(itemId, productId) {
+                const itemRow = document.getElementById(`item-${itemId}`);
                 
-                // Remove old product from tracking if it exists
-                if (currentProductId) {
-                    addedProducts.delete(parseInt(currentProductId));
-                }
-                
-                // Handle the new product selection
-                handleProductChange(itemCount, newProductId);
-                
-                // Update current product tracking
-                currentProductId = newProductId;
-            });
-
-            // Auto-select product if provided
-            if (productId) {
-                productSelect.val(productId).trigger('change');
-            }
-        }
-    
-        // Handle product selection change
-        function handleProductChange(itemId, productId) {
-        const itemRow = document.getElementById(`item-${itemId}`);
-        const supplierSelect = itemRow.querySelector('.supplier-select');
-        
-        // Clear supplier dropdown first
-        supplierSelect.innerHTML = '<option value="">Select Supplier</option>';
-        
-        if (!productId) {
-            // Product was cleared, reset supplier dropdown to show all suppliers
-            ALL_SUPPLIERS.forEach(supplier => {
-                const option = document.createElement('option');
-                option.value = supplier.id;
-                option.textContent = supplier.supplier_name;
-                supplierSelect.appendChild(option);
-            });
-            return;
-        }
-
-        // Check for duplicate product
-        if (addedProducts.has(parseInt(productId))) {
-            alert('This product has already been added to the shipment.');
-            $(`#item-${itemId} .product-select`).val('').trigger('change');
-            return;
-        }
-        
-        // Add the new product to tracking
-        addedProducts.add(parseInt(productId));
-
-        // Find product data
-        const product = PRODUCTS_DATA.find(p => p.id == productId);
-        if (!product) return;
-
-        // Populate supplier dropdown with only the product's suppliers
-        if (product.suppliers && product.suppliers.length > 0) {
-            product.suppliers.forEach(supplier => {
-                const option = document.createElement('option');
-                option.value = supplier.id;
-                option.textContent = supplier.supplier_name;
-                supplierSelect.appendChild(option);
-            });
-            
-            // Auto-select default supplier if it exists in the product's suppliers
-            if (product.default_supplier_id) {
-                const defaultSupplierExists = product.suppliers.some(s => s.id == product.default_supplier_id);
-                if (defaultSupplierExists) {
-                    supplierSelect.value = product.default_supplier_id;
-                }
-            }
-        } else {
-            // If product has no suppliers, show message
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'No suppliers available';
-            option.disabled = true;
-            supplierSelect.appendChild(option);
-        }
-
-        // Auto-fill unit cost
-        const unitCostInput = itemRow.querySelector('.unit-cost');
-        if (product.latest_unit_cost) {
-            unitCostInput.value = product.latest_unit_cost;
-            unitCostInput.classList.add('autofill-highlight');
-            setTimeout(() => unitCostInput.classList.remove('autofill-highlight'), 2000);
-        }
-
-        // Auto-fill retail price
-        const retailPriceInput = itemRow.querySelector('.retail-price');
-        if (product.current_retail_price) {
-            retailPriceInput.value = product.current_retail_price;
-            retailPriceInput.classList.add('autofill-highlight');
-            setTimeout(() => retailPriceInput.classList.remove('autofill-highlight'), 2000);
-        }
-    }
-    
-        function removeItem(itemId) {
-            const row = document.getElementById(`item-${itemId}`);
-            const select = $(row).find('.product-select');
-            const productId = select.val();
-            
-            // Remove product from tracking
-            if (productId) {
-                addedProducts.delete(parseInt(productId));
-            }
-            
-            // Destroy Select2 before removing
-            select.select2('destroy');
-            row.remove();
-        }
-    
-        // Add item button
-        document.getElementById('add-item').addEventListener('click', () => addItemRow());
-    
-        // Post Shipment
-        document.getElementById('post-shipment').addEventListener('click', function() {
-            const items = document.querySelectorAll('.item-row');
-            if (items.length === 0) {
-                alert('Please add at least one item.');
-                return;
-            }
-    
-            const referenceNo = document.getElementById('reference_no').value;
-            if (!referenceNo) {
-                alert('Please enter a reference number.');
-                return;
-            }
-    
-            // Build confirmation summary
-            let summary = `<strong>Reference:</strong> ${referenceNo}<br>`;
-            summary += `<strong>Items:</strong> ${items.length}<br><br>`;
-            
-            items.forEach((item, index) => {
-                const productSelect = $(item).find('.product-select');
-                const supplierSelect = item.querySelector('.supplier-select');
-                const quantity = item.querySelector('input[name*="quantity_received"]').value;
-                const cost = item.querySelector('.unit-cost').value;
-                const price = item.querySelector('.retail-price').value;
-                
-                if (productSelect.val() && supplierSelect.value) {
-                    const productName = productSelect.select2('data')[0]?.text || 'Unknown Product';
-                    const supplierName = supplierSelect.options[supplierSelect.selectedIndex].text;
-                    summary += `<strong>Item ${index + 1}:</strong> ${productName}<br>`;
-                    summary += `Supplier: ${supplierName} | Qty: ${quantity} | Cost: ₱${cost} | Price: ₱${price}<br><br>`;
-                }
-            });
-    
-            document.getElementById('confirmationSummary').innerHTML = summary;
-            new bootstrap.Modal(document.getElementById('confirmationModal')).show();
-        });
-    
-        document.getElementById('confirmPost').addEventListener('click', function() {
-            const formData = new FormData();
-            let hasErrors = false;
-    
-            // Basic data
-            formData.append('reference_no', document.getElementById('reference_no').value);
-            formData.append('stock_in_date', document.getElementById('stock_in_date').value);
-            formData.append('received_by_user_id', document.getElementById('received_by_user_id').value);
-    
-            // Items data
-            document.querySelectorAll('.item-row').forEach((item, index) => {
-                const productId = $(item).find('.product-select').val();
-                const supplierId = item.querySelector('.supplier-select').value;
-                const quantity = item.querySelector('input[name*="quantity_received"]').value;
-                const actualUnitCost = item.querySelector('.unit-cost').value;
-                const retailPrice = item.querySelector('.retail-price').value;
-    
-                if (!productId || !supplierId || !quantity || !actualUnitCost || !retailPrice) {
-                    alert(`Item ${index + 1} has missing fields.`);
-                    hasErrors = true;
+                if (!productId) {
+                    // Product was cleared, reset fields but keep all suppliers available
+                    resetItemFields(itemId);
                     return;
                 }
-    
-                formData.append(`items[${index}][product_id]`, productId);
-                formData.append(`items[${index}][supplier_id]`, supplierId);
-                formData.append(`items[${index}][quantity_received]`, quantity);
-                formData.append(`items[${index}][actual_unit_cost]`, actualUnitCost);
-                formData.append(`items[${index}][retail_price]`, retailPrice);
-            });
-    
-            if (hasErrors) return;
-    
-            // Submit the form
-            fetch('{{ route("stock-ins.store") }}', {
-                method: 'POST',
-                body: formData,
-                headers: { 
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json'
+
+                // Check for duplicate product
+                if (addedProducts.has(parseInt(productId))) {
+                    alert('This product has already been added to the shipment.');
+                    $(`#item-${itemId} .product-select`).val('').trigger('change');
+                    return;
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Stock In posted successfully!');
-                    window.location = "{{ route('stock-ins.index') }}";
-                } else {
-                    alert('Error: ' + (data.message || 'Unknown error occurred'));
+                
+                // Add the new product to tracking
+                addedProducts.add(parseInt(productId));
+
+                // Find product data
+                const product = PRODUCTS_DATA.find(p => p.id == productId);
+                if (!product) return;
+
+                // Auto-select default supplier if it exists
+                if (product.default_supplier_id) {
+                    $(`#item-${itemId} .supplier-select`).val(product.default_supplier_id).trigger('change');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error: ' + error.message);
+
+                // Auto-fill unit cost
+                const unitCostInput = itemRow.querySelector('.unit-cost');
+                if (product.latest_unit_cost) {
+                    unitCostInput.value = product.latest_unit_cost;
+                    unitCostInput.classList.add('autofill-highlight');
+                    setTimeout(() => unitCostInput.classList.remove('autofill-highlight'), 2000);
+                }
+
+                // Auto-fill retail price
+                const retailPriceInput = itemRow.querySelector('.retail-price');
+                if (product.current_retail_price) {
+                    retailPriceInput.value = product.current_retail_price;
+                    retailPriceInput.classList.add('autofill-highlight');
+                    setTimeout(() => retailPriceInput.classList.remove('autofill-highlight'), 2000);
+                }
+            }
+
+            // Reset item fields when product is cleared
+            function resetItemFields(itemId) {
+                const itemRow = document.getElementById(`item-${itemId}`);
+                
+                // Clear unit cost and retail price
+                itemRow.querySelector('.unit-cost').value = '';
+                itemRow.querySelector('.retail-price').value = '';
+                
+                // Clear supplier selection but keep all suppliers available
+                $(`#item-${itemId} .supplier-select`).val('').trigger('change');
+            }
+        
+            function removeItem(itemId) {
+                const row = document.getElementById(`item-${itemId}`);
+                const select = $(row).find('.product-select');
+                const productId = select.val();
+                
+                // Remove product from tracking
+                if (productId) {
+                    addedProducts.delete(parseInt(productId));
+                }
+                
+                // Destroy Select2 before removing
+                select.select2('destroy');
+                $(row).find('.supplier-select').select2('destroy');
+                row.remove();
+            }
+        
+            // Add item button
+            document.getElementById('add-item').addEventListener('click', () => addItemRow());
+        
+            // Post Shipment
+            document.getElementById('post-shipment').addEventListener('click', function() {
+                const items = document.querySelectorAll('.item-row');
+                if (items.length === 0) {
+                    alert('Please add at least one item.');
+                    return;
+                }
+        
+                const referenceNo = document.getElementById('reference_no').value;
+                if (!referenceNo) {
+                    alert('Please enter a reference number.');
+                    return;
+                }
+
+                // Validate all items have required fields
+                let hasErrors = false;
+                items.forEach((item, index) => {
+                    const productSelect = $(item).find('.product-select');
+                    const supplierSelect = $(item).find('.supplier-select');
+                    const quantity = item.querySelector('input[name*="quantity_received"]').value;
+                    const cost = item.querySelector('.unit-cost').value;
+                    const price = item.querySelector('.retail-price').value;
+                    
+                    if (!productSelect.val() || !supplierSelect.val() || !quantity || !cost || !price) {
+                        alert(`Item ${index + 1} has missing fields. Please fill in all required fields.`);
+                        hasErrors = true;
+                    }
+                });
+
+                if (hasErrors) return;
+        
+                // Build confirmation summary
+                let summary = `<strong>Reference:</strong> ${referenceNo}<br>`;
+                summary += `<strong>Items:</strong> ${items.length}<br><br>`;
+                
+                items.forEach((item, index) => {
+                    const productSelect = $(item).find('.product-select');
+                    const supplierSelect = $(item).find('.supplier-select');
+                    const quantity = item.querySelector('input[name*="quantity_received"]').value;
+                    const cost = item.querySelector('.unit-cost').value;
+                    const price = item.querySelector('.retail-price').value;
+                    
+                    const productName = productSelect.select2('data')[0]?.text || 'Unknown Product';
+                    const supplierName = supplierSelect.select2('data')[0]?.text || 'Unknown Supplier';
+                    summary += `<strong>Item ${index + 1}:</strong> ${productName}<br>`;
+                    summary += `Supplier: ${supplierName} | Qty: ${quantity} | Cost: ₱${cost} | Price: ₱${price}<br><br>`;
+                });
+        
+                document.getElementById('confirmationSummary').innerHTML = summary;
+                new bootstrap.Modal(document.getElementById('confirmationModal')).show();
             });
-        });
-    
-        // Initialize with one empty row
-        document.addEventListener('DOMContentLoaded', () => {
-            addItemRow();
-        });
-    </script>
+        
+            document.getElementById('confirmPost').addEventListener('click', function() {
+                const formData = new FormData();
+                let hasErrors = false;
+        
+                // Basic data
+                formData.append('reference_no', document.getElementById('reference_no').value);
+                formData.append('stock_in_date', document.getElementById('stock_in_date').value);
+                formData.append('received_by_user_id', document.getElementById('received_by_user_id').value);
+        
+                // Items data
+                document.querySelectorAll('.item-row').forEach((item, index) => {
+                    const productId = $(item).find('.product-select').val();
+                    const supplierId = $(item).find('.supplier-select').val();
+                    const quantity = item.querySelector('input[name*="quantity_received"]').value;
+                    const actualUnitCost = item.querySelector('.unit-cost').value;
+                    const retailPrice = item.querySelector('.retail-price').value;
+        
+                    if (!productId || !supplierId || !quantity || !actualUnitCost || !retailPrice) {
+                        alert(`Item ${index + 1} has missing fields.`);
+                        hasErrors = true;
+                        return;
+                    }
+        
+                    formData.append(`items[${index}][product_id]`, productId);
+                    formData.append(`items[${index}][supplier_id]`, supplierId);
+                    formData.append(`items[${index}][quantity_received]`, quantity);
+                    formData.append(`items[${index}][actual_unit_cost]`, actualUnitCost);
+                    formData.append(`items[${index}][retail_price]`, retailPrice);
+                });
+        
+                if (hasErrors) return;
+        
+                // Submit the form
+                fetch('{{ route("stock-ins.store") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Stock In posted successfully!');
+                        window.location = "{{ route('stock-ins.index') }}";
+                    } else {
+                        alert('Error: ' + (data.message || 'Unknown error occurred'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error: ' + error.message);
+                });
+            });
+        
+            // Initialize with one empty row
+            document.addEventListener('DOMContentLoaded', () => {
+                addItemRow();
+            });
+        </script>
     @endpush
 @endsection
