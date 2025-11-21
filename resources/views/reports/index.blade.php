@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Business Reports System</title>
+    <title>Inventory Reports System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -31,43 +31,12 @@
             margin-bottom: 1.5rem;
         }
         
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            margin-bottom: 1.5rem;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-body {
-            padding: 1.5rem;
-        }
-        
-        .stat-card {
-            text-align: center;
-            padding: 1.5rem;
-        }
-        
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-        
         .table-container {
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             overflow: hidden;
+            margin-top: 1.5rem;
         }
         
         .table th {
@@ -199,10 +168,6 @@
         }
         
         @media (max-width: 768px) {
-            .stat-value {
-                font-size: 2rem;
-            }
-            
             .table-container {
                 overflow-x: auto;
             }
@@ -291,45 +256,6 @@
                 </div>
             </form>
 
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">{{ $totalItems }}</div>
-                            <div class="stat-label">TOTAL ITEMS</div>
-                            <small class="text-muted">Product types</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">{{ $totalQuantity }}</div>
-                            <div class="stat-label">TOTAL QUANTITY</div>
-                            <small class="text-muted">Units in stock</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">${{ number_format($totalValue, 2) }}</div>
-                            <div class="stat-label">TOTAL VALUE</div>
-                            <small class="text-muted">Inventory worth</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value text-warning">{{ $lowStockItems }}</div>
-                            <div class="stat-label">LOW STOCK ITEMS</div>
-                            <small class="text-muted">Requires attention</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             @if($lowStockItems > 0)
             <div class="alert alert-warning d-flex align-items-center" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
@@ -417,45 +343,6 @@
                 </div>
             </form>
 
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">{{ $totalPurchases ?? 156 }}</div>
-                            <div class="stat-label">TOTAL PURCHASES</div>
-                            <small class="text-muted">All time</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">${{ number_format($totalSpent ?? 45230.75, 2) }}</div>
-                            <div class="stat-label">TOTAL SPENT</div>
-                            <small class="text-muted">This year</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">{{ $pendingOrders ?? 12 }}</div>
-                            <div class="stat-label">PENDING ORDERS</div>
-                            <small class="text-muted">Awaiting delivery</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card stat-card">
-                        <div class="card-body">
-                            <div class="stat-value">{{ $supplierCount ?? 8 }}</div>
-                            <div class="stat-label">SUPPLIERS</div>
-                            <small class="text-muted">Active vendors</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="table-container">
                 <div class="p-3 border-bottom">
                     <h3 class="h5 mb-0">Purchase Orders</h3>
@@ -501,8 +388,239 @@
             </div>
         </div>
 
-        <!-- Add similar sections for Sales, Supplier, and User modules following the same pattern -->
+        <!-- Sales Module -->
+        <div id="sales-module" class="module-content {{ $activeModule === 'sales' ? 'active' : '' }}">
+            <form action="{{ route('reports.index') }}" method="GET">
+                <input type="hidden" name="module" value="sales">
+                <div class="filter-section">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="salesDateFrom" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="salesDateFrom" name="dateFrom" value="{{ request('dateFrom', '2024-01-01') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="salesDateTo" class="form-label">Date To</label>
+                            <input type="date" class="form-control" id="salesDateTo" name="dateTo" value="{{ request('dateTo', '2024-12-31') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="salesCategory" class="form-label">Product Category</label>
+                            <select class="form-select" id="salesCategory" name="category">
+                                <option value="All Categories" {{ request('category', 'All Categories') === 'All Categories' ? 'selected' : '' }}>All Categories</option>
+                                <option value="Electronics" {{ request('category') === 'Electronics' ? 'selected' : '' }}>Electronics</option>
+                                <option value="Furniture" {{ request('category') === 'Furniture' ? 'selected' : '' }}>Furniture</option>
+                                <option value="Office Supplies" {{ request('category') === 'Office Supplies' ? 'selected' : '' }}>Office Supplies</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100 mb-1">
+                                <i class="fas fa-filter me-2"></i> Apply Filters
+                            </button>
+                            <a href="{{ route('reports.export.pdf', ['module' => 'sales']) }}?{{ http_build_query(request()->all()) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-file-pdf me-2"></i> Export to PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
 
+            <div class="table-container">
+                <div class="p-3 border-bottom">
+                    <h3 class="h5 mb-0">Sales Transactions</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ORDER ID</th>
+                                <th>CUSTOMER</th>
+                                <th>PRODUCT</th>
+                                <th>QUANTITY</th>
+                                <th>UNIT PRICE</th>
+                                <th>TOTAL AMOUNT</th>
+                                <th>ORDER DATE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sales ?? [] as $sale)
+                            <tr>
+                                <td><span class="product-code">{{ $sale->order_id }}</span></td>
+                                <td>{{ $sale->customer }}</td>
+                                <td>{{ $sale->product }}</td>
+                                <td>{{ $sale->quantity }}</td>
+                                <td>${{ number_format($sale->unit_price, 2) }}</td>
+                                <td class="total-value">${{ number_format($sale->total_amount, 2) }}</td>
+                                <td>{{ $sale->order_date }}</td>
+                                <td>
+                                    @if($sale->status === 'Completed')
+                                        <span class="status-completed">{{ $sale->status }}</span>
+                                    @else
+                                        <span class="status-pending">{{ $sale->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Module -->
+        <div id="supplier-module" class="module-content {{ $activeModule === 'supplier' ? 'active' : '' }}">
+            <form action="{{ route('reports.index') }}" method="GET">
+                <input type="hidden" name="module" value="supplier">
+                <div class="filter-section">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="supplierStatus" class="form-label">Status</label>
+                            <select class="form-select" id="supplierStatus" name="status">
+                                <option value="All Status" {{ request('status', 'All Status') === 'All Status' ? 'selected' : '' }}>All Status</option>
+                                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+                                <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="supplierCategory" class="form-label">Category</label>
+                            <select class="form-select" id="supplierCategory" name="category">
+                                <option value="All Categories" {{ request('category', 'All Categories') === 'All Categories' ? 'selected' : '' }}>All Categories</option>
+                                <option value="Electronics" {{ request('category') === 'Electronics' ? 'selected' : '' }}>Electronics</option>
+                                <option value="Furniture" {{ request('category') === 'Furniture' ? 'selected' : '' }}>Furniture</option>
+                                <option value="Office Supplies" {{ request('category') === 'Office Supplies' ? 'selected' : '' }}>Office Supplies</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary w-100 mb-1">
+                                <i class="fas fa-filter me-2"></i> Apply Filters
+                            </button>
+                            <a href="{{ route('reports.export.pdf', ['module' => 'supplier']) }}?{{ http_build_query(request()->all()) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-file-pdf me-2"></i> Export to PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-container">
+                <div class="p-3 border-bottom">
+                    <h3 class="h5 mb-0">Supplier Information</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>SUPPLIER ID</th>
+                                <th>SUPPLIER NAME</th>
+                                <th>CONTACT PERSON</th>
+                                <th>EMAIL</th>
+                                <th>PHONE</th>
+                                <th>PRODUCT CATEGORY</th>
+                                <th>TOTAL ORDERS</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($suppliers ?? [] as $supplier)
+                            <tr>
+                                <td><span class="product-code">{{ $supplier->supplier_id }}</span></td>
+                                <td>{{ $supplier->supplier_name }}</td>
+                                <td>{{ $supplier->contact_person }}</td>
+                                <td>{{ $supplier->email }}</td>
+                                <td>{{ $supplier->phone }}</td>
+                                <td>{{ $supplier->product_category }}</td>
+                                <td>{{ $supplier->total_orders }}</td>
+                                <td>
+                                    @if($supplier->status === 'Active')
+                                        <span class="status-active">{{ $supplier->status }}</span>
+                                    @else
+                                        <span class="status-out-of-stock">{{ $supplier->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Module -->
+        <div id="user-module" class="module-content {{ $activeModule === 'user' ? 'active' : '' }}">
+            <form action="{{ route('reports.index') }}" method="GET">
+                <input type="hidden" name="module" value="user">
+                <div class="filter-section">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label for="userRole" class="form-label">Role</label>
+                            <select class="form-select" id="userRole" name="role">
+                                <option value="All Roles" {{ request('role', 'All Roles') === 'All Roles' ? 'selected' : '' }}>All Roles</option>
+                                <option value="Admin" {{ request('role') === 'Admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="Manager" {{ request('role') === 'Manager' ? 'selected' : '' }}>Manager</option>
+                                <option value="Staff" {{ request('role') === 'Staff' ? 'selected' : '' }}>Staff</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="userStatus" class="form-label">Status</label>
+                            <select class="form-select" id="userStatus" name="status">
+                                <option value="All Status" {{ request('status', 'All Status') === 'All Status' ? 'selected' : '' }}>All Status</option>
+                                <option value="Active" {{ request('status') === 'Active' ? 'selected' : '' }}>Active</option>
+                                <option value="Inactive" {{ request('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary w-100 mb-1">
+                                <i class="fas fa-filter me-2"></i> Apply Filters
+                            </button>
+                            <a href="{{ route('reports.export.pdf', ['module' => 'user']) }}?{{ http_build_query(request()->all()) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-file-pdf me-2"></i> Export to PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-container">
+                <div class="p-3 border-bottom">
+                    <h3 class="h5 mb-0">User Management</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>USER ID</th>
+                                <th>FULL NAME</th>
+                                <th>EMAIL</th>
+                                <th>ROLE</th>
+                                <th>DEPARTMENT</th>
+                                <th>LAST LOGIN</th>
+                                <th>JOIN DATE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($users ?? [] as $user)
+                            <tr>
+                                <td><span class="product-code">{{ $user->user_id }}</span></td>
+                                <td>{{ $user->name }}</td>
+                                <td>{{ $user->email }}</td>
+                                <td>{{ $user->role }}</td>
+                                <td>{{ $user->department }}</td>
+                                <td>{{ $user->last_login }}</td>
+                                <td>{{ $user->join_date }}</td>
+                                <td>
+                                    @if($user->status === 'Active')
+                                        <span class="status-active">{{ $user->status }}</span>
+                                    @else
+                                        <span class="status-out-of-stock">{{ $user->status }}</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -538,3 +656,5 @@
     </script>
 </body>
 </html>
+
+

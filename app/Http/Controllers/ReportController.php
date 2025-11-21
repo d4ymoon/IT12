@@ -3,11 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Inventory;
-use App\Models\Purchase;
-use App\Models\Sale;
-use App\Models\Supplier;
-use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
@@ -42,7 +37,7 @@ class ReportController extends Controller
     
     private function getInventoryData(Request $request)
     {
-        // For demo purposes - in real app, this would query the database
+        // Demo data
         $inventory = [
             (object)[
                 'product_code' => 'PRD-001',
@@ -60,24 +55,38 @@ class ReportController extends Controller
                 'unit_price' => 349.99,
                 'last_updated' => '2024-11-14'
             ],
-            // Add more demo data...
+            (object)[
+                'product_code' => 'PRD-003',
+                'product_name' => 'Wireless Mouse',
+                'category' => 'Electronics',
+                'quantity' => 0,
+                'unit_price' => 29.99,
+                'last_updated' => '2024-11-10'
+            ],
+            (object)[
+                'product_code' => 'PRD-004',
+                'product_name' => 'Standing Desk',
+                'category' => 'Furniture',
+                'quantity' => 23,
+                'unit_price' => 599.99,
+                'last_updated' => '2024-11-16'
+            ],
+            (object)[
+                'product_code' => 'PRD-005',
+                'product_name' => 'Monitor 27" 4K',
+                'category' => 'Electronics',
+                'quantity' => 18,
+                'unit_price' => 449.99,
+                'last_updated' => '2024-11-15'
+            ],
         ];
 
-        $totalItems = count($inventory);
-        $totalQuantity = array_sum(array_column($inventory, 'quantity'));
-        $totalValue = 0;
-        foreach ($inventory as $item) {
-            $totalValue += $item->quantity * $item->unit_price;
-        }
         $lowStockItems = count(array_filter($inventory, function($item) {
             return $item->quantity < 5;
         }));
 
         return [
             'inventory' => $inventory,
-            'totalItems' => $totalItems,
-            'totalQuantity' => $totalQuantity,
-            'totalValue' => $totalValue,
             'lowStockItems' => $lowStockItems
         ];
     }
@@ -96,22 +105,30 @@ class ReportController extends Controller
                 'order_date' => '2024-11-10',
                 'status' => 'Completed'
             ],
-            // Add more demo data...
+            (object)[
+                'order_id' => 'PO-2024-002',
+                'supplier' => 'Office Furniture Co.',
+                'product' => 'Office Chair Executive',
+                'quantity' => 15,
+                'unit_cost' => 280.00,
+                'total_cost' => 4200.00,
+                'order_date' => '2024-11-12',
+                'status' => 'Completed'
+            ],
+            (object)[
+                'order_id' => 'PO-2024-003',
+                'supplier' => 'Global Electronics',
+                'product' => 'Wireless Mouse',
+                'quantity' => 50,
+                'unit_cost' => 22.50,
+                'total_cost' => 1125.00,
+                'order_date' => '2024-11-15',
+                'status' => 'Pending'
+            ],
         ];
 
-        $totalPurchases = count($purchases);
-        $totalSpent = array_sum(array_column($purchases, 'total_cost'));
-        $pendingOrders = count(array_filter($purchases, function($purchase) {
-            return $purchase->status === 'Pending';
-        }));
-        $supplierCount = count(array_unique(array_column($purchases, 'supplier')));
-
         return [
-            'purchases' => $purchases,
-            'totalPurchases' => $totalPurchases,
-            'totalSpent' => $totalSpent,
-            'pendingOrders' => $pendingOrders,
-            'supplierCount' => $supplierCount
+            'purchases' => $purchases
         ];
     }
     
@@ -129,20 +146,30 @@ class ReportController extends Controller
                 'order_date' => '2024-11-12',
                 'status' => 'Completed'
             ],
-            // Add more demo data...
+            (object)[
+                'order_id' => 'SO-2024-002',
+                'customer' => 'XYZ Enterprises',
+                'product' => 'Office Chair Executive',
+                'quantity' => 8,
+                'unit_price' => 349.99,
+                'total_amount' => 2799.92,
+                'order_date' => '2024-11-14',
+                'status' => 'Completed'
+            ],
+            (object)[
+                'order_id' => 'SO-2024-003',
+                'customer' => 'Global Tech Inc.',
+                'product' => 'Monitor 27" 4K',
+                'quantity' => 3,
+                'unit_price' => 449.99,
+                'total_amount' => 1349.97,
+                'order_date' => '2024-11-16',
+                'status' => 'Completed'
+            ],
         ];
 
-        $totalRevenue = array_sum(array_column($sales, 'total_amount'));
-        $totalOrders = count($sales);
-        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
-        $activeCustomers = count(array_unique(array_column($sales, 'customer')));
-
         return [
-            'sales' => $sales,
-            'totalRevenue' => $totalRevenue,
-            'totalOrders' => $totalOrders,
-            'avgOrderValue' => $avgOrderValue,
-            'activeCustomers' => $activeCustomers
+            'sales' => $sales
         ];
     }
     
@@ -160,22 +187,30 @@ class ReportController extends Controller
                 'total_orders' => 45,
                 'status' => 'Active'
             ],
-            // Add more demo data...
+            (object)[
+                'supplier_id' => 'SUP-002',
+                'supplier_name' => 'Office Furniture Co.',
+                'contact_person' => 'Sarah Johnson',
+                'email' => 'sarah@officefurniture.com',
+                'phone' => '(555) 234-5678',
+                'product_category' => 'Furniture',
+                'total_orders' => 38,
+                'status' => 'Active'
+            ],
+            (object)[
+                'supplier_id' => 'SUP-003',
+                'supplier_name' => 'Global Electronics',
+                'contact_person' => 'Mike Chen',
+                'email' => 'mike@globalelectronics.com',
+                'phone' => '(555) 345-6789',
+                'product_category' => 'Electronics',
+                'total_orders' => 27,
+                'status' => 'Active'
+            ],
         ];
 
-        $totalSuppliers = count($suppliers);
-        $activeSuppliers = count(array_filter($suppliers, function($supplier) {
-            return $supplier->status === 'Active';
-        }));
-        $totalSpent = 45230.75; // This would be calculated from purchases in real app
-        $totalOrders = array_sum(array_column($suppliers, 'total_orders'));
-
         return [
-            'suppliers' => $suppliers,
-            'totalSuppliers' => $totalSuppliers,
-            'activeSuppliers' => $activeSuppliers,
-            'totalSpent' => $totalSpent,
-            'totalOrders' => $totalOrders
+            'suppliers' => $suppliers
         ];
     }
     
@@ -193,26 +228,30 @@ class ReportController extends Controller
                 'join_date' => '2023-01-15',
                 'status' => 'Active'
             ],
-            // Add more demo data...
+            (object)[
+                'user_id' => 'USR-002',
+                'name' => 'Sarah Manager',
+                'email' => 'sarah.manager@company.com',
+                'role' => 'Manager',
+                'department' => 'Sales',
+                'last_login' => '2024-11-16 08:30',
+                'join_date' => '2023-03-20',
+                'status' => 'Active'
+            ],
+            (object)[
+                'user_id' => 'USR-003',
+                'name' => 'Mike Technician',
+                'email' => 'mike.tech@company.com',
+                'role' => 'Staff',
+                'department' => 'IT',
+                'last_login' => '2024-11-15 14:20',
+                'join_date' => '2023-06-10',
+                'status' => 'Active'
+            ],
         ];
 
-        $totalUsers = count($users);
-        $activeUsers = count(array_filter($users, function($user) {
-            return $user->status === 'Active';
-        }));
-        $adminUsers = count(array_filter($users, function($user) {
-            return $user->role === 'Admin';
-        }));
-        $staffUsers = count(array_filter($users, function($user) {
-            return $user->role === 'Staff';
-        }));
-
         return [
-            'users' => $users,
-            'totalUsers' => $totalUsers,
-            'activeUsers' => $activeUsers,
-            'adminUsers' => $adminUsers,
-            'staffUsers' => $staffUsers
+            'users' => $users
         ];
     }
     

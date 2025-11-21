@@ -56,6 +56,7 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/suppliers/quick-add', [SupplierController::class, 'quickAdd'])->name('suppliers.quick-add');
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        
         Route::get('/reports/export-pdf/{module}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 
 
