@@ -160,7 +160,7 @@
                     @endphp
                     <tr>
                         <td>{{ $adjustment->id }}</td>
-                        <td>{{ $adjustment->adjustment_date->format('Y-m-d H:i') }}</td>
+                        <td>{{ $adjustment->adjustment_date->format('M d, Y h:i A') }}</td>
                         <td class="
                             @if($adjustment->adjustment_type == 'Damage/Scrap') text-danger
                             @elseif($adjustment->adjustment_type == 'Found Stock') text-success
@@ -313,7 +313,11 @@
                     .then(adjustment => {
                         // Populate header information
                         document.getElementById('viewAdjustmentId').textContent = adjustment.id;
-                        document.getElementById('viewAdjustmentDate').textContent = new Date(adjustment.adjustment_date).toLocaleString();
+                        document.getElementById('viewAdjustmentDate').textContent = new Date(adjustment.adjustment_date).toLocaleDateString('en-US', {
+                            month: 'short', day: '2-digit',  year: 'numeric'
+                        }) + ' ' + new Date(adjustment.adjustment_date).toLocaleTimeString('en-US', {
+                            hour: '2-digit', minute: '2-digit', hour12: true
+                        });
                         document.getElementById('viewAdjustmentType').textContent = adjustment.adjustment_type;
                         document.getElementById('viewProcessedBy').textContent = adjustment.processed_by.full_name;
                         document.getElementById('viewTotalItems').textContent = adjustment.items.length;

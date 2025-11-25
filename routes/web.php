@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
 
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StockAdjustmentController;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +34,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth.simple'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
+    Route::get('/dashboard/sales-chart-data', [DashboardController::class, 'getSalesChartData']);
     // Admin only routes
     Route::middleware(['role:Administrator'])->group(function () {
         Route::resource('roles', RoleController::class);
@@ -82,6 +84,9 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('/product-prices', [ProductPriceController::class, 'index'])->name('product-prices.index');
         Route::post('/product-prices/update', [ProductPriceController::class, 'update'])->name('product-prices.update');
         Route::get('/api/product-prices/{product}/history', [ProductPriceController::class, 'priceHistory']);
+
+        Route::resource('returns', ReturnController::class);
+        Route::get('/returns/get-sale/{saleId}', [ReturnController::class, 'getSaleDetails'])->name('returns.get-sale-details');
     });
 
     // Both admin and employee can access these

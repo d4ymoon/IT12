@@ -6,23 +6,31 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold" style="color: #06448a;">Dashboard</h2>
     <div class="d-flex">
-        <div class="input-group me-2" style="width: 300px;">
-            <span class="input-group-text bg-white border-end-0">
-                <i class="bi bi-search text-muted"></i>
-            </span>
-            <input type="text" class="form-control border-start-0" placeholder="Search...">
-        </div>
-        <div class="dropdown">
+        <div class="dropdown me-2">
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="bi bi-filter me-1"></i> Filter
+                <i class="bi bi-filter me-1"></i> 
+                <span id="currentFilterLabel">
+                    @if(request('filter_type') == 'custom')
+                        Custom: {{ request('start_date') }} to {{ request('end_date') }}
+                    @else
+                        {{ ucfirst(request('filter', 'this month')) }}
+                    @endif
+                </span>
             </button>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">Today</a></li>
-                <li><a class="dropdown-item" href="#">This Week</a></li>
-                <li><a class="dropdown-item" href="#">This Month</a></li>
-                <li><a class="dropdown-item" href="#">This Year</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="today">Today</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="this_week">This Week</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="this_month">This Month</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="this_year">This Year</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customDateModal">Custom Range</a></li>
             </ul>
         </div>
+        @if(request('filter_type') == 'custom' || request('filter'))
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-danger">
+            <i class="bi bi-x-circle me-1"></i> Clear Filter
+        </a>
+        @endif
     </div>
 </div>
 
@@ -66,16 +74,50 @@
     </div>
 </div>
 
+<!-- Custom Date Range Modal -->
+<div class="modal fade" id="customDateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Custom Date Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="GET" action="{{ route('dashboard') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="filter_type" value="custom">
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="{{ request('start_date', Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')) }}" 
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="{{ request('end_date', Carbon\Carbon::now()->format('Y-m-d')) }}" 
+                               required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Charts and Data -->
 <div class="row mb-4">
     <div class="col-md-8 mb-3">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Sales Overview</span>
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-light active">Daily</button>
-                    <button type="button" class="btn btn-outline-light">Weekly</button>
-                    <button type="button" class="btn btn-outline-light">Monthly</button>
+                <div class="btn-group btn-group-sm" id="salesChartType">
+                    <button type="button" class="btn btn-outline-primary" data-type="daily">Daily</button>
+                    <button type="button" class="btn btn-outline-primary active" data-type="weekly">Weekly</button>
+                    <button type="button" class="btn btn-outline-primary" data-type="monthly">Monthly</button>
+                    <button type="button" class="btn btn-outline-primary" data-type="yearly">Yearly</button>
                 </div>
             </div>
             <div class="card-body">
@@ -301,119 +343,224 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Sales Chart (Revenue Trend)
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(salesCtx, {
-            type: 'line',
-            data: {
-                labels: @json($salesTrend['labels']),
-                datasets: [{
-                    label: 'Revenue (₱)',
-                    data: @json($salesTrend['data']),
-                    borderColor: '#06448a',
-                    backgroundColor: 'rgba(6, 68, 138, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
+        let salesChart;
+        let topProductsChart;
+        let categoryChart;
+
+        // Filter functionality
+        const filterOptions = document.querySelectorAll('.filter-option');
+        const currentFilterLabel = document.getElementById('currentFilterLabel');
+        
+        filterOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.getAttribute('data-filter');
+                
+                // Update URL with filter parameter
+                const url = new URL(window.location.href);
+                url.searchParams.set('filter', filter);
+                url.searchParams.delete('filter_type');
+                url.searchParams.delete('start_date');
+                url.searchParams.delete('end_date');
+                
+                window.location.href = url.toString();
+            });
         });
 
-        // Top Products Chart (Bar Chart)
-        const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-        const topProductsChart = new Chart(topProductsCtx, {
-            type: 'bar',
-            data: {
-                labels: @json($topProducts['labels']),
-                datasets: [{
-                    label: 'Quantity Sold',
-                    data: @json($topProducts['data']),
-                    backgroundColor: [
-                        '#06448a',
-                        '#28a745',
-                        '#ffc107',
-                        '#dc3545',
-                        '#6f42c1'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
+        // Date validation for custom range
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
+        
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = this.value;
+                if (new Date(endDateInput.value) < new Date(this.value)) {
+                    endDateInput.value = this.value;
                 }
-            }
+            });
+            
+            endDateInput.addEventListener('change', function() {
+                if (new Date(this.value) < new Date(startDateInput.value)) {
+                    this.value = startDateInput.value;
+                }
+            });
+        }
+
+        // Sales Chart Type Selector
+        const salesChartTypeButtons = document.querySelectorAll('#salesChartType button');
+        salesChartTypeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                salesChartTypeButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Update chart data based on selected type
+                const chartType = this.getAttribute('data-type');
+                updateSalesChart(chartType);
+            });
         });
 
-        // Category Chart (Pie Chart)
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        const categoryChart = new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: @json($categorySales['labels']),
-                datasets: [{
-                    data: @json($categorySales['data']),
-                    backgroundColor: [
-                        '#06448a',
-                        '#28a745',
-                        '#ffc107',
-                        '#dc3545',
-                        '#6f42c1',
-                        '#17a2b8',
-                        '#6c757d'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+        // Initialize Charts
+        initializeCharts();
+
+        function initializeCharts() {
+            // Sales Chart (Revenue Trend)
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: @json($salesTrend['labels']),
+                    datasets: [{
+                        label: 'Revenue (₱)',
+                        data: @json($salesTrend['data']),
+                        borderColor: '#06448a',
+                        backgroundColor: 'rgba(6, 68, 138, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Revenue: ₱${context.parsed.y.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
                     }
                 }
-            }
-        });
+            });
+
+            // Top Products Chart (Bar Chart)
+            const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+            topProductsChart = new Chart(topProductsCtx, {
+                type: 'bar',
+                data: {
+                    labels: @json($topProducts['labels']),
+                    datasets: [{
+                        label: 'Quantity Sold',
+                        data: @json($topProducts['data']),
+                        backgroundColor: [
+                            '#06448a',
+                            '#28a745',
+                            '#ffc107',
+                            '#dc3545',
+                            '#6f42c1'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Category Chart (Pie Chart)
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @json($categorySales['labels']),
+                    datasets: [{
+                        data: @json($categorySales['data']),
+                        backgroundColor: [
+                            '#06448a',
+                            '#28a745',
+                            '#ffc107',
+                            '#dc3545',
+                            '#6f42c1',
+                            '#17a2b8',
+                            '#6c757d'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSalesChart(chartType) {
+            // Get current filter parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const filter = urlParams.get('filter');
+            const filterType = urlParams.get('filter_type');
+            const startDate = urlParams.get('start_date');
+            const endDate = urlParams.get('end_date');
+
+            // Show loading state
+            const salesChartCanvas = document.getElementById('salesChart');
+            salesChartCanvas.style.opacity = '0.5';
+
+            // Fetch updated chart data
+            fetch(`/dashboard/sales-chart-data?chart_type=${chartType}&filter=${filter}&filter_type=${filterType}&start_date=${startDate}&end_date=${endDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update chart data
+                    salesChart.data.labels = data.labels;
+                    salesChart.data.datasets[0].data = data.data;
+                    salesChart.update();
+                    
+                    // Restore opacity
+                    salesChartCanvas.style.opacity = '1';
+                })
+                .catch(error => {
+                    console.error('Error fetching chart data:', error);
+                    salesChartCanvas.style.opacity = '1';
+                });
+        }
     });
 </script>
 @endpush

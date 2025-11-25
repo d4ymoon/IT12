@@ -18,9 +18,7 @@ return new class extends Migration
             ->constrained('stock_adjustments')
             ->onDelete('cascade');
 
-            $table->foreignId('product_id')
-                    ->constrained('products')
-                    ->onDelete('cascade');
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
 
             $table->integer('quantity_change'); // +/- allowed
 

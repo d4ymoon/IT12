@@ -14,23 +14,15 @@ return new class extends Migration
         Schema::create('product_prices', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('product_id')
-                ->constrained('products') // Ensures it links to the products table
-                ->onDelete('cascade'); // If the product is deleted, its price record is too.
+            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             
             // The current selling price that will be used by the POS/Sales system
             $table->decimal('retail_price', 10, 2); 
             
             // Optional, but recommended: Reference the Stock In transaction that initiated this price change.
-            $table->foreignId('stock_in_id')
-                ->nullable()
-                ->constrained('stock_ins')
-                ->onDelete('set null');
+            $table->foreignId('stock_in_id')->nullable()->constrained('stock_ins')->onDelete('set null');
 
-            $table->foreignId('updated_by_user_id')
-                ->nullable()
-                ->constrained('users')
-                ->onDelete('set null');
+            $table->foreignId('updated_by_user_id')->nullable()->constrained('users')->onDelete('set null');
                 
             $table->timestamps();
         });

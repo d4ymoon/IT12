@@ -8,11 +8,13 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get current date range (this month as default)
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate = Carbon::now()->endOfMonth();
+        // Get date range based on filter
+        $dateRange = $this->getDateRangeFromFilter($request);
+        $startDate = $dateRange['start_date'];
+        $endDate = $dateRange['end_date'];
+        $filterType = $dateRange['filter_type'];
 
         // Total Revenue
         $totalRevenue = DB::table('sale_items')
@@ -34,8 +36,8 @@ class DashboardController extends Controller
         // Inventory Value
         $inventoryValue = $this->calculateInventoryValue();
 
-        // Sales Trend Data (last 7 days)
-        $salesTrend = $this->getSalesTrend();
+        // Sales Trend Data
+        $salesTrend = $this->getSalesTrend($startDate, $endDate, $filterType);
 
         // Top Products
         $topProducts = $this->getTopProducts($startDate, $endDate);
@@ -59,13 +61,146 @@ class DashboardController extends Controller
             'topProducts',
             'categorySales',
             'lowStockAlerts',
-            'recentAdjustments'
+            'recentAdjustments',
+            'startDate',
+            'endDate'
         ));
+    }
+
+    private function getDateRangeFromFilter(Request $request)
+    {
+        $filter = $request->get('filter', 'this_month');
+        $filterType = $request->get('filter_type', 'preset');
+
+        if ($filterType === 'custom') {
+            $startDate = Carbon::parse($request->get('start_date'))->startOfDay();
+            $endDate = Carbon::parse($request->get('end_date'))->endOfDay();
+        } else {
+            switch ($filter) {
+                case 'today':
+                    $startDate = Carbon::today()->startOfDay();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'this_week':
+                    $startDate = Carbon::now()->startOfWeek();
+                    $endDate = Carbon::now()->endOfWeek();
+                    break;
+                case 'this_year':
+                    $startDate = Carbon::now()->startOfYear();
+                    $endDate = Carbon::now()->endOfYear();
+                    break;
+                case 'this_month':
+                default:
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+            }
+        }
+
+        return [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'filter_type' => $filterType
+        ];
+    }
+
+    private function getSalesTrend($startDate, $endDate, $filterType)
+    {
+        $daysDiff = $startDate->diffInDays($endDate);
+        
+        // For longer periods, show weekly/monthly data
+        if ($daysDiff > 60) {
+            // Monthly data for long periods
+            return $this->getMonthlySalesData($startDate, $endDate);
+        } elseif ($daysDiff > 14) {
+            // Weekly data for medium periods
+            return $this->getWeeklySalesData($startDate, $endDate);
+        } else {
+            // Daily data for short periods
+            return $this->getDailySalesData($startDate, $endDate);
+        }
+    }
+
+    private function getDailySalesData($startDate, $endDate)
+    {
+        $dates = [];
+        $data = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate <= $endDate) {
+            $dates[] = $currentDate->format('M d');
+            
+            $dailyRevenue = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->whereDate('sales.sale_date', $currentDate->format('Y-m-d'))
+                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+            
+            $data[] = $dailyRevenue;
+            $currentDate->addDay();
+        }
+
+        return [
+            'labels' => $dates,
+            'data' => $data
+        ];
+    }
+
+    private function getWeeklySalesData($startDate, $endDate)
+    {
+        $labels = [];
+        $data = [];
+        $currentWeek = $startDate->copy();
+
+        while ($currentWeek <= $endDate) {
+            $weekStart = $currentWeek->copy()->startOfWeek();
+            $weekEnd = $currentWeek->copy()->endOfWeek();
+            
+            $labels[] = $weekStart->format('M d') . ' - ' . $weekEnd->format('M d');
+            
+            $weeklyRevenue = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.sale_date', [$weekStart, $weekEnd])
+                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+            
+            $data[] = $weeklyRevenue;
+            $currentWeek->addWeek();
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
+    }
+
+    private function getMonthlySalesData($startDate, $endDate)
+    {
+        $labels = [];
+        $data = [];
+        $currentMonth = $startDate->copy();
+
+        while ($currentMonth <= $endDate) {
+            $monthStart = $currentMonth->copy()->startOfMonth();
+            $monthEnd = $currentMonth->copy()->endOfMonth();
+            
+            $labels[] = $monthStart->format('M Y');
+            
+            $monthlyRevenue = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.sale_date', [$monthStart, $monthEnd])
+                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+            
+            $data[] = $monthlyRevenue;
+            $currentMonth->addMonth();
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
     }
 
     private function calculateGrossProfit($startDate, $endDate)
     {
-        // Simplified gross profit calculation using average cost
         $revenue = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
@@ -82,35 +217,11 @@ class DashboardController extends Controller
 
     private function calculateInventoryValue()
     {
-        // Calculate current stock level and value using average cost
         $inventoryValue = DB::table('products')
             ->where('is_active', true)
             ->sum(DB::raw('quantity_in_stock * COALESCE(latest_unit_cost, 0)'));
 
         return $inventoryValue;
-    }
-
-    private function getSalesTrend()
-    {
-        $dates = [];
-        $data = [];
-
-        for ($i = 6; $i >= 0; $i--) {
-            $date = Carbon::now()->subDays($i);
-            $dates[] = $date->format('D');
-            
-            $dailyRevenue = DB::table('sale_items')
-                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-                ->whereDate('sales.sale_date', $date->format('Y-m-d'))
-                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
-            
-            $data[] = $dailyRevenue;
-        }
-
-        return [
-            'labels' => $dates,
-            'data' => $data
-        ];
     }
 
     private function getTopProducts($startDate, $endDate)
@@ -193,5 +304,61 @@ class DashboardController extends Controller
                 $item->adjustment_date = Carbon::parse($item->adjustment_date);
                 return $item;
             });
+    }
+    
+    public function getSalesChartData(Request $request)
+    {
+        $chartType = $request->get('chart_type', 'daily');
+        
+        // Get date range based on filter
+        $dateRange = $this->getDateRangeFromFilter($request);
+        $startDate = $dateRange['start_date'];
+        $endDate = $dateRange['end_date'];
+        
+        // Get sales data based on chart type
+        switch ($chartType) {
+            case 'weekly':
+                $salesData = $this->getWeeklySalesData($startDate, $endDate);
+                break;
+            case 'monthly':
+                $salesData = $this->getMonthlySalesData($startDate, $endDate);
+                break;
+            case 'yearly':
+                $salesData = $this->getYearlySalesData($startDate, $endDate);
+                break;
+            case 'daily':
+            default:
+                $salesData = $this->getDailySalesData($startDate, $endDate);
+                break;
+        }
+        
+        return response()->json($salesData);
+    }
+    
+    private function getYearlySalesData($startDate, $endDate)
+    {
+        $labels = [];
+        $data = [];
+        $currentYear = $startDate->copy();
+    
+        while ($currentYear <= $endDate) {
+            $yearStart = $currentYear->copy()->startOfYear();
+            $yearEnd = $currentYear->copy()->endOfYear();
+            
+            $labels[] = $yearStart->format('Y');
+            
+            $yearlyRevenue = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.sale_date', [$yearStart, $yearEnd])
+                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+            
+            $data[] = $yearlyRevenue;
+            $currentYear->addYear();
+        }
+    
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
     }
 }

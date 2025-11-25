@@ -26,9 +26,7 @@ return new class extends Migration
 
             $table->text('reason_notes'); 
 
-            $table->foreignId('processed_by_user_id')
-                ->constrained('users')
-                ->onDelete('cascade');
+            $table->foreignId('processed_by_user_id')->constrained('users')->onDelete('cascade');
 
             $table->timestamps();
         });

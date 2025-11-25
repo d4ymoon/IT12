@@ -27,29 +27,6 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="#collapseUser" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseUser">
-                    <i class="bi bi-people me-3"></i>
-                    <span class="pe-2">User Management</span>
-                    <i class="bi bi-chevron-down ms-auto chevron"></i> 
-                </a>
-                <div class="collapse {{ request()->is('users*') || request()->is('roles*') ? 'show' : '' }}" id="collapseUser">
-                    <ul class="nav flex-column ps-3">
-                        <li class="nav-item">
-                            <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
-                                <i class="bi bi-people me-3"></i>
-                                <span>Users</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('roles.index') }}" class="nav-link {{ request()->is('roles*') ? 'active' : '' }}">
-                                <i class="bi bi-person-badge me-3"></i>
-                                <span>Roles</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </li>
-            <li class="nav-item">
                 <a href="#collapseInventory" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventory">
                     <i class="bi bi-boxes me-3"></i>
                     <span class="pe-2">Products</span>
@@ -98,16 +75,39 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}">
+                    <i class="bi bi-arrow-counterclockwise me-3"></i>
+                    <span>Returns</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('reports.index') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
                     <i class="bi bi-file-text me-3"></i>
                     <span>Reports</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}">
-                    <i class="bi bi-file-text me-3"></i>
-                    <span>Sales</span>
+                <a href="#collapseUser" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseUser">
+                    <i class="bi bi-people me-3"></i>
+                    <span class="pe-2">User Management</span>
+                    <i class="bi bi-chevron-down ms-auto chevron"></i> 
                 </a>
+                <div class="collapse {{ request()->is('users*') || request()->is('roles*') ? 'show' : '' }}" id="collapseUser">
+                    <ul class="nav flex-column ps-3">
+                        <li class="nav-item">
+                            <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                                <i class="bi bi-people me-3"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('roles.index') }}" class="nav-link {{ request()->is('roles*') ? 'active' : '' }}">
+                                <i class="bi bi-person-badge me-3"></i>
+                                <span>Roles</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item mt-4">
                 <a href="#" class="nav-link {{ request()->is('settings*') ? 'active' : '' }}">

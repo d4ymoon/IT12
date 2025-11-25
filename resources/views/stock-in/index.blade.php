@@ -104,7 +104,7 @@
                     @forelse($stockIns as $stockIn)
                     <tr>
                         <td>{{ $stockIn->id }}</td>
-                        <td>{{ $stockIn->stock_in_date->format('Y-m-d H:i') }}</td>
+                        <td>{{ $stockIn->stock_in_date->format('M d, Y h:i A') }}</td>
                         <td>{{ $stockIn->reference_no ?? 'N/A' }}</td>
                         <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $stockIn->items->count() }}</td>
@@ -223,7 +223,11 @@
                     .then(response => response.json())
                     .then(stockIn => {
                         document.getElementById('viewStockInId').textContent = stockIn.id;
-                        document.getElementById('viewStockInDate').textContent = new Date(stockIn.stock_in_date).toLocaleString();
+                        document.getElementById('viewStockInDate').textContent = new Date(stockIn.stock_in_date).toLocaleDateString('en-US', {
+                            month: 'short', day: '2-digit',  year: 'numeric'
+                        }) + ' ' + new Date(stockIn.stock_in_date).toLocaleTimeString('en-US', {
+                            hour: '2-digit', minute: '2-digit', hour12: true
+                        });
                         document.getElementById('viewReferenceNo').textContent = stockIn.reference_no || 'N/A';
                         document.getElementById('viewReceivedBy').textContent = stockIn.received_by.full_name;
                         document.getElementById('viewTotalItems').textContent = stockIn.items.length;

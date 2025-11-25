@@ -47,7 +47,6 @@
                                 <th>Sale ID</th>
                                 <th>Date & Time</th>
                                 <th>Cashier</th>
-                                <th>Customer</th>
                                 <th>Items</th>
                                 <th>Total Amount</th>
                                 <th>Payment Method</th>
@@ -58,18 +57,11 @@
                             @forelse($salesData['detailedSales'] as $sale)
                             <tr>
                                 <td><strong>#{{ $sale->id }}</strong></td>
-                                <td>{{ $sale->sale_date->format('M d, Y h:i A') }}</td>
-                                <td>{{ $sale->user->f_name ?? 'N/A' }} {{ $sale->user->l_name ?? '' }}</td>
-                                <td>{{ $sale->customer_name ?: 'Walk-in Customer' }}</td>
+                                <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y h:i A') }}</td>
+                                <td>{{ $sale->f_name ?? 'N/A' }} {{ $sale->l_name ?? '' }}</td>
                                 <td>{{ $sale->items_count }} items</td>
-                                <td class="fw-bold text-success">₱{{ number_format($sale->total_amount, 2) }}</td>
-                                <td>
-                                    @if($sale->payment)
-                                        <span class="badge bg-primary">{{ $sale->payment->payment_method }}</span>
-                                    @else
-                                        <span class="badge bg-secondary">N/A</span>
-                                    @endif
-                                </td>
+                                <td>₱{{ number_format($sale->total_amount, 2) }}</td>
+                                <td>{{ $sale->payment_method ?? 'N/A' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-info btn-action view-sale" data-id="{{ $sale->id }}" title="View Details">
                                         <i class="bi bi-eye"></i>
@@ -291,7 +283,7 @@
                         document.getElementById('viewSaleNumber').textContent = '#' + sale.id;
                         document.getElementById('viewSaleDate').textContent = new Date(sale.sale_date).toLocaleString();
                         document.getElementById('viewSaleCashier').textContent = sale.user ? (sale.user.f_name + ' ' + sale.user.l_name) : 'N/A';
-                        document.getElementById('viewSaleCustomer').textContent = sale.customer_name || 'Walk-in Customer';
+                        document.getElementById('viewSaleCustomer').textContent = sale.customer_name || 'N/A';
                         document.getElementById('viewSaleContact').textContent = sale.customer_contact || 'N/A';
                         
                         // Update items table

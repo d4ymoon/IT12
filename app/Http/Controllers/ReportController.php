@@ -3,296 +3,281 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $module = $request->get('module', 'inventory');
+        // Get date range from request or default to this month
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
         
-        // Load data based on the selected module
-        switch($module) {
-            case 'inventory':
-                $data = $this->getInventoryData($request);
-                break;
-            case 'purchase':
-                $data = $this->getPurchaseData($request);
-                break;
-            case 'sales':
-                $data = $this->getSalesData($request);
-                break;
-            case 'supplier':
-                $data = $this->getSupplierData($request);
-                break;
-            case 'user':
-                $data = $this->getUserData($request);
-                break;
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Sales Reports Data
+        $salesData = $this->getSalesReportsData($startDate, $endDate);
+        $inventoryData = $this->getInventoryReportsData();
+        $financialData = $this->getFinancialReportsData($startDate, $endDate);
+
+        return view('reports.index', compact(
+            'salesData',
+            'inventoryData', 
+            'financialData',
+            'dateRange',
+            'startDate',
+            'endDate'
+        ));
+    }
+
+    private function calculateDateRange($range, $customStart = null, $customEnd = null)
+    {
+        $today = Carbon::today();
+        
+        switch ($range) {
+            case 'today':
+                return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
+            case 'yesterday':
+                return [$today->copy()->subDay(), $today->copy()->subDay()];
+            case 'thisweek':
+                return [$today->copy()->startOfWeek(), $today->copy()->endOfWeek()];
+            case 'lastweek':
+                return [$today->copy()->subWeek()->startOfWeek(), $today->copy()->subWeek()->endOfWeek()];
+            case 'thismonth':
+                return [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()];
+            case 'lastmonth':
+                return [$today->copy()->subMonth()->startOfMonth(), $today->copy()->subMonth()->endOfMonth()];
+            case 'thisyear':
+                return [$today->copy()->startOfYear(), $today->copy()->endOfYear()];
+            case 'custom':
+                return [
+                    $customStart ? Carbon::parse($customStart) : $today->copy()->startOfMonth(), 
+                    $customEnd ? Carbon::parse($customEnd) : $today->copy()->endOfMonth()
+                ];
             default:
-                $data = $this->getInventoryData($request);
+                return [$today->copy()->startOfMonth(), $today->copy()->endOfMonth()];
         }
-        
-        return view('reports.index', array_merge($data, ['activeModule' => $module]));
     }
-    
-    private function getInventoryData(Request $request)
-    {
-        // Demo data
-        $inventory = [
-            (object)[
-                'product_code' => 'PRD-001',
-                'product_name' => 'Laptop Dell XPS 15',
-                'category' => 'Electronics',
-                'quantity' => 45,
-                'unit_price' => 1299.99,
-                'last_updated' => '2024-11-15'
-            ],
-            (object)[
-                'product_code' => 'PRD-002',
-                'product_name' => 'Office Chair Executive',
-                'category' => 'Furniture',
-                'quantity' => 12,
-                'unit_price' => 349.99,
-                'last_updated' => '2024-11-14'
-            ],
-            (object)[
-                'product_code' => 'PRD-003',
-                'product_name' => 'Wireless Mouse',
-                'category' => 'Electronics',
-                'quantity' => 0,
-                'unit_price' => 29.99,
-                'last_updated' => '2024-11-10'
-            ],
-            (object)[
-                'product_code' => 'PRD-004',
-                'product_name' => 'Standing Desk',
-                'category' => 'Furniture',
-                'quantity' => 23,
-                'unit_price' => 599.99,
-                'last_updated' => '2024-11-16'
-            ],
-            (object)[
-                'product_code' => 'PRD-005',
-                'product_name' => 'Monitor 27" 4K',
-                'category' => 'Electronics',
-                'quantity' => 18,
-                'unit_price' => 449.99,
-                'last_updated' => '2024-11-15'
-            ],
-        ];
 
-        $lowStockItems = count(array_filter($inventory, function($item) {
-            return $item->quantity < 5;
-        }));
+    private function getSalesReportsData($startDate, $endDate)
+    {
+        // Sales by Date Range
+        $salesByDate = DB::table('sales')
+            ->select(
+                DB::raw('DATE(sale_date) as date'),
+                DB::raw('COUNT(*) as transaction_count'),
+                DB::raw('SUM((SELECT SUM(si.unit_price * si.quantity_sold) FROM sale_items si WHERE si.sale_id = sales.id)) as total_revenue')
+            )
+            ->whereBetween('sale_date', [$startDate, $endDate])
+            ->groupBy(DB::raw('DATE(sale_date)'))
+            ->orderBy('date')
+            ->get();
+    
+        // Detailed Sales with pagination - Fixed to include payment method directly
+        $detailedSales = DB::table('sales')
+            ->join('users', 'sales.user_id', '=', 'users.id')
+            ->leftJoin('payments', 'sales.id', '=', 'payments.sale_id')
+            ->select(
+                'sales.id',
+                'sales.sale_date',
+                'sales.customer_name',
+                'sales.customer_contact',
+                'users.f_name',
+                'users.l_name',
+                DB::raw('(SELECT COUNT(*) FROM sale_items WHERE sale_items.sale_id = sales.id) as items_count'),
+                DB::raw('(SELECT SUM(unit_price * quantity_sold) FROM sale_items WHERE sale_items.sale_id = sales.id) as total_amount'),
+                'payments.payment_method' // Get payment method directly
+            )
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->orderBy('sales.sale_date', 'desc')
+            ->paginate(10);
+    
+        // Product Performance
+        $productPerformance = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'products.name',
+                DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
+                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as total_revenue'),
+                DB::raw('AVG(sale_items.unit_price) as avg_price')
+            )
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_revenue')
+            ->limit(10)
+            ->get();
+    
+        // Category Analysis
+        $categoryAnalysis = DB::table('sale_items')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'categories.name as category_name',
+                DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
+                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as total_revenue'),
+                DB::raw('COUNT(DISTINCT sales.id) as transaction_count')
+            )
+            ->groupBy('categories.id', 'categories.name')
+            ->orderByDesc('total_revenue')
+            ->get();
+    
+        return [
+            'salesByDate' => $salesByDate,
+            'detailedSales' => $detailedSales,
+            'productPerformance' => $productPerformance,
+            'categoryAnalysis' => $categoryAnalysis,
+            'dateRange' => ['start' => $startDate, 'end' => $endDate]
+        ];
+    }
+
+    private function getInventoryReportsData()
+    {
+        // Stock Levels
+        $stockLevels = DB::table('products')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->where('products.is_active', true)
+            ->select(
+                'products.name',
+                'categories.name as category_name',
+                'products.quantity_in_stock',
+                'products.reorder_level',
+                'products.latest_unit_cost',
+                DB::raw('(products.quantity_in_stock * COALESCE(products.latest_unit_cost, 0)) as stock_value')
+            )
+            ->orderBy('products.quantity_in_stock')
+            ->get();
+
+        // Low Stock Alerts
+        $lowStockAlerts = DB::table('products')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->where('products.is_active', true)
+            ->where(function($query) {
+                $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
+                      ->orWhere('products.quantity_in_stock', 0);
+            })
+            ->select(
+                'products.name',
+                'categories.name as category_name',
+                'products.quantity_in_stock',
+                'products.reorder_level',
+                'products.latest_unit_cost'
+            )
+            ->orderBy('products.quantity_in_stock')
+            ->get();
+
+        // Stock Movement
+        $stockMovement = DB::table('stock_in_items')
+            ->join('products', 'stock_in_items.product_id', '=', 'products.id')
+            ->join('stock_ins', 'stock_in_items.stock_in_id', '=', 'stock_ins.id')
+            ->select(
+                'products.name',
+                'stock_ins.stock_in_date',
+                'stock_in_items.quantity_received',
+                'stock_in_items.actual_unit_cost',
+                DB::raw('(stock_in_items.quantity_received * stock_in_items.actual_unit_cost) as total_cost')
+            )
+            ->orderBy('stock_ins.stock_in_date', 'desc')
+            ->limit(20)
+            ->get();
+
+        // Valuation Report
+        $valuationReport = DB::table('products')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->where('products.is_active', true)
+            ->select(
+                'categories.name as category_name',
+                DB::raw('COUNT(*) as product_count'),
+                DB::raw('SUM(products.quantity_in_stock) as total_quantity'),
+                DB::raw('SUM(products.quantity_in_stock * COALESCE(products.latest_unit_cost, 0)) as total_value')
+            )
+            ->groupBy('categories.id', 'categories.name')
+            ->orderByDesc('total_value')
+            ->get();
 
         return [
-            'inventory' => $inventory,
-            'lowStockItems' => $lowStockItems
+            'stockLevels' => $stockLevels,
+            'lowStockAlerts' => $lowStockAlerts,
+            'stockMovement' => $stockMovement,
+            'valuationReport' => $valuationReport
         ];
     }
-    
-    private function getPurchaseData(Request $request)
+
+    private function getFinancialReportsData($startDate, $endDate)
     {
-        // Demo data
-        $purchases = [
-            (object)[
-                'order_id' => 'PO-2024-001',
-                'supplier' => 'Tech Supplies Inc.',
-                'product' => 'Laptop Dell XPS 15',
-                'quantity' => 10,
-                'unit_cost' => 1150.00,
-                'total_cost' => 11500.00,
-                'order_date' => '2024-11-10',
-                'status' => 'Completed'
-            ],
-            (object)[
-                'order_id' => 'PO-2024-002',
-                'supplier' => 'Office Furniture Co.',
-                'product' => 'Office Chair Executive',
-                'quantity' => 15,
-                'unit_cost' => 280.00,
-                'total_cost' => 4200.00,
-                'order_date' => '2024-11-12',
-                'status' => 'Completed'
-            ],
-            (object)[
-                'order_id' => 'PO-2024-003',
-                'supplier' => 'Global Electronics',
-                'product' => 'Wireless Mouse',
-                'quantity' => 50,
-                'unit_cost' => 22.50,
-                'total_cost' => 1125.00,
-                'order_date' => '2024-11-15',
-                'status' => 'Pending'
-            ],
-        ];
+        // Profit & Loss
+        $revenue = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+
+        $cogs = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->sum(DB::raw('sale_items.quantity_sold * COALESCE(products.latest_unit_cost, 0)'));
+
+        $grossProfit = $revenue - $cogs;
+
+        // COGS Analysis
+        $cogsAnalysis = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'categories.name as category_name',
+                DB::raw('SUM(sale_items.quantity_sold * COALESCE(products.latest_unit_cost, 0)) as total_cogs'),
+                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as total_revenue'),
+                DB::raw('SUM(sale_items.quantity_sold) as total_quantity')
+            )
+            ->groupBy('categories.id', 'categories.name')
+            ->orderByDesc('total_cogs')
+            ->get();
+
+        // Payment Methods
+        $paymentMethods = DB::table('payments')
+            ->join('sales', 'payments.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'payment_method',
+                DB::raw('COUNT(*) as transaction_count'),
+                DB::raw('SUM(amount_tendered - change_given) as total_amount')
+            )
+            ->groupBy('payment_method')
+            ->orderByDesc('total_amount')
+            ->get();
 
         return [
-            'purchases' => $purchases
+            'profitLoss' => [
+                'revenue' => $revenue,
+                'cogs' => $cogs,
+                'grossProfit' => $grossProfit,
+                'grossMargin' => $revenue > 0 ? ($grossProfit / $revenue) * 100 : 0
+            ],
+            'cogsAnalysis' => $cogsAnalysis,
+            'paymentMethods' => $paymentMethods
         ];
     }
-    
-    private function getSalesData(Request $request)
-    {
-        // Demo data
-        $sales = [
-            (object)[
-                'order_id' => 'SO-2024-001',
-                'customer' => 'ABC Corporation',
-                'product' => 'Laptop Dell XPS 15',
-                'quantity' => 5,
-                'unit_price' => 1299.99,
-                'total_amount' => 6499.95,
-                'order_date' => '2024-11-12',
-                'status' => 'Completed'
-            ],
-            (object)[
-                'order_id' => 'SO-2024-002',
-                'customer' => 'XYZ Enterprises',
-                'product' => 'Office Chair Executive',
-                'quantity' => 8,
-                'unit_price' => 349.99,
-                'total_amount' => 2799.92,
-                'order_date' => '2024-11-14',
-                'status' => 'Completed'
-            ],
-            (object)[
-                'order_id' => 'SO-2024-003',
-                'customer' => 'Global Tech Inc.',
-                'product' => 'Monitor 27" 4K',
-                'quantity' => 3,
-                'unit_price' => 449.99,
-                'total_amount' => 1349.97,
-                'order_date' => '2024-11-16',
-                'status' => 'Completed'
-            ],
-        ];
 
-        return [
-            'sales' => $sales
-        ];
-    }
-    
-    private function getSupplierData(Request $request)
+    // Export methods can be added here later
+    public function exportSalesReport(Request $request)
     {
-        // Demo data
-        $suppliers = [
-            (object)[
-                'supplier_id' => 'SUP-001',
-                'supplier_name' => 'Tech Supplies Inc.',
-                'contact_person' => 'John Smith',
-                'email' => 'john@techsupplies.com',
-                'phone' => '(555) 123-4567',
-                'product_category' => 'Electronics',
-                'total_orders' => 45,
-                'status' => 'Active'
-            ],
-            (object)[
-                'supplier_id' => 'SUP-002',
-                'supplier_name' => 'Office Furniture Co.',
-                'contact_person' => 'Sarah Johnson',
-                'email' => 'sarah@officefurniture.com',
-                'phone' => '(555) 234-5678',
-                'product_category' => 'Furniture',
-                'total_orders' => 38,
-                'status' => 'Active'
-            ],
-            (object)[
-                'supplier_id' => 'SUP-003',
-                'supplier_name' => 'Global Electronics',
-                'contact_person' => 'Mike Chen',
-                'email' => 'mike@globalelectronics.com',
-                'phone' => '(555) 345-6789',
-                'product_category' => 'Electronics',
-                'total_orders' => 27,
-                'status' => 'Active'
-            ],
-        ];
+        // PDF export functionality can be implemented here
+    }
 
-        return [
-            'suppliers' => $suppliers
-        ];
-    }
-    
-    private function getUserData(Request $request)
+    public function exportInventoryReport(Request $request)
     {
-        // Demo data
-        $users = [
-            (object)[
-                'user_id' => 'USR-001',
-                'name' => 'John Administrator',
-                'email' => 'john.admin@company.com',
-                'role' => 'Admin',
-                'department' => 'Management',
-                'last_login' => '2024-11-16 09:45',
-                'join_date' => '2023-01-15',
-                'status' => 'Active'
-            ],
-            (object)[
-                'user_id' => 'USR-002',
-                'name' => 'Sarah Manager',
-                'email' => 'sarah.manager@company.com',
-                'role' => 'Manager',
-                'department' => 'Sales',
-                'last_login' => '2024-11-16 08:30',
-                'join_date' => '2023-03-20',
-                'status' => 'Active'
-            ],
-            (object)[
-                'user_id' => 'USR-003',
-                'name' => 'Mike Technician',
-                'email' => 'mike.tech@company.com',
-                'role' => 'Staff',
-                'department' => 'IT',
-                'last_login' => '2024-11-15 14:20',
-                'join_date' => '2023-06-10',
-                'status' => 'Active'
-            ],
-        ];
+        // PDF export functionality can be implemented here
+    }
 
-        return [
-            'users' => $users
-        ];
-    }
-    
-    public function exportPdf(Request $request, $module)
+    public function exportFinancialReport(Request $request)
     {
-        // Load data based on the selected module
-        switch($module) {
-            case 'inventory':
-                $data = $this->getInventoryData($request);
-                $view = 'reports.pdf.inventory';
-                $filename = 'inventory-report-' . date('Y-m-d') . '.pdf';
-                break;
-            case 'purchase':
-                $data = $this->getPurchaseData($request);
-                $view = 'reports.pdf.purchase';
-                $filename = 'purchase-report-' . date('Y-m-d') . '.pdf';
-                break;
-            case 'sales':
-                $data = $this->getSalesData($request);
-                $view = 'reports.pdf.sales';
-                $filename = 'sales-report-' . date('Y-m-d') . '.pdf';
-                break;
-            case 'supplier':
-                $data = $this->getSupplierData($request);
-                $view = 'reports.pdf.supplier';
-                $filename = 'supplier-report-' . date('Y-m-d') . '.pdf';
-                break;
-            case 'user':
-                $data = $this->getUserData($request);
-                $view = 'reports.pdf.user';
-                $filename = 'user-report-' . date('Y-m-d') . '.pdf';
-                break;
-            default:
-                $data = $this->getInventoryData($request);
-                $view = 'reports.pdf.inventory';
-                $filename = 'inventory-report-' . date('Y-m-d') . '.pdf';
-        }
-        
-        $data['filters'] = $request->all();
-        
-        $pdf = PDF::loadView($view, $data);
-        return $pdf->download($filename);
+        // PDF export functionality can be implemented here
     }
 }

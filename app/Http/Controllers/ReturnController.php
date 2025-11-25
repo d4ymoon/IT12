@@ -1,0 +1,282 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\ProductReturn;
+use App\Models\ReturnItem;
+use App\Models\Sale;
+use App\Models\Payment;
+use App\Models\Product;
+use App\Models\SaleItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+
+class ReturnController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = ProductReturn::with(['sale', 'user', 'returnItems.product'])
+            ->orderBy('created_at', 'desc');
+
+        // Search functionality
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('return_reason', 'like', "%{$search}%")
+                ->orWhereHas('sale', function($q2) use ($search) {
+                    $q2->where('id', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Date filter
+        if ($request->has('start_date') && $request->start_date != '') {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->has('end_date') && $request->end_date != '') {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        $returns = $query->paginate(10);
+        
+        // Calculate total refunded amount for display
+        $totalRefunded = ProductReturn::when($request->has('search') && $request->search != '', function($q) use ($request) {
+                $search = $request->search;
+                $q->where(function($q2) use ($search) {
+                    $q2->where('return_reason', 'like', "%{$search}%")
+                    ->orWhereHas('sale', function($q3) use ($search) {
+                        $q3->where('id', 'like', "%{$search}%"); 
+                    });
+                });
+            })
+            ->when($request->has('start_date') && $request->start_date != '', function($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->start_date);
+            })
+            ->when($request->has('end_date') && $request->end_date != '', function($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->end_date);
+            })
+            ->sum('total_refund_amount');
+
+        return view('returns.index', compact('returns', 'totalRefunded'));
+    }
+
+    // Add show method for viewing return details
+    public function show($id)
+    {
+        $return = ProductReturn::with([
+            'sale', 
+            'user', 
+            'refundPayment',
+            'returnItems.product'
+        ])->findOrFail($id);
+
+        return response()->json($return);
+    }
+
+    public function create()
+    {
+        $recentSales = Sale::with('items')->latest()->take(5)->get();
+        return view('returns.create');
+    }
+
+    public function getSaleDetails($saleId)
+    {
+        try {
+            // Make sure to load the items relationship with product
+            $sale = Sale::with(['items.product'])->findOrFail($saleId);
+
+            // Check if sale is within 7 days
+            $saleDate = Carbon::parse($sale->sale_date);
+            $sevenDaysAgo = Carbon::now()->subDays(7);
+            
+            if ($saleDate->lt($sevenDaysAgo)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Returns are only accepted within 7 days of purchase. This sale is too old.'
+                ]);
+            }
+
+            // Check if this sale already has returns
+            $existingReturns = ProductReturn::where('sale_id', $saleId)->get();
+            $alreadyReturnedItems = [];
+            
+            if ($existingReturns->count() > 0) {
+                $returnIds = $existingReturns->pluck('id');
+                $alreadyReturnedItems = ReturnItem::whereIn('product_return_id', $returnIds)
+                    ->with('saleItem')
+                    ->get()
+                    ->groupBy('sale_item_id')
+                    ->map(function ($items) {
+                        return $items->sum('quantity_returned');
+                    });
+            }
+
+            // Check if items exist and is not null
+            if (!$sale->items) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No items found for this sale.'
+                ]);
+            }
+
+            $saleItems = $sale->items->map(function ($item) use ($alreadyReturnedItems) {
+                // Also check if product relationship is loaded
+                if (!$item->product) {
+                    return null;
+                }
+
+                $maxReturnable = $item->quantity_sold;
+                
+                if (isset($alreadyReturnedItems[$item->id])) {
+                    $maxReturnable = $item->quantity_sold - $alreadyReturnedItems[$item->id];
+                }
+
+                return [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'product_name' => $item->product->name,
+                    'product_sku' => $item->product->sku,
+                    'quantity_sold' => $item->quantity_sold,
+                    'unit_price' => $item->unit_price,
+                    'max_returnable' => max(0, $maxReturnable),
+                    'already_returned' => $alreadyReturnedItems[$item->id] ?? 0
+                ];
+            })->filter(); // Remove any null entries
+
+            // Check if we have any valid sale items
+            if ($saleItems->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid items found for this sale.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'sale' => [
+                    'id' => $sale->id,
+                    'sale_date' => $sale->sale_date,
+                    'customer_name' => $sale->customer_name,
+                    'customer_contact' => $sale->customer_contact,
+                    'total_amount' => $sale->items->sum(function ($item) {
+                        return $item->quantity_sold * $item->unit_price;
+                    }),
+                    'items' => $saleItems
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sale not found or error retrieving sale details: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'return_reason' => 'required|in:Defective,Wrong Item,Customer Change Mind,Other',
+            'notes' => 'nullable|string',
+            'refund_method' => 'required|in:Cash,GCash,Card',
+            'reference_no' => 'required_if:refund_method,GCash,Card|nullable|string|max:100',
+            'items' => 'required|array|min:1',
+            'items.*.sale_item_id' => 'required|exists:sale_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.condition' => 'required|in:resaleable,damaged',
+            'items.*.refund_amount' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get sale and verify it's within 7 days
+            $sale = Sale::findOrFail($validated['sale_id']);
+            $saleDate = Carbon::parse($sale->sale_date);
+            $sevenDaysAgo = Carbon::now()->subDays(7);
+            
+            if ($saleDate->lt($sevenDaysAgo)) {
+                return back()->withErrors(['sale_id' => 'Returns are only accepted within 7 days of purchase.']);
+            }
+
+            // Calculate total refund amount
+            $totalRefundAmount = collect($validated['items'])->sum('refund_amount');
+
+            // Create negative payment record for refund
+            $refundPayment = Payment::create([
+                'sale_id' => $sale->id,
+                'payment_method' => $validated['refund_method'],
+                'amount_tendered' => -$totalRefundAmount,
+                'change_given' => 0,
+                'reference_no' => $validated['reference_no'] ?? null,
+                'payment_date' => now()
+            ]);
+
+            // Create return header
+            $productReturn = ProductReturn::create([
+                'sale_id' => $sale->id,
+                'user_id' => session('user_id'), 
+                'refund_payment_id' => $refundPayment->id,
+                'total_refund_amount' => $totalRefundAmount,
+                'return_reason' => $validated['return_reason'],
+                'notes' => $validated['notes']
+            ]);
+
+            // Create return items and update inventory
+            foreach ($validated['items'] as $itemData) {
+                $saleItem = SaleItem::find($itemData['sale_item_id']);
+                
+                $returnItem = ReturnItem::create([
+                    'product_return_id' => $productReturn->id,
+                    'product_id' => $saleItem->product_id,
+                    'sale_item_id' => $saleItem->id,
+                    'quantity_returned' => $itemData['quantity'],
+                    'refunded_price_per_unit' => $itemData['refund_amount'] / $itemData['quantity'],
+                    'total_line_refund' => $itemData['refund_amount'],
+                    'inventory_adjusted' => $itemData['condition'] === 'resaleable'
+                ]);
+
+                // Update inventory if item is resaleable
+                if ($itemData['condition'] === 'resaleable') {
+                    $product = Product::find($saleItem->product_id);
+                    $product->quantity_in_stock += $itemData['quantity'];
+                    $product->save();
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('returns.index')
+                ->with('success', 'Return processed successfully. Total refund: $' . number_format($totalRefundAmount, 2));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to process return: ' . $e->getMessage()]);
+        }
+    }
+
+    // You can add these methods later if needed:
+    
+    // public function show($id)
+    // {
+    //     // Show individual return details
+    // }
+    
+    // public function edit($id)
+    // {
+    //     // Edit return (if needed)
+    // }
+    
+    // public function update(Request $request, $id)
+    // {
+    //     // Update return
+    // }
+    
+    // public function destroy($id)
+    // {
+    //     // Delete return
+    // }
+}
