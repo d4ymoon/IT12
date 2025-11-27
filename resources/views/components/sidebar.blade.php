@@ -80,12 +80,36 @@
                     <span>Returns</span>
                 </a>
             </li>
+
             <li class="nav-item">
-                <a href="{{ route('reports.index') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}">
-                    <i class="bi bi-file-text me-3"></i>
-                    <span>Reports</span>
+                <a href="#collapseReports" class="nav-link {{ request()->is('reports*') ? '' : 'collapsed' }}" 
+                    data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*') ? 'true' : 'false' }}" aria-controls="collapseReports">
+                    <i class="bi bi-file-text me-3"></i> <span class="pe-2">Reports</span> <i class="bi bi-chevron-down ms-auto chevron"></i> 
                 </a>
+                <div class="collapse {{ request()->is('reports*') ? 'show' : '' }}" id="collapseReports">
+                    <ul class="nav flex-column ps-3">
+                        <li class="nav-item">
+                            <a href="{{ route('reports.sales.index') }}" class="nav-link {{ request()->is('reports/sales*') ? 'active' : '' }}">
+                                <i class="bi bi-cash-stack me-3"></i>
+                                <span>Sales Reports</span>
+                            </a>                            
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.inventory.index') }}" class="nav-link {{ request()->is('reports/inventory*') ? 'active' : '' }}">
+                                <i class="bi bi-box-seam me-3"></i>
+                                <span>Inventory Reports</span>
+                            </a>                            
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('reports.financial.index') }}" class="nav-link {{ request()->is('reports/financial*') ? 'active' : '' }}">
+                                <i class="bi bi-wallet2 me-3"></i>
+                                <span>Financial Reports</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
+
             <li class="nav-item">
                 <a href="#collapseUser" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseUser">
                     <i class="bi bi-people me-3"></i>

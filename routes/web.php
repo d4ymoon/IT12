@@ -11,10 +11,12 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\DashboardController;
-
+use App\Http\Controllers\FinancialReportController;
+use App\Http\Controllers\InventoryReportController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\StockAdjustmentController;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -58,6 +60,11 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/suppliers/quick-add', [SupplierController::class, 'quickAdd'])->name('suppliers.quick-add');
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+        Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales.index');
+        Route::get('/reports/inventory', [InventoryReportController::class, 'index'])->name('reports.inventory.index');
+        Route::get('/reports/financial', [FinancialReportController::class, 'index'])->name('reports.financial.index');
+        
         
         Route::get('/reports/export-pdf/{module}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
 

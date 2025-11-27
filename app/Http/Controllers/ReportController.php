@@ -22,11 +22,13 @@ class ReportController extends Controller
         $salesData = $this->getSalesReportsData($startDate, $endDate);
         $inventoryData = $this->getInventoryReportsData();
         $financialData = $this->getFinancialReportsData($startDate, $endDate);
+        $returnsData = $this->getReturnsReportsData($startDate, $endDate);
 
         return view('reports.index', compact(
             'salesData',
             'inventoryData', 
             'financialData',
+            'returnsData',
             'dateRange',
             'startDate',
             'endDate'
@@ -64,19 +66,27 @@ class ReportController extends Controller
 
     private function getSalesReportsData($startDate, $endDate)
     {
-        // Sales by Date Range
+        // Net Sales by Date Range (Sales minus Returns)
         $salesByDate = DB::table('sales')
-            ->select(
-                DB::raw('DATE(sale_date) as date'),
-                DB::raw('COUNT(*) as transaction_count'),
-                DB::raw('SUM((SELECT SUM(si.unit_price * si.quantity_sold) FROM sale_items si WHERE si.sale_id = sales.id)) as total_revenue')
-            )
-            ->whereBetween('sale_date', [$startDate, $endDate])
-            ->groupBy(DB::raw('DATE(sale_date)'))
-            ->orderBy('date')
-            ->get();
+        ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
+        ->leftJoin('product_returns', function ($join) {
+            $join->on(DB::raw('DATE(product_returns.created_at)'), '=', DB::raw('DATE(sales.sale_date)'));
+        })
+        ->whereBetween('sales.sale_date', [$startDate, $endDate])
+        ->select(
+            DB::raw('DATE(sales.sale_date) as date'),
+            DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+            DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
+            DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
+                    COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue') // Changed to total_revenue
+        )
+        ->groupBy(DB::raw('DATE(sales.sale_date)'))
+        ->orderBy('date', 'asc')
+        ->get();
+
     
-        // Detailed Sales with pagination - Fixed to include payment method directly
+        // Detailed Sales with pagination
         $detailedSales = DB::table('sales')
             ->join('users', 'sales.user_id', '=', 'users.id')
             ->leftJoin('payments', 'sales.id', '=', 'payments.sale_id')
@@ -89,27 +99,31 @@ class ReportController extends Controller
                 'users.l_name',
                 DB::raw('(SELECT COUNT(*) FROM sale_items WHERE sale_items.sale_id = sales.id) as items_count'),
                 DB::raw('(SELECT SUM(unit_price * quantity_sold) FROM sale_items WHERE sale_items.sale_id = sales.id) as total_amount'),
-                'payments.payment_method' // Get payment method directly
+                'payments.payment_method'
             )
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
             ->orderBy('sales.sale_date', 'desc')
             ->paginate(10);
     
-        // Product Performance
-        $productPerformance = DB::table('sale_items')
-            ->join('products', 'sale_items.product_id', '=', 'products.id')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->select(
-                'products.name',
-                DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as total_revenue'),
-                DB::raw('AVG(sale_items.unit_price) as avg_price')
-            )
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('total_revenue')
-            ->limit(10)
-            ->get();
+        // Product Performance (Net of Returns)
+       // Product Performance (Net of Returns)
+$productPerformance = DB::table('sale_items')
+->join('products', 'sale_items.product_id', '=', 'products.id')
+->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+->whereBetween('sales.sale_date', [$startDate, $endDate])
+->select(
+    'products.name',
+    DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
+    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+    DB::raw('COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as returns_amount'),
+    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as total_revenue'),
+    DB::raw('AVG(sale_items.unit_price) as avg_price')
+)
+->addBinding([$startDate, $endDate, $startDate, $endDate], 'select')
+->groupBy('products.id', 'products.name')
+->orderByDesc('total_revenue') // FIXED: Changed from 'net_revenue' to 'total_revenue'
+->limit(10)
+->get();
     
         // Category Analysis
         $categoryAnalysis = DB::table('sale_items')
@@ -210,19 +224,36 @@ class ReportController extends Controller
 
     private function getFinancialReportsData($startDate, $endDate)
     {
-        // Profit & Loss
-        $revenue = DB::table('sale_items')
+        // Gross Revenue
+        $grossRevenue = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
             ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
 
-        $cogs = DB::table('sale_items')
+        // Returns Amount
+        $returnsAmount = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('total_refund_amount');
+
+        // Net Revenue
+        $netRevenue = $grossRevenue - $returnsAmount;
+
+        // COGS (adjusted for returned items that were restocked)
+        $grossCogs = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
             ->sum(DB::raw('sale_items.quantity_sold * COALESCE(products.latest_unit_cost, 0)'));
 
-        $grossProfit = $revenue - $cogs;
+        $returnedCogs = DB::table('return_items')
+            ->join('product_returns', 'return_items.product_return_id', '=', 'product_returns.id')
+            ->join('products', 'return_items.product_id', '=', 'products.id')
+            ->whereBetween('product_returns.created_at', [$startDate, $endDate])
+            ->where('return_items.inventory_adjusted', true)
+            ->sum(DB::raw('COALESCE(products.latest_unit_cost, 0) * return_items.quantity_returned'));
+
+        $netCogs = $grossCogs - $returnedCogs;
+        $grossProfit = $netRevenue - $netCogs;
 
         // COGS Analysis
         $cogsAnalysis = DB::table('sale_items')
@@ -255,13 +286,80 @@ class ReportController extends Controller
 
         return [
             'profitLoss' => [
-                'revenue' => $revenue,
-                'cogs' => $cogs,
+                'gross_revenue' => $grossRevenue,
+                'returns_amount' => $returnsAmount,
+                'net_revenue' => $netRevenue,
+                'gross_cogs' => $grossCogs,
+                'returned_cogs' => $returnedCogs,
+                'net_cogs' => $netCogs,
                 'grossProfit' => $grossProfit,
-                'grossMargin' => $revenue > 0 ? ($grossProfit / $revenue) * 100 : 0
+                'grossMargin' => $netRevenue > 0 ? ($grossProfit / $netRevenue) * 100 : 0
             ],
             'cogsAnalysis' => $cogsAnalysis,
             'paymentMethods' => $paymentMethods
+        ];
+    }
+
+    private function getReturnsReportsData($startDate, $endDate)
+    {
+        // Returns Summary
+        $returnsSummary = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                DB::raw('COUNT(*) as total_returns'),
+                DB::raw('SUM(total_refund_amount) as total_refunds'),
+                DB::raw('AVG(total_refund_amount) as avg_refund')
+            )
+            ->first();
+
+        // Returns by Reason
+        $returnsByReason = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select(
+                'return_reason',
+                DB::raw('COUNT(*) as return_count'),
+                DB::raw('SUM(total_refund_amount) as refund_amount')
+            )
+            ->groupBy('return_reason')
+            ->get();
+
+        // Returns by Product
+        $returnsByProduct = DB::table('return_items')
+            ->join('product_returns', 'return_items.product_return_id', '=', 'product_returns.id')
+            ->join('products', 'return_items.product_id', '=', 'products.id')
+            ->whereBetween('product_returns.created_at', [$startDate, $endDate])
+            ->select(
+                'products.name',
+                DB::raw('SUM(return_items.quantity_returned) as total_quantity'),
+                DB::raw('SUM(return_items.total_line_refund) as total_refund')
+            )
+            ->groupBy('products.id', 'products.name')
+            ->orderByDesc('total_refund')
+            ->get();
+
+        // Recent Returns
+        $recentReturns = DB::table('product_returns')
+            ->join('sales', 'product_returns.sale_id', '=', 'sales.id')
+            ->join('users', 'product_returns.user_id', '=', 'users.id')
+            ->whereBetween('product_returns.created_at', [$startDate, $endDate])
+            ->select(
+                'product_returns.id',
+                'product_returns.created_at',
+                'sales.id as sale_id',
+                'sales.customer_name',
+                'product_returns.total_refund_amount',
+                'product_returns.return_reason',
+                DB::raw('CONCAT(users.f_name, " ", users.l_name) as processed_by')
+            )
+            ->orderBy('product_returns.created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return [
+            'summary' => $returnsSummary,
+            'by_reason' => $returnsByReason,
+            'by_product' => $returnsByProduct,
+            'recent_returns' => $recentReturns
         ];
     }
 

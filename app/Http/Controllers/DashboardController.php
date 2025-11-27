@@ -16,11 +16,8 @@ class DashboardController extends Controller
         $endDate = $dateRange['end_date'];
         $filterType = $dateRange['filter_type'];
 
-        // Total Revenue
-        $totalRevenue = DB::table('sale_items')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+        // Total Revenue (Net of Returns)
+        $totalRevenue = $this->calculateNetRevenue($startDate, $endDate);
 
         // Total Sales Transactions
         $totalTransactions = DB::table('sales')
@@ -30,19 +27,19 @@ class DashboardController extends Controller
         // Average Order Value
         $averageOrderValue = $totalTransactions > 0 ? $totalRevenue / $totalTransactions : 0;
 
-        // Gross Profit (simplified calculation using average cost)
+        // Gross Profit (Net of Returns)
         $grossProfit = $this->calculateGrossProfit($startDate, $endDate);
 
         // Inventory Value
         $inventoryValue = $this->calculateInventoryValue();
 
-        // Sales Trend Data
+        // Sales Trend Data (Net of Returns)
         $salesTrend = $this->getSalesTrend($startDate, $endDate, $filterType);
 
-        // Top Products
+        // Top Products (Net of Returns)
         $topProducts = $this->getTopProducts($startDate, $endDate);
 
-        // Sales by Category
+        // Sales by Category (Net of Returns)
         $categorySales = $this->getCategorySales($startDate, $endDate);
 
         // Low Stock Alerts
@@ -50,6 +47,9 @@ class DashboardController extends Controller
 
         // Recent Adjustments
         $recentAdjustments = $this->getRecentAdjustments();
+
+        // Returns Data
+        $returnsData = $this->getReturnsData($startDate, $endDate);
 
         return view('dashboard', compact(
             'totalRevenue',
@@ -62,6 +62,7 @@ class DashboardController extends Controller
             'categorySales',
             'lowStockAlerts',
             'recentAdjustments',
+            'returnsData',
             'startDate',
             'endDate'
         ));
@@ -104,19 +105,56 @@ class DashboardController extends Controller
         ];
     }
 
+    private function calculateNetRevenue($startDate, $endDate)
+    {
+        // Gross Sales
+        $grossSales = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+
+        // Returns Amount
+        $returnsAmount = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('total_refund_amount');
+
+        return $grossSales - $returnsAmount;
+    }
+
+    private function calculateGrossProfit($startDate, $endDate)
+    {
+        // Net Revenue
+        $netRevenue = $this->calculateNetRevenue($startDate, $endDate);
+
+        // COGS (Cost of Goods Sold) - Adjusted for returns
+        $grossCogs = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->sum(DB::raw('COALESCE(products.latest_unit_cost, 0) * sale_items.quantity_sold'));
+
+        // COGS from returned items (items that were restocked)
+        $returnedCogs = DB::table('return_items')
+            ->join('product_returns', 'return_items.product_return_id', '=', 'product_returns.id')
+            ->join('products', 'return_items.product_id', '=', 'products.id')
+            ->whereBetween('product_returns.created_at', [$startDate, $endDate])
+            ->where('return_items.inventory_adjusted', true) // Only resaleable items
+            ->sum(DB::raw('COALESCE(products.latest_unit_cost, 0) * return_items.quantity_returned'));
+
+        $netCogs = $grossCogs - $returnedCogs;
+
+        return $netRevenue - $netCogs;
+    }
+
     private function getSalesTrend($startDate, $endDate, $filterType)
     {
         $daysDiff = $startDate->diffInDays($endDate);
         
-        // For longer periods, show weekly/monthly data
         if ($daysDiff > 60) {
-            // Monthly data for long periods
             return $this->getMonthlySalesData($startDate, $endDate);
         } elseif ($daysDiff > 14) {
-            // Weekly data for medium periods
             return $this->getWeeklySalesData($startDate, $endDate);
         } else {
-            // Daily data for short periods
             return $this->getDailySalesData($startDate, $endDate);
         }
     }
@@ -130,12 +168,17 @@ class DashboardController extends Controller
         while ($currentDate <= $endDate) {
             $dates[] = $currentDate->format('M d');
             
-            $dailyRevenue = DB::table('sale_items')
+            // Net sales for the day (sales minus returns)
+            $dailySales = DB::table('sale_items')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->whereDate('sales.sale_date', $currentDate->format('Y-m-d'))
                 ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
             
-            $data[] = $dailyRevenue;
+            $dailyReturns = DB::table('product_returns')
+                ->whereDate('created_at', $currentDate->format('Y-m-d'))
+                ->sum('total_refund_amount');
+            
+            $data[] = $dailySales - $dailyReturns;
             $currentDate->addDay();
         }
 
@@ -157,12 +200,16 @@ class DashboardController extends Controller
             
             $labels[] = $weekStart->format('M d') . ' - ' . $weekEnd->format('M d');
             
-            $weeklyRevenue = DB::table('sale_items')
+            $weeklySales = DB::table('sale_items')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->whereBetween('sales.sale_date', [$weekStart, $weekEnd])
                 ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
             
-            $data[] = $weeklyRevenue;
+            $weeklyReturns = DB::table('product_returns')
+                ->whereBetween('created_at', [$weekStart, $weekEnd])
+                ->sum('total_refund_amount');
+            
+            $data[] = $weeklySales - $weeklyReturns;
             $currentWeek->addWeek();
         }
 
@@ -184,12 +231,16 @@ class DashboardController extends Controller
             
             $labels[] = $monthStart->format('M Y');
             
-            $monthlyRevenue = DB::table('sale_items')
+            $monthlySales = DB::table('sale_items')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->whereBetween('sales.sale_date', [$monthStart, $monthEnd])
                 ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
             
-            $data[] = $monthlyRevenue;
+            $monthlyReturns = DB::table('product_returns')
+                ->whereBetween('created_at', [$monthStart, $monthEnd])
+                ->sum('total_refund_amount');
+            
+            $data[] = $monthlySales - $monthlyReturns;
             $currentMonth->addMonth();
         }
 
@@ -197,22 +248,6 @@ class DashboardController extends Controller
             'labels' => $labels,
             'data' => $data
         ];
-    }
-
-    private function calculateGrossProfit($startDate, $endDate)
-    {
-        $revenue = DB::table('sale_items')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
-
-        $cogs = DB::table('sale_items')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->join('products', 'sale_items.product_id', '=', 'products.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->sum(DB::raw('COALESCE(products.latest_unit_cost, 0) * sale_items.quantity_sold'));
-
-        return $revenue - $cogs;
     }
 
     private function calculateInventoryValue()
@@ -305,6 +340,29 @@ class DashboardController extends Controller
                 return $item;
             });
     }
+
+    private function getReturnsData($startDate, $endDate)
+    {
+        $totalReturns = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        $totalRefunds = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('total_refund_amount');
+
+        $returnsByReason = DB::table('product_returns')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->select('return_reason', DB::raw('COUNT(*) as count'))
+            ->groupBy('return_reason')
+            ->get();
+
+        return [
+            'total_returns' => $totalReturns,
+            'total_refunds' => $totalRefunds,
+            'returns_by_reason' => $returnsByReason
+        ];
+    }
     
     public function getSalesChartData(Request $request)
     {
@@ -347,12 +405,16 @@ class DashboardController extends Controller
             
             $labels[] = $yearStart->format('Y');
             
-            $yearlyRevenue = DB::table('sale_items')
+            $yearlySales = DB::table('sale_items')
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->whereBetween('sales.sale_date', [$yearStart, $yearEnd])
                 ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
             
-            $data[] = $yearlyRevenue;
+            $yearlyReturns = DB::table('product_returns')
+                ->whereBetween('created_at', [$yearStart, $yearEnd])
+                ->sum('total_refund_amount');
+            
+            $data[] = $yearlySales - $yearlyReturns;
             $currentYear->addYear();
         }
     

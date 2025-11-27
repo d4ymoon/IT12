@@ -1,0 +1,413 @@
+@extends('layouts.app')
+
+@section('title', 'ATIN - Inventory Reports')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold" style="color: #06448a;">
+        <i class="bi bi-box-seam me-2"></i>Inventory Reports
+    </h2>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card report-card border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Total Products</h6>
+                        <h3 class="fw-bold text-primary">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-box text-primary" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card report-card border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Total Quantity</h6>
+                        <h3 class="fw-bold text-success">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-layers text-success" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card report-card border-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Inventory Value</h6>
+                        <h3 class="fw-bold text-info">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-currency-dollar text-info" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card report-card border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title text-muted">Low Stock Items</h6>
+                        <h3 class="fw-bold text-warning">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
+                        <small class="text-muted">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Low Stock Alerts</h5>
+                    <small>{{ $inventoryData['lowStockAlerts']->count() }} products need attention</small>
+                </div>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportReport()">
+                    <i class="bi bi-file-pdf me-1"></i>Export
+                </button>
+            </div>
+            <div class="card-body">
+                @if($inventoryData['lowStockAlerts']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Reorder Level</th>
+                                <th>Unit Cost</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['lowStockAlerts'] as $product)
+                            <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
+                                <td>{{ $product->name }}</td>
+                                <td>{{ $product->category_name }}</td>
+                                <td>{{ $product->quantity_in_stock }}</td>
+                                <td>{{ $product->reorder_level }}</td>
+                                <td>₱{{ number_format($product->latest_unit_cost, 2) }}</td>
+                                <td>
+                                    @if($product->quantity_in_stock == 0)
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    @else
+                                        <span class="badge bg-warning">Low Stock</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">No Low Stock Alerts</h5>
+                    <p class="text-muted">All products are sufficiently stocked.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Stock Movement</h5>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockMovement()">
+                    <i class="bi bi-file-pdf me-1"></i>Export
+                </button>
+            </div>
+            <div class="card-body">
+                @if($inventoryData['stockMovement']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Date</th>
+                                <th>Qty Received</th>
+                                <th>Unit Cost</th>
+                                <th>Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['stockMovement'] as $movement)
+                            <tr>
+                                <td>{{ $movement->name }}</td>
+                                <td>{{ \Carbon\Carbon::parse($movement->stock_in_date)->format('M d, Y') }}</td>
+                                <td>{{ $movement->quantity_received }}</td>
+                                <td>₱{{ number_format($movement->actual_unit_cost, 2) }}</td>
+                                <td>₱{{ number_format($movement->total_cost, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">No Recent Stock Movement</h5>
+                    <p class="text-muted">No stock received recently.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Inventory Valuation by Category</h5>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportValuation()">
+                    <i class="bi bi-file-pdf me-1"></i>Export
+                </button>
+            </div>
+            <div class="card-body">
+                @if($inventoryData['valuationReport']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Products</th>
+                                <th>Total Quantity</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['valuationReport'] as $valuation)
+                            <tr>
+                                <td>{{ $valuation->category_name }}</td>
+                                <td>{{ $valuation->product_count }}</td>
+                                <td>{{ $valuation->total_quantity }}</td>
+                                <td>₱{{ number_format($valuation->total_value, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-4">
+                    <i class="bi bi-pie-chart text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">No Valuation Data</h5>
+                    <p class="text-muted">No products available for valuation.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between">
+                <h5 class="mb-0">Recent Stock Adjustments</h5>
+                <button class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-file-earmark-pdf"></i> Export
+                </button>
+            </div>
+            <div class="card-body">
+                @if(count($inventoryData['stockAdjustments']) > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Change</th>
+                                <th>Type</th>
+                                <th>Processed By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['stockAdjustments'] as $adj)
+                            <tr>
+                                <td>{{ \Carbon\Carbon::parse($adj->adjustment_date)->format('M d, Y') }}</td>
+                                <td>{{ $adj->product_name }}</td>
+                                <td>
+                                    @if($adj->quantity_change > 0)
+                                        <span class="text-success fw-bold">+{{ $adj->quantity_change }}</span>
+                                    @else
+                                        <span class="text-danger fw-bold">{{ $adj->quantity_change }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ $adj->adjustment_type }}</td>
+                                <td>{{ $adj->processed_by }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                    <div class="text-center text-muted">No stock adjustments found.</div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-danger text-white d-flex justify-content-between">
+                <h5 class="mb-0">Returns Stock Impact</h5>
+                <button class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-file-earmark-pdf"></i> Export
+                </button>
+            </div>
+            <div class="card-body">
+                @if(count($inventoryData['returns']) > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Product</th>
+                                <th>Qty Returned</th>
+                                <th>Stock Impact</th>
+                                <th>Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['returns'] as $ret)
+                            <tr>
+                                <td>{{ \Carbon\Carbon::parse($ret->created_at)->format('M d, Y') }}</td>
+                                <td>{{ $ret->product_name }}</td>
+                                <td>{{ $ret->quantity_returned }}</td>
+                                <td>
+                                    @if($ret->inventory_adjusted)
+                                        <span class="badge bg-success">Added Back</span>
+                                    @else
+                                        <span class="badge bg-danger">Not Added (Loss)</span>
+                                    @endif
+                                </td>
+                                <td>{{ $ret->return_reason }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                    <div class="text-center text-muted">No product returns found.</div>
+                @endif
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Complete Stock Levels Table -->
+    <div class="col-12 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Complete Stock Levels</h5>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockLevels()">
+                    <i class="bi bi-file-pdf me-1"></i>Export
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Reorder Level</th>
+                                <th>Unit Cost</th>
+                                <th>Stock Value</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['stockLevels'] as $product)
+                            <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : ($product->quantity_in_stock <= $product->reorder_level ? 'low-stock' : '') }}">
+                                <td>{{ $product->name }}</td>
+                                <td>{{ $product->category_name }}</td>
+                                <td>{{ $product->quantity_in_stock }}</td>
+                                <td>{{ $product->reorder_level }}</td>
+                                <td>₱{{ number_format($product->latest_unit_cost, 2) }}</td>
+                                <td>₱{{ number_format($product->stock_value, 2) }}</td>
+                                <td>
+                                    @if($product->quantity_in_stock == 0)
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    @elseif($product->quantity_in_stock <= $product->reorder_level)
+                                        <span class="badge bg-warning">Low Stock</span>
+                                    @else
+                                        <span class="badge bg-success">In Stock</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<style>
+    .report-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+    }
+    .report-card:hover {
+        transform: translateY(-2px);
+    }
+    .table th {
+        background-color: #f8f9fa;
+        color: #06448a;
+        font-weight: 600;
+    }
+    .low-stock {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+    .out-of-stock {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    function exportReport() {
+        alert('Low Stock Alerts PDF export functionality would be implemented here');
+    }
+
+    function exportStockMovement() {
+        alert('Stock Movement PDF export functionality would be implemented here');
+    }
+
+    function exportValuation() {
+        alert('Valuation Report PDF export functionality would be implemented here');
+    }
+
+    function exportStockLevels() {
+        alert('Complete Stock Levels PDF export functionality would be implemented here');
+    }
+</script>
+@endpush
