@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\POSController;
@@ -9,7 +10,6 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StockInController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
-
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\InventoryReportController;
@@ -18,9 +18,6 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\StockAdjustmentController;
-use Illuminate\Support\Facades\Log;
-use Barryvdh\DomPDF\Facade\Pdf;
-
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -34,13 +31,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected routes - require login
 Route::middleware(['auth.simple'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
-    Route::get('/dashboard/sales-chart-data', [DashboardController::class, 'getSalesChartData']);
-    // Admin only routes
+    
+    // Admin only routes - use the new 'admin' middleware
     Route::middleware(['role:Administrator'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
+        Route::get('/dashboard/sales-chart-data', [DashboardController::class, 'getSalesChartData']);
+        
         Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
+        Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
         Route::resource('suppliers', SupplierController::class);
 
@@ -48,11 +48,9 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/users/{user}/restore', [UserController::class, 'restore'])->name('users.restore');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
-        Route::resource('suppliers', SupplierController::class);
         Route::post('/suppliers/{supplier}/archive', [SupplierController::class, 'archive'])->name('suppliers.archive');
         Route::post('/suppliers/{supplier}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
 
-        Route::resource('products', ProductController::class);
         Route::post('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::post('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::get('/products/suggest-sku/{categoryId}', [ProductController::class, 'suggestSku']);
@@ -60,14 +58,10 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/suppliers/quick-add', [SupplierController::class, 'quickAdd'])->name('suppliers.quick-add');
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales.index');
         Route::get('/reports/inventory', [InventoryReportController::class, 'index'])->name('reports.inventory.index');
         Route::get('/reports/financial', [FinancialReportController::class, 'index'])->name('reports.financial.index');
-        
-        
         Route::get('/reports/export-pdf/{module}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
-
 
         Route::resource('stock-ins', StockInController::class);
         Route::get('/api/suppliers/{supplier}/products', function($supplier) {
@@ -97,9 +91,9 @@ Route::middleware(['auth.simple'])->group(function () {
     });
 
     // Both admin and employee can access these
-    Route::resource('categories', CategoryController::class);
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
 
+    // Shared POS functionality routes
     Route::prefix('pos')->group(function () {
         Route::post('/initialize-sale', [POSController::class, 'initializeSale']);
         Route::post('/search-product', [POSController::class, 'searchProduct']);
@@ -110,8 +104,10 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::post('/process-payment', [POSController::class, 'processPayment']);
         Route::get('/receipt/{sale}/pdf', [POSController::class, 'downloadReceiptPDF']);
         Route::post('/complete-sale', [POSController::class, 'completeSale'])->name('pos.completeSale');
-        
-        });
+    });
 
-    
+    // Account settings - both can access
+    Route::get('/account/settings', [AccountSettingsController::class, 'edit'])->name('account.settings');
+    Route::put('/account/settings', [AccountSettingsController::class, 'update'])->name('account.settings.update');
+    Route::put('/account/settings/password', [AccountSettingsController::class, 'updatePassword'])->name('account.settings.password');
 });

@@ -17,5 +17,10 @@ class RoleSeeder extends Seeder
             'name' => 'Administrator',
             'is_protected' => true
         ]);
+
+        Role::create([
+            'name' => 'Employee',
+            'is_protected' => true
+        ]);
     }
 }

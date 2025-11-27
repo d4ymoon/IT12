@@ -14,18 +14,26 @@
         </div>
         
         <ul class="nav flex-column">
+            <!-- Dashboard - Show for both roles -->
+            @if(session('role_id') == 1)
             <li class="nav-item">
                 <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
                     <i class="bi bi-speedometer2 me-3"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
+            @endif
+
+            <!-- POS - Show for both roles -->
             <li class="nav-item">
                 <a href="{{ route('pos.index') }}" class="nav-link {{ request()->is('pos') ? 'active' : '' }}">
                     <i class="bi bi-cash-stack me-3"></i>
                     <span>POS</span>
                 </a>
             </li>
+
+            <!-- Products Menu - Admin Only -->
+            @if(session('role_id') == 1)
             <li class="nav-item">
                 <a href="#collapseInventory" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventory">
                     <i class="bi bi-boxes me-3"></i>
@@ -62,18 +70,24 @@
                     </ul>
                 </div>
             </li>
+
+            <!-- Stock In - Admin Only -->
             <li class="nav-item">
                 <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('stock-ins*') ? 'active' : '' }}">
                     <i class="bi bi-box-arrow-in-down me-3"></i>
                     <span>Stock In</span>
                 </a>
             </li>
+
+            <!-- Stock Adjustments - Admin Only -->
             <li class="nav-item">
                 <a href="{{ route('stock-adjustments.index') }}" class="nav-link {{ request()->is('stock-adjustments*') ? 'active' : '' }}">
                     <i class="bi bi-sliders me-3"></i>
                     <span>Stock Adjustments</span>
                 </a>
             </li>
+
+            <!-- Returns - Admin Only -->
             <li class="nav-item">
                 <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}">
                     <i class="bi bi-arrow-counterclockwise me-3"></i>
@@ -81,6 +95,7 @@
                 </a>
             </li>
 
+            <!-- Reports Menu - Admin Only -->
             <li class="nav-item">
                 <a href="#collapseReports" class="nav-link {{ request()->is('reports*') ? '' : 'collapsed' }}" 
                     data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*') ? 'true' : 'false' }}" aria-controls="collapseReports">
@@ -110,6 +125,7 @@
                 </div>
             </li>
 
+            <!-- User Management Menu - Admin Only -->
             <li class="nav-item">
                 <a href="#collapseUser" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseUser">
                     <i class="bi bi-people me-3"></i>
@@ -133,8 +149,11 @@
                     </ul>
                 </div>
             </li>
+            @endif
+
+            <!-- Settings - Show for both roles -->
             <li class="nav-item mt-4">
-                <a href="#" class="nav-link {{ request()->is('settings*') ? 'active' : '' }}">
+                <a href="{{ route('account.settings') }}" class="nav-link {{ request()->is('account/settings*') ? 'active' : '' }}">
                     <i class="bi bi-gear me-3"></i>
                     <span>Settings</span>
                 </a>

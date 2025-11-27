@@ -21,6 +21,12 @@ class POSController extends Controller
         return view('pos.index');
     }
 
+    public function employeePos()
+{
+    // Employee POS - use employee layout
+    return view('pos.index'); // This will use layouts.employee
+}
+
     /**
      * Search products by name, SKU, or barcode
      */

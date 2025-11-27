@@ -11,7 +11,12 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (session('user_id')) {
-            return redirect('/dashboard');
+            // Redirect based on role
+            if (session('role_id') == 1) { // Administrator
+                return redirect('/dashboard');
+            } else { // Employee
+                return redirect('/employee/dashboard');
+            }
         }
         return view('auth.login');
     }
@@ -37,7 +42,11 @@ class AuthController extends Controller
                 'username' => $user->username,
             ]);
 
-            return redirect('/dashboard')->with('success', 'Welcome back, ' . $user->f_name . '!');
+            if ($user->role_id == 1) { // Administrator
+                return redirect('/dashboard')->with('success', 'Welcome back, ' . $user->f_name . '!');
+            } else { // Employee
+                return redirect('/pos')->with('success', 'Welcome, ' . $user->f_name . '!');
+            }
         }
 
         return back()->with('error', 'Invalid credentials .');

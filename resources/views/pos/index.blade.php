@@ -1,5 +1,5 @@
     @extends('layouts.app')
-    @section('title', 'POS - ATIN Admin')
+    @section('title', 'POS - ATIN')
     @push('styles')
     <style>
         .pos-container {
