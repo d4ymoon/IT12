@@ -1,5 +1,5 @@
 <!-- Sidebar Only -->
-<nav class="sidebar">
+<nav class="sidebar {{ session('role_id') != 1 ? 'collapsed' : '' }}">
     <div class="sidebar-content">
         <div class="logo-container">
             <div class="d-flex align-items-center justify-content-between">
@@ -12,9 +12,11 @@
                         </div>
                     </div>
                 </div>
-                <button id="toggleSidebar" class="btn btn-link p-0 sidebar-toggle-btn" type="button" title="Toggle Sidebar">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
+                @if(session('role_id') != 1)
+                {{-- Toggle button hidden for employees (always collapsed) --}}
+                @else
+                {{-- Toggle button hidden for admins (always expanded) --}}
+                @endif
             </div>
         </div>
         
@@ -31,7 +33,7 @@
 
             <!-- POS - Show for both roles -->
             <li class="nav-item">
-                <a href="{{ route('pos.index') }}" class="nav-link {{ request()->is('pos') ? 'active' : '' }}">
+                <a href="{{ route('pos.index') }}" class="nav-link {{ request()->is('pos') ? 'active' : '' }}" title="POS">
                     <i class="bi bi-cash-stack me-3"></i>
                     <span>POS</span>
                 </a>

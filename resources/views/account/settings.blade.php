@@ -163,7 +163,9 @@
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Minimum 8 characters</div>
                             </div>
+                            
 
                             <!-- Confirm New Password -->
                             <div class="col-md-6 mb-3">
@@ -174,12 +176,6 @@
                                        required>
                             </div>
                         </div>
-
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <strong>Password Requirements:</strong> Minimum 8 characters.
-                        </div>
-
                         <div class="d-flex justify-content-end">
                             <button type="submit" class="btn btn-warning">
                                 <i class="bi bi-key me-2"></i>Change Password

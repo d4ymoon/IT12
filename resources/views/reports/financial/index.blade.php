@@ -251,19 +251,11 @@
                             @endphp
                             @foreach($financialData['paymentMethods'] as $payment)
                             <tr>
-                                <td>
-                                    <span class="badge bg-light text-dark">
-                                        <i class="bi bi-credit-card me-1"></i>{{ $payment->payment_method }}
-                                    </span>
-                                </td>
+                                <td>{{ $payment->payment_method }}</td>
                                 <td class="text-center">{{ $payment->transaction_count }}</td>
                                 <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
-                                <td class="text-center">
-                                    <span class="badge bg-primary">
-                                        {{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%
-                                    </span>
-                                </td>
+                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
                             </tr>
                             @endforeach
                             @if($totalAmount > 0)

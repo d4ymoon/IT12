@@ -489,6 +489,9 @@
                             beginAtZero: true,
                             grid: {
                                 drawBorder: false
+                            },
+                            ticks: {
+                                precision: 0 // This ensures no decimals
                             }
                         },
                         x: {

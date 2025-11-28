@@ -108,6 +108,7 @@ class AccountSettingsController extends Controller
 
             $user->update([
                 'password' => Hash::make($request->password),
+                'password_changed' => true, 
             ]);
 
             return redirect()->route('account.settings')->with('success', 'Password updated successfully.');

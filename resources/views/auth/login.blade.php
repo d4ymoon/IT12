@@ -108,17 +108,17 @@
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <div class="input-group">
-                      <span class="input-group-text">
-                        <i class="bi bi-lock"></i>
-                      </span>
-                      <input type="password" class="form-control" 
-                             id="password" name="password" 
-                             placeholder="Enter your password" required>
-                      <span class="input-group-text" id="togglePassword" style="cursor: pointer;">
-                        <i class="bi bi-eye"></i>
-                      </span>
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <input type="password" class="form-control border-end-0" 
+                               id="password" name="password" 
+                               placeholder="Enter your password" required>
+                        <span class="input-group-text bg-transparent border-start-0" id="togglePassword" style="cursor: pointer;">
+                            <i class="bi bi-eye"></i>
+                        </span>
                     </div>
-                  </div>
+                </div>
                 
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
                     <i class="bi bi-box-arrow-in-right me-2"></i>
@@ -140,6 +140,13 @@
       
           this.querySelector("i").classList.toggle("bi-eye");
           this.querySelector("i").classList.toggle("bi-eye-slash");
+        });
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
         });
       </script>
 </body>
