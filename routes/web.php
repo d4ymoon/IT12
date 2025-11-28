@@ -59,9 +59,25 @@ Route::middleware(['auth.simple'])->group(function () {
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales.index');
+        Route::get('/reports/sales/export-summary', [SalesReportController::class, 'exportSummaryPDF']);
+        Route::get('/reports/sales/export-detailed', [SalesReportController::class, 'exportDetailedCSV']);
+
         Route::get('/reports/inventory', [InventoryReportController::class, 'index'])->name('reports.inventory.index');
+        // Inventory Report CSV Exports
+        Route::get('/reports/inventory/export-low-stock-csv', [InventoryReportController::class, 'exportLowStockCSV']);
+        Route::get('/reports/inventory/export-stock-movement-csv', [InventoryReportController::class, 'exportStockMovementCSV']);
+        Route::get('/reports/inventory/export-valuation-csv', [InventoryReportController::class, 'exportValuationCSV']);
+        Route::get('/reports/inventory/export-adjustments-csv', [InventoryReportController::class, 'exportAdjustmentsCSV']);
+        Route::get('/reports/inventory/export-returns-csv', [InventoryReportController::class, 'exportReturnsCSV']);
+        Route::get('/reports/inventory/export-best-sellers-csv', [InventoryReportController::class, 'exportBestSellersCSV']);
+        Route::get('/reports/inventory/export-dead-stock-csv', [InventoryReportController::class, 'exportDeadStockCSV']);
+        Route::get('/reports/inventory/export-stock-levels-csv', [InventoryReportController::class, 'exportStockLevelsCSV']);
+
         Route::get('/reports/financial', [FinancialReportController::class, 'index'])->name('reports.financial.index');
-        Route::get('/reports/export-pdf/{module}', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+        Route::get('/reports/financial/export-full', [FinancialReportController::class, 'exportFullReport']);
+        Route::get('/reports/financial/export-profit-loss', [FinancialReportController::class, 'exportProfitLossCSV']);
+        Route::get('/reports/financial/export-cogs-analysis', [FinancialReportController::class, 'exportCogsAnalysisCSV']);
+        Route::get('/reports/financial/export-payment-analysis', [FinancialReportController::class, 'exportPaymentAnalysisCSV']);
 
         Route::resource('stock-ins', StockInController::class);
         Route::get('/api/suppliers/{supplier}/products', function($supplier) {

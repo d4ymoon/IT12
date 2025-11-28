@@ -11,79 +11,70 @@
 
 <!-- Summary Statistics -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card report-card border-primary">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-primary h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Total Products</h6>
-                        <h3 class="fw-bold text-primary">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-box text-primary" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-box text-primary me-2"></i>Total Products
+                </h6>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-success">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-success h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Total Quantity</h6>
-                        <h3 class="fw-bold text-success">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-layers text-success" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-layers text-success me-2"></i>Total Quantity
+                </h6>
+                <h3 class="fw-bold text-success mb-0 text-end">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-info">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-info h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Inventory Value</h6>
-                        <h3 class="fw-bold text-info">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-currency-dollar text-info" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-currency-dollar text-info me-2"></i>Inventory Value
+                </h6>
+                <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-warning">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-warning h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Low Stock Items</h6>
-                        <h3 class="fw-bold text-warning">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
-                        <small class="text-muted">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Low Stock Items
+                </h6>
+                <h3 class="fw-bold text-warning mb-0 text-end">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
+                <small class="text-muted text-end d-block">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-info h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-repeat text-info me-2"></i>Turnover Rate
+                </h6>
+                <h3 class="fw-bold text-info mb-0 text-end">{{ $inventoryData['inventoryTurnover']['turnover_rate'] ?? 0 }}x</h3>
+                <small class="text-muted text-end d-block">{{ $inventoryData['inventoryTurnover']['period'] ?? '' }}</small>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-12 mb-4">
+    <div class="col-12 mb-3">
         <div class="card report-card">
             <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">Low Stock Alerts</h5>
                     <small>{{ $inventoryData['lowStockAlerts']->count() }} products need attention</small>
                 </div>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportReport()">
-                    <i class="bi bi-file-pdf me-1"></i>Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportLowStockCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -120,6 +111,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if($inventoryData['lowStockAlerts']->hasPages())
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $inventoryData['lowStockAlerts']->links('pagination::bootstrap-4') }}
+                    </div>
+                    @endif
                 @else
                 <div class="text-center py-4">
                     <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
@@ -131,12 +127,12 @@
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
+    <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Recent Stock Movement</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockMovement()">
-                    <i class="bi bi-file-pdf me-1"></i>Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockMovementCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -176,12 +172,12 @@
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
+    <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Inventory Valuation by Category</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportValuation()">
-                    <i class="bi bi-file-pdf me-1"></i>Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportValuationCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -219,12 +215,12 @@
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
+    <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-secondary text-white d-flex justify-content-between">
                 <h5 class="mb-0">Recent Stock Adjustments</h5>
-                <button class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-file-earmark-pdf"></i> Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportAdjustmentsCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -266,12 +262,12 @@
         </div>
     </div>
 
-    <div class="col-md-6 mb-4">
+    <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-danger text-white d-flex justify-content-between">
                 <h5 class="mb-0">Returns Stock Impact</h5>
-                <button class="btn btn-outline-light btn-sm">
-                    <i class="bi bi-file-earmark-pdf"></i> Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportReturnsCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -313,14 +309,106 @@
         </div>
     </div>
     
+    <div class="col-md-6 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-success text-white d-flex justify-content-between">
+                <h5 class="mb-0">Top 10 Products by Sales Volume</h5>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportBestSellersCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Qty Sold</th>
+                                <th>Revenue</th>
+                                <th>Avg Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['bestSellers'] as $product)
+                            <tr>
+                                <td>{{ $product->name }}</td>
+                                <td><small class="text-muted">{{ $product->sku }}</small></td>
+                                <td>{{ $product->total_quantity_sold }}</td>
+                                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
+                                <td>₱{{ number_format($product->avg_selling_price, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-danger text-white d-flex justify-content-between">
+                <h5 class="mb-0">Dead Stock / Slow Movers</h5>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDeadStockCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
+                </button>
+            </div>
+            <div class="card-body">
+                @if($inventoryData['deadStock']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Current Stock</th>
+                                <th>Stock Value</th>
+                                <th>Last Sale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($inventoryData['deadStock'] as $product)
+                            <tr class="dead-stock">
+                                <td>{{ $product->name }}</td>
+                                <td>{{ $product->category_name }}</td>
+                                <td>{{ $product->quantity_in_stock }}</td>
+                                <td>₱{{ number_format($product->stock_value, 2) }}</td>
+                                <td>
+                                    @if($product->last_sale_date)
+                                        {{ \Carbon\Carbon::parse($product->last_sale_date)->format('M d, Y') }}
+                                    @else
+                                        <span class="text-muted">Never Sold</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @if($inventoryData['deadStock']->hasPages())
+<div class="d-flex justify-content-center mt-3">
+    {{ $inventoryData['deadStock']->links('pagination::bootstrap-4') }}
+</div>
+@endif
+                </div>
+                @else
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3 text-muted">No Dead Stock</h5>
+                    <p class="text-muted">All products have recent sales activity.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <!-- Complete Stock Levels Table -->
     <div class="col-12 mb-4">
         <div class="card report-card">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Complete Stock Levels</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockLevels()">
-                    <i class="bi bi-file-pdf me-1"></i>Export
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockLevelsCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
             <div class="card-body">
@@ -360,6 +448,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if($inventoryData['stockLevels']->hasPages())
+<div class="d-flex justify-content-center mt-3">
+    {{ $inventoryData['stockLevels']->links('pagination::bootstrap-4') }}
+</div>
+@endif
             </div>
         </div>
     </div>
@@ -394,20 +487,49 @@
 
 @push('scripts')
 <script>
-    function exportReport() {
-        alert('Low Stock Alerts PDF export functionality would be implemented here');
+    function exportLowStockCSV() { 
+        showLoading('Low Stock Alerts');
+        window.location.href = '/reports/inventory/export-low-stock-csv'; 
     }
 
-    function exportStockMovement() {
-        alert('Stock Movement PDF export functionality would be implemented here');
+    function exportStockMovementCSV() { 
+        showLoading('Stock Movement');
+        window.location.href = '/reports/inventory/export-stock-movement-csv'; 
     }
 
-    function exportValuation() {
-        alert('Valuation Report PDF export functionality would be implemented here');
+    function exportValuationCSV() { 
+        showLoading('Inventory Valuation');
+        window.location.href = '/reports/inventory/export-valuation-csv'; 
     }
 
-    function exportStockLevels() {
-        alert('Complete Stock Levels PDF export functionality would be implemented here');
+    function exportAdjustmentsCSV() { 
+        showLoading('Stock Adjustments');
+        window.location.href = '/reports/inventory/export-adjustments-csv'; 
+    }
+
+    function exportReturnsCSV() { 
+        showLoading('Returns Impact');
+        window.location.href = '/reports/inventory/export-returns-csv'; 
+    }
+
+    function exportBestSellersCSV() { 
+        showLoading('Best Sellers');
+        window.location.href = '/reports/inventory/export-best-sellers-csv'; 
+    }
+
+    function exportDeadStockCSV() { 
+        showLoading('Dead Stock');
+        window.location.href = '/reports/inventory/export-dead-stock-csv'; 
+    }
+
+    function exportStockLevelsCSV() { 
+        showLoading('Complete Stock Levels');
+        window.location.href = '/reports/inventory/export-stock-levels-csv'; 
+    }
+
+    function showLoading(reportName) {
+        // Optional: Add a small loading indicator
+        console.log(`Exporting ${reportName}...`);
     }
 </script>
 @endpush

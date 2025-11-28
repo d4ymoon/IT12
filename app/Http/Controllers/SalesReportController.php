@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\PDF; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
 
 class SalesReportController extends Controller
 {
@@ -98,25 +100,44 @@ class SalesReportController extends Controller
             ->orderBy('sales.sale_date', 'desc')
             ->paginate(10);
 
-        // Product Performance (Net of Returns)
-        $productPerformance = DB::table('sale_items')
-            ->join('products', 'sale_items.product_id', '=', 'products.id')
-            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->select(
-                'products.name',
-                DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
-                DB::raw('COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as returns_amount'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as total_revenue'),
-                DB::raw('AVG(sale_items.unit_price) as avg_price')
-            )
-            ->addBinding([$startDate, $endDate, $startDate, $endDate], 'select')
-            ->groupBy('products.id', 'products.name')
-            ->orderByDesc('total_revenue')
-            ->limit(10)
-            ->get();
+        // Product Performance (Net of Returns) - Ordered by Quantity Sold
+        // Top Products by Quantity Sold
+        $topProductsByQuantity = DB::table('sale_items')
+        ->join('products', 'sale_items.product_id', '=', 'products.id')
+        ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+        ->whereBetween('sales.sale_date', [$startDate, $endDate])
+        ->select(
+            'products.name',
+            DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+            DB::raw('COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as returns_amount'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as total_revenue'),
+            DB::raw('AVG(sale_items.unit_price) as avg_price')
+        )
+        ->addBinding([$startDate, $endDate, $startDate, $endDate], 'select')
+        ->groupBy('products.id', 'products.name')
+        ->orderByDesc('total_quantity')
+        ->limit(10)
+        ->get();
 
+        // Top Products by Revenue
+        $topProductsByRevenue = DB::table('sale_items')
+        ->join('products', 'sale_items.product_id', '=', 'products.id')
+        ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+        ->whereBetween('sales.sale_date', [$startDate, $endDate])
+        ->select(
+            'products.name',
+            DB::raw('SUM(sale_items.quantity_sold) as total_quantity'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+            DB::raw('COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as returns_amount'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE((SELECT SUM(ri.total_line_refund) FROM return_items ri JOIN product_returns pr ON ri.product_return_id = pr.id WHERE ri.product_id = products.id AND pr.created_at BETWEEN ? AND ?), 0) as total_revenue'),
+            DB::raw('AVG(sale_items.unit_price) as avg_price')
+        )
+        ->addBinding([$startDate, $endDate, $startDate, $endDate], 'select')
+        ->groupBy('products.id', 'products.name')
+        ->orderByDesc('total_revenue')
+        ->limit(10)
+        ->get();
         // Category Analysis
         $categoryAnalysis = DB::table('sale_items')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
@@ -134,36 +155,145 @@ class SalesReportController extends Controller
             ->get();
 
         // Summary Statistics
+        // Summary Statistics
         $summaryStats = DB::table('sales')
-            ->join('sale_items', 'sales.id', '=', 'sale_items.sale_id')
-            ->leftJoin('product_returns', function ($join) use ($startDate, $endDate) {
-                $join->on('product_returns.sale_id', '=', 'sales.id')
-                     ->whereBetween('product_returns.created_at', [$startDate, $endDate]);
-            })
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->select(
-                DB::raw('COUNT(DISTINCT sales.id) as total_transactions'),
-                DB::raw('SUM(sale_items.quantity_sold) as total_items_sold'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
-                DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as total_returns'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE(SUM(product_returns.total_refund_amount), 0) as net_revenue'),
-                DB::raw('AVG((SELECT SUM(unit_price * quantity_sold) FROM sale_items WHERE sale_items.sale_id = sales.id)) as avg_transaction_value')
-            )
-            ->first();
+        ->join('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+        ->leftJoin('product_returns', function ($join) use ($startDate, $endDate) {
+            $join->on('product_returns.sale_id', '=', 'sales.id')
+                ->whereBetween('product_returns.created_at', [$startDate, $endDate]);
+        })
+        ->whereBetween('sales.sale_date', [$startDate, $endDate])
+        ->select(
+            DB::raw('COUNT(DISTINCT sales.id) as total_transactions'),
+            DB::raw('SUM(sale_items.quantity_sold) as total_items_sold'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+            DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as total_returns'),
+            DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE(SUM(product_returns.total_refund_amount), 0) as net_revenue'),
+            DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - COALESCE(SUM(product_returns.total_refund_amount), 0)) / COUNT(DISTINCT sales.id) as avg_transaction_value')
+        )
+        ->first();
 
         return [
             'salesByDate' => $salesByDate,
             'detailedSales' => $detailedSales,
-            'productPerformance' => $productPerformance,
+            'topProductsByQuantity' => $topProductsByQuantity,
+            'topProductsByRevenue' => $topProductsByRevenue,
             'categoryAnalysis' => $categoryAnalysis,
             'summaryStats' => $summaryStats,
             'dateRange' => ['start' => $startDate, 'end' => $endDate]
         ];
     }
 
-    public function exportSalesReport(Request $request)
+    public function exportSummaryPDF(Request $request)
     {
-        // PDF export functionality can be implemented here
-        // You can reuse the same data fetching logic from index method
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get sales data (same as index but without detailed sales)
+        $salesData = $this->getSalesReportsData($startDate, $endDate);
+
+        $data = [
+            'salesData' => $salesData,
+            'dateRange' => $dateRange,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'exportDate' => now()->format('M d, Y h:i A'),
+        ];
+
+        $pdf = PDF::loadView('reports.sales.exports.summary-pdf', $data);
+        
+        $filename = "sales-summary-{$startDate->format('Y-m-d')}-to-{$endDate->format('Y-m-d')}.pdf";
+        
+        return $pdf->download($filename);
+    }
+
+    public function exportDetailedCSV(Request $request)
+    {
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get detailed sales with line items
+        $detailedSales = DB::table('sales')
+            ->join('users', 'sales.user_id', '=', 'users.id')
+            ->join('sale_items', 'sales.id', '=', 'sale_items.sale_id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->leftJoin('payments', 'sales.id', '=', 'payments.sale_id')
+            ->select(
+                'sales.id as sale_id',
+                'sales.sale_date as sale_datetime',
+                DB::raw('CONCAT(users.f_name, " ", users.l_name) as cashier_name'),
+                DB::raw('(SELECT SUM(unit_price * quantity_sold) FROM sale_items WHERE sale_items.sale_id = sales.id) as total_net_revenue'),
+                'sales.customer_name',
+                'sales.customer_contact',
+                'payments.payment_method',
+                'products.name as product_name',
+                'sale_items.quantity_sold',
+                DB::raw('sale_items.unit_price * sale_items.quantity_sold as line_item_total'),
+                'sale_items.unit_price as unit_cost',
+                'products.sku as product_sku'
+            )
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->orderBy('sales.id', 'desc')
+            ->orderBy('products.name', 'asc')
+            ->get();
+
+        $filename = "sales-detailed-{$startDate->format('Y-m-d')}-to-{$endDate->format('Y-m-d')}.csv";
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($detailedSales) {
+            $file = fopen('php://output', 'w');
+            
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            fputcsv($file, [
+                'sale_id',           
+                'sale_datetime',     
+                'cashier_name',      
+                'total_net_revenue', 
+                'customer_name',     
+                'customer_contact',  
+                'payment_method',    
+                'product_name',      
+                'product_sku',       
+                'quantity_sold',     
+                'line_item_total',   
+                'unit_cost'          
+            ]);
+            
+            // Data - each row represents a line item
+            foreach ($detailedSales as $sale) {
+                fputcsv($file, [
+                    $sale->sale_id,                  
+                    $sale->sale_datetime,              
+                    $sale->cashier_name,               
+                    $sale->total_net_revenue,          
+                    $sale->customer_name ?? '',        
+                    $sale->customer_contact ?? '',     
+                    $sale->payment_method ?? '',       
+                    $sale->product_name,               
+                    $sale->product_sku ?? '',          
+                    $sale->quantity_sold,              
+                    $sale->line_item_total,            
+                    $sale->unit_cost                   
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

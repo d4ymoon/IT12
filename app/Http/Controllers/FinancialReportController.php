@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -148,8 +149,195 @@ class FinancialReportController extends Controller
         ];
     }
 
-    public function exportFinancialReport(Request $request)
+    public function exportFullReport(Request $request)
     {
-        // PDF export functionality can be implemented here
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get financial data
+        $financialData = $this->getFinancialReportsData($startDate, $endDate);
+
+        $data = [
+            'financialData' => $financialData,
+            'dateRange' => $dateRange,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'exportDate' => now()->format('M d, Y h:i A'),
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.financial.exports.full-pdf', $data);
+        
+        $filename = "Financial_Report_{$startDate->format('M_Y')}.pdf";
+        
+        return $pdf->download($filename);
+    }
+
+    public function exportProfitLossCSV(Request $request)
+    {
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get financial data
+        $financialData = $this->getFinancialReportsData($startDate, $endDate);
+
+        $filename = "P_L_Summary_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}.csv";
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($financialData, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for UTF-8
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Headers
+            fputcsv($file, [
+                'Start_Date', 'End_Date', 'Gross_Revenue', 'Returns_Refunds_Amount', 
+                'Net_Revenue', 'Gross_COGS', 'Returned_COGS_Credit', 'Net_COGS', 
+                'Gross_Profit', 'Gross_Margin_Percentage'
+            ]);
+            
+            // Data
+            $pl = $financialData['profitLoss'];
+            fputcsv($file, [
+                $startDate->format('Y-m-d'),
+                $endDate->format('Y-m-d'),
+                $pl['gross_revenue'],
+                $pl['returns_amount'],
+                $pl['net_revenue'],
+                $pl['gross_cogs'],
+                $pl['returned_cogs'],
+                $pl['net_cogs'],
+                $pl['grossProfit'],
+                $pl['grossMargin']
+            ]);
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportCogsAnalysisCSV(Request $request)
+    {
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get financial data
+        $financialData = $this->getFinancialReportsData($startDate, $endDate);
+
+        $filename = "COGS_Analysis_Category_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}.csv";
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($financialData) {
+            $file = fopen('php://output', 'w');
+            
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Headers
+            fputcsv($file, [
+                'Category_Name', 'Total_Quantity_Sold', 'Total_Revenue', 'Total_COGS',
+                'Gross_Profit', 'Gross_Margin_Percentage', 'Avg_Selling_Price', 'Avg_Unit_Cost'
+            ]);
+            
+            // Data
+            foreach ($financialData['cogsAnalysis'] as $analysis) {
+                $profit = $analysis->total_revenue - $analysis->total_cogs;
+                $margin = $analysis->total_revenue > 0 ? ($profit / $analysis->total_revenue) * 100 : 0;
+                $avgPrice = $analysis->total_quantity > 0 ? $analysis->total_revenue / $analysis->total_quantity : 0;
+                $avgCost = $analysis->total_quantity > 0 ? $analysis->total_cogs / $analysis->total_quantity : 0;
+                
+                fputcsv($file, [
+                    $analysis->category_name,
+                    $analysis->total_quantity,
+                    $analysis->total_revenue,
+                    $analysis->total_cogs,
+                    $profit,
+                    $margin,
+                    $avgPrice,
+                    $avgCost
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPaymentAnalysisCSV(Request $request)
+    {
+        // Get date range from request
+        $dateRange = $request->get('date_range', 'thismonth');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Set dates based on selection
+        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
+
+        // Get financial data
+        $financialData = $this->getFinancialReportsData($startDate, $endDate);
+
+        $filename = "Payment_Analysis_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}.csv";
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($financialData) {
+            $file = fopen('php://output', 'w');
+            
+            fwrite($file, "\xEF\xBB\xBF");
+            
+            // Headers
+            fputcsv($file, [
+                'Payment_Method', 'Transaction_Count', 'Total_Amount', 
+                'Percentage_of_Total_Sales', 'Average_Transaction_Value'
+            ]);
+            
+            // Calculate total for percentages
+            $totalAmount = $financialData['paymentMethods']->sum('total_amount');
+            
+            // Data
+            foreach ($financialData['paymentMethods'] as $payment) {
+                $percentage = $totalAmount > 0 ? ($payment->total_amount / $totalAmount) * 100 : 0;
+                $avgValue = $payment->transaction_count > 0 ? $payment->total_amount / $payment->transaction_count : 0;
+                
+                fputcsv($file, [
+                    $payment->payment_method,
+                    $payment->transaction_count,
+                    $payment->total_amount,
+                    $percentage,
+                    $avgValue
+                ]);
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

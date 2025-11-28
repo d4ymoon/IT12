@@ -12,7 +12,7 @@
 <!-- Date Range Filter -->
 <div class="card mb-4">
     <div class="card-body">
-        <form id="reportFilterForm" method="GET" class="row g-3 align-items-end">
+        <form id="reportFilterForm" method="GET" action="{{ url()->current() }}" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label">Date Range</label>
                 <select class="form-select" name="date_range" id="dateRange">
@@ -38,7 +38,7 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-filter me-1"></i>Apply Filter
                 </button>
-                <button type="button" class="btn btn-outline-success" onclick="exportReport()">
+                <button type="button" class="btn btn-outline-success" onclick="exportFullReport()">
                     <i class="bi bi-file-pdf me-1"></i>Export PDF
                 </button>
             </div>
@@ -48,63 +48,63 @@
 
 <!-- Summary Statistics -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card report-card border-success">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-success h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Net Revenue</h6>
-                        <h3 class="fw-bold text-success">₱{{ number_format($financialData['profitLoss']['net_revenue'], 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-currency-dollar text-success" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-currency-dollar text-success me-2"></i>Net Revenue
+                </h6>
+                <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($financialData['profitLoss']['net_revenue'], 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-primary">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-primary h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Gross Profit</h6>
-                        <h3 class="fw-bold text-primary">₱{{ number_format($financialData['profitLoss']['grossProfit'], 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-graph-up-arrow text-primary" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-graph-up-arrow text-primary me-2"></i>Gross Profit
+                </h6>
+                <h3 class="fw-bold text-primary mb-0 text-end">₱{{ number_format($financialData['profitLoss']['grossProfit'], 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-info">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-info h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Gross Margin</h6>
-                        <h3 class="fw-bold text-info">{{ number_format($financialData['profitLoss']['grossMargin'], 2) }}%</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-percent text-info" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-percent text-info me-2"></i>Gross Margin
+                </h6>
+                <h3 class="fw-bold text-info mb-0 text-end">{{ number_format($financialData['profitLoss']['grossMargin'], 2) }}%</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-warning">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-warning h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Avg. Transaction</h6>
-                        <h3 class="fw-bold text-warning">₱{{ number_format($financialData['additionalMetrics']['average_transaction_value'], 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-receipt text-warning" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-receipt text-warning me-2"></i>Avg. Transaction
+                </h6>
+                <h3 class="fw-bold text-warning mb-0 text-end">₱{{ number_format($financialData['additionalMetrics']['average_transaction_value'], 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-danger h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-arrow-return-left text-danger me-2"></i>Returns Rate
+                </h6>
+                <h3 class="fw-bold text-danger mb-0 text-end">{{ number_format($financialData['additionalMetrics']['returns_percentage'], 2) }}%</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-secondary h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-box-seam text-secondary me-2"></i>Gross COGS
+                </h6>
+                <h3 class="fw-bold text-secondary mb-0 text-end">₱{{ number_format($financialData['profitLoss']['gross_cogs'], 2) }}</h3>
             </div>
         </div>
     </div>
@@ -280,54 +280,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Additional Metrics -->
-    <div class="col-12 mb-4">
-        <div class="card report-card">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Additional Financial Metrics</h5>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h6 class="text-muted">Total Transactions</h6>
-                                <h4 class="text-dark">{{ $financialData['additionalMetrics']['total_transactions'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h6 class="text-muted">Returns Rate</h6>
-                                <h4 class="text-warning">{{ number_format($financialData['additionalMetrics']['returns_percentage'], 2) }}%</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h6 class="text-muted">Gross COGS</h6>
-                                <h4 class="text-danger">₱{{ number_format($financialData['profitLoss']['gross_cogs'], 2) }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <h6 class="text-muted">COGS Adjusted</h6>
-                                <h4 class="text-info">₱{{ number_format($financialData['profitLoss']['returned_cogs'], 2) }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
-
 @push('styles')
 <style>
     .report-card {
@@ -345,45 +299,107 @@
         color: #06448a;
         font-weight: 600;
     }
-    .financial-summary .financial-item {
-        padding: 8px 0;
-    }
-    .financial-summary hr {
-        margin: 15px 0;
-    }
 </style>
 @endpush
-
 @push('scripts')
 <script>
-    // Show/hide custom date range
-    document.getElementById('dateRange').addEventListener('change', function() {
-        const isCustom = this.value === 'custom';
+       function toggleCustomDateRange() {
+        const dateRange = document.getElementById('dateRange');
+        const isCustom = dateRange.value === 'custom';
+        
         document.getElementById('customDateRange').style.display = isCustom ? 'block' : 'none';
         document.getElementById('customDateRangeEnd').style.display = isCustom ? 'block' : 'none';
-    });
-
-    function exportReport() {
-        alert('Complete Financial Report PDF export functionality would be implemented here');
     }
 
-    function exportProfitLoss() {
-        alert('Profit & Loss PDF export functionality would be implemented here');
-    }
-
-    function exportCogsAnalysis() {
-        alert('COGS Analysis PDF export functionality would be implemented here');
-    }
-
-    function exportPaymentAnalysis() {
-        alert('Payment Analysis PDF export functionality would be implemented here');
-    }
-
-    // Auto-submit form when date range changes (except custom)
-    document.getElementById('dateRange').addEventListener('change', function() {
-        if (this.value !== 'custom') {
-            document.getElementById('reportFilterForm').submit();
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial toggle
+        toggleCustomDateRange();
+        
+        // Add change event listener to date range
+        const dateRangeSelect = document.getElementById('dateRange');
+        if (dateRangeSelect) {
+            dateRangeSelect.addEventListener('change', function() {
+                toggleCustomDateRange();
+                
+                if (this.value !== 'custom') {
+                    document.getElementById('reportFilterForm').submit();
+                }
+            });
         }
     });
+
+    // Export functions (keep your existing ones)
+    function exportFullReport() {
+        const form = document.getElementById('reportFilterForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        const btn = event.target;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+        btn.disabled = true;
+        
+        window.location.href = `/reports/financial/export-full?${params.toString()}`;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 3000);
+    }
+
+    function exportProfitLossCSV() {
+        const form = document.getElementById('reportFilterForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        const btn = event.target;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+        btn.disabled = true;
+        
+        window.location.href = `/reports/financial/export-profit-loss?${params.toString()}`;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 3000);
+    }
+
+    function exportCogsAnalysisCSV() {
+        const form = document.getElementById('reportFilterForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        const btn = event.target;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+        btn.disabled = true;
+        
+        window.location.href = `/reports/financial/export-cogs-analysis?${params.toString()}`;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 3000);
+    }
+
+    function exportPaymentAnalysisCSV() {
+        const form = document.getElementById('reportFilterForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams(formData);
+        
+        const btn = event.target;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+        btn.disabled = true;
+        
+        window.location.href = `/reports/financial/export-payment-analysis?${params.toString()}`;
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 3000);
+    }
 </script>
 @endpush

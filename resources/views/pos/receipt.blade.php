@@ -185,9 +185,9 @@
     </div>
 
     <!-- Return/Exchange Policy -->
-    <div class="return-policy">
-        Keep this invoice for item return/exchange.<br>
-        Return/exchange is acceptable within 7 days from purchase date.
+    <div class="footer" style="margin-top: 10px; font-style: italic;">
+        Keep this invoice for item return/refund.<br>
+        Return/refund is acceptable within 7 days from purchase date.
     </div>
 </body>
 </html>

@@ -26,20 +26,20 @@
                     <option value="custom" {{ $dateRange == 'custom' ? 'selected' : '' }}>Custom Range</option>
                 </select>
             </div>
-            <div class="col-md-3" id="customDateRange" style="{{ $dateRange == 'custom' ? 'display: block;' : 'display: none;' }}">
+            <div class="col-md-2" id="customDateRange" style="{{ $dateRange == 'custom' ? 'display: block;' : 'display: none;' }}">
                 <label class="form-label">Start Date</label>
                 <input type="date" class="form-control" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
             </div>
-            <div class="col-md-3" id="customDateRangeEnd" style="{{ $dateRange == 'custom' ? 'display: block;' : 'display: none;' }}">
+            <div class="col-md-2" id="customDateRangeEnd" style="{{ $dateRange == 'custom' ? 'display: block;' : 'display: none;' }}">
                 <label class="form-label">End Date</label>
                 <input type="date" class="form-control" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
             </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary">
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary me-2">
                     <i class="bi bi-filter me-1"></i>Apply Filter
                 </button>
-                <button type="button" class="btn btn-outline-success" onclick="exportReport()">
-                    <i class="bi bi-file-pdf me-1"></i>Export PDF
+                <button type="button" class="btn btn-outline-success" onclick="exportSummaryPDF()">
+                    <i class="bi bi-file-pdf me-1"></i>Export Summary (PDF)
                 </button>
             </div>
         </form>
@@ -47,71 +47,267 @@
 </div>
 
 <!-- Summary Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card report-card border-primary">
+<div class="row mb-4"> 
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-primary h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Total Transactions</h6>
-                        <h3 class="fw-bold text-primary">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-receipt text-primary" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-receipt text-primary me-2"></i>Total Transactions
+                </h6>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-success">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-success h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Items Sold</h6>
-                        <h3 class="fw-bold text-success">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-box-seam text-success" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-box-seam text-success me-2"></i>Items Sold
+                </h6>
+                <h3 class="fw-bold text-success mb-0 text-end">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-info">
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-info h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Net Revenue</h6>
-                        <h3 class="fw-bold text-info">₱{{ number_format($salesData['summaryStats']->net_revenue ?? 0, 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-currency-dollar text-info" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-currency-dollar text-info me-2"></i>Gross Revenue
+                </h6>
+                <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card report-card border-warning">
+
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-danger h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title text-muted">Avg. Transaction</h6>
-                        <h3 class="fw-bold text-warning">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="bi bi-graph-up text-warning" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-arrow-return-left text-danger me-2"></i>Total Refunds
+                </h6>
+                <h3 class="fw-bold text-danger mb-0 text-end">-₱{{ number_format($salesData['summaryStats']->total_returns_value ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-success border-3 h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-wallet2 text-success me-2"></i>Net Revenue
+                </h6>
+                <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($salesData['summaryStats']->net_revenue ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-warning h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-calculator text-warning me-2"></i>Avg. Transaction
+                </h6>
+                <h3 class="fw-bold text-warning mb-0 text-end">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Sales Reports Content -->
-@include('reports.partials.sales')
+<div class="row">
+    <div class="col-12 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Sales by Date Range</h5>
+                <small>{{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Transactions</th>
+                                <th>Total Revenue</th>
+                                <th>Average per Transaction</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($salesData['salesByDate'] as $sale)
+                            <tr>
+                                <td>{{ \Carbon\Carbon::parse($sale->date)->format('M d, Y') }}</td>
+                                <td>{{ $sale->transaction_count }}</td>
+                                <td>₱{{ number_format($sale->total_revenue, 2) }}</td>
+                                <td>₱{{ number_format($sale->total_revenue / $sale->transaction_count, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Top 10 Products by Items Sold</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity Sold</th>
+                                <th>Revenue</th>
+                                <th>Avg Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($salesData['topProductsByQuantity'] as $product)
+                            <tr>
+                                <td>{{ $product->name }}</td>
+                                <td>{{ $product->total_quantity }}</td>
+                                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
+                                <td>₱{{ number_format($product->avg_price, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Top 10 Products by Revenue</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Revenue</th>
+                                <th>Avg Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($salesData['topProductsByRevenue'] as $product)
+                            <tr>
+                                <td>{{ $product->name }}</td>
+                                <td>{{ $product->total_quantity }}</td>
+                                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
+                                <td>₱{{ number_format($product->avg_price, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0">Sales by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Revenue</th>
+                                <th>Quantity</th>
+                                <th>Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($salesData['categoryAnalysis'] as $category)
+                            <tr>
+                                <td>{{ $category->category_name }}</td>
+                                <td>₱{{ number_format($category->total_revenue, 2) }}</td>
+                                <td>{{ $category->total_quantity }}</td>
+                                <td>{{ $category->transaction_count }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Sales Table -->
+    <div class="col-12 mb-4">
+        <div class="card report-card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Detailed Sales Transactions</h5>
+                    <small>Individual sales records for the selected period</small>
+                </div>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDetailedCSV()">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV  
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Date & Time</th>
+                                <th>Cashier</th>
+                                <th>Items Sold</th>
+                                <th>Total Amount</th>
+                                <th>Payment Method</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($salesData['detailedSales'] as $sale)
+                            <tr>
+                                <td><strong>#{{ $sale->id }}</strong></td>
+                                <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y h:i A') }}</td>
+                                <td>{{ $sale->f_name ?? 'N/A' }} {{ $sale->l_name ?? '' }}</td>
+                                <td>{{ $sale->items_count }} items</td>
+                                <td>₱{{ number_format($sale->total_amount, 2) }}</td>
+                                <td>{{ $sale->payment_method ?? 'N/A' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info btn-action view-sale" data-id="{{ $sale->id }}" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <a href="{{ route('sales.receipt', $sale->id) }}" class="btn btn-sm btn-outline-success btn-action" title="Print Receipt" target="_blank">
+                                        <i class="bi bi-receipt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    No sales found for the selected period
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                @if($salesData['detailedSales']->hasPages())
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $salesData['detailedSales']->appends(request()->query())->links('pagination::bootstrap-4') }}
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <!-- View Sale Modal -->
 <div class="modal fade" id="viewSaleModal" tabindex="-1" aria-labelledby="viewSaleModalLabel" aria-hidden="true">
@@ -126,7 +322,7 @@
             </div>
             <div class="modal-body">
                 <!-- Sale Information -->
-                <div class="row mb-4">
+                <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="card">
                             <div class="card-header bg-light">
@@ -253,10 +449,49 @@
         document.getElementById('customDateRangeEnd').style.display = isCustom ? 'block' : 'none';
     });
 
-    function exportReport() {
-        // Implement PDF export functionality
-        alert('Sales Report PDF export functionality would be implemented here');
-    }
+    function exportSummaryPDF() {
+    // Get current filter parameters
+    const form = document.getElementById('reportFilterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    
+    // Show loading state
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+    btn.disabled = true;
+    
+    // Trigger PDF download
+    window.location.href = `/reports/sales/export-summary?${params.toString()}`;
+    
+    // Reset button after a delay
+    setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }, 3000);
+}
+
+function exportDetailedCSV() {
+    // Get current filter parameters
+    const form = document.getElementById('reportFilterForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+    
+    // Show loading state
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+    btn.disabled = true;
+    
+    // Trigger CSV download
+    window.location.href = `/reports/sales/export-detailed?${params.toString()}`;
+    
+    // Reset button after a delay
+    setTimeout(() => {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+    }, 3000);
+}
 
     // Auto-submit form when date range changes (except custom)
     document.getElementById('dateRange').addEventListener('change', function() {
