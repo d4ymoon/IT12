@@ -88,6 +88,13 @@
                     {{ session('success') }}
                 </div>
             @endif
+
+            @if(session('message'))
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock-history me-2"></i>
+                    {{ session('message') }}
+                </div>
+            @endif
             
             <form method="POST" action="/login">
                 @csrf

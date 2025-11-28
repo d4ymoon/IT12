@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.simple' => \App\Http\Middleware\SimpleAuth::class,
             'role' => \App\Http\Middleware\CheckRole::class,
+            'session.activity' => \App\Http\Middleware\CheckSessionActivity::class,
+        ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckSessionActivity::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

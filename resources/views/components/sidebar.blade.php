@@ -78,29 +78,37 @@
                 </div>
             </li>
 
-            <!-- Stock In - Admin Only -->
+            <!-- Inventory Management - Admin Only -->
             <li class="nav-item">
-                <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('stock-ins*') ? 'active' : '' }}">
-                    <i class="bi bi-box-arrow-in-down me-3"></i>
-                    <span>Stock In</span>
+                <a href="#collapseInventoryOps" class="nav-link collapsed pe-1" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps">
+                    <i class="bi bi-box-seam me-3"></i>
+                    <span class="pe-2">Inventory Management</span>
+                    <i class="bi bi-chevron-down ms-auto chevron"></i>
                 </a>
+                <div class="collapse {{ request()->is('stock-ins*') || request()->is('stock-adjustments*') || request()->is('returns*') ? 'show' : '' }}" id="collapseInventoryOps">
+                    <ul class="nav flex-column ps-3">
+                        <li class="nav-item">
+                            <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('stock-ins*') ? 'active' : '' }}">
+                                <i class="bi bi-box-arrow-in-down me-3"></i>
+                                <span>Stock In</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('stock-adjustments.index') }}" class="nav-link {{ request()->is('stock-adjustments*') ? 'active' : '' }}">
+                                <i class="bi bi-sliders me-3"></i>
+                                <span>Stock Adjustments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}">
+                                <i class="bi bi-arrow-counterclockwise me-3"></i>
+                                <span>Returns</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
 
-            <!-- Stock Adjustments - Admin Only -->
-            <li class="nav-item">
-                <a href="{{ route('stock-adjustments.index') }}" class="nav-link {{ request()->is('stock-adjustments*') ? 'active' : '' }}">
-                    <i class="bi bi-sliders me-3"></i>
-                    <span>Stock Adjustments</span>
-                </a>
-            </li>
-
-            <!-- Returns - Admin Only -->
-            <li class="nav-item">
-                <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}">
-                    <i class="bi bi-arrow-counterclockwise me-3"></i>
-                    <span>Returns</span>
-                </a>
-            </li>
 
             <!-- Reports Menu - Admin Only -->
             <li class="nav-item">

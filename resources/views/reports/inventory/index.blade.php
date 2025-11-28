@@ -386,10 +386,10 @@
                         </tbody>
                     </table>
                     @if($inventoryData['deadStock']->hasPages())
-<div class="d-flex justify-content-center mt-3">
-    {{ $inventoryData['deadStock']->links('pagination::bootstrap-4') }}
-</div>
-@endif
+                    <div class="d-flex justify-content-center mt-3">
+                        {{ $inventoryData['deadStock']->links('pagination::bootstrap-4') }}
+                    </div>
+                    @endif
                 </div>
                 @else
                 <div class="text-center py-4">
@@ -449,10 +449,10 @@
                     </table>
                 </div>
                 @if($inventoryData['stockLevels']->hasPages())
-<div class="d-flex justify-content-center mt-3">
-    {{ $inventoryData['stockLevels']->links('pagination::bootstrap-4') }}
-</div>
-@endif
+                <div class="d-flex justify-content-center mt-3">
+                    {{ $inventoryData['stockLevels']->links('pagination::bootstrap-4') }}
+                </div>
+                @endif
             </div>
         </div>
     </div>
