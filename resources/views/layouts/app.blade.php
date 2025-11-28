@@ -13,8 +13,6 @@
     <link href="{{ asset('css/vendor/select2.min.css') }}" rel="stylesheet">
     
     <style>
- 
-        
         /* Company Color Variables */
         :root {
             --congress-blue: #06448a;
@@ -181,12 +179,72 @@
                 margin-left: 80px;
                 width: calc(100vw - 80px);
             }
+            /* Collapsed Sidebar */
+.sidebar.collapsed {
+    width: 80px;
+}
+
+.sidebar.collapsed .sidebar-content {
+    overflow-x: hidden;
+}
+
+.sidebar.collapsed .nav-link span {
+    display: none; /* Hide text */
+}
+
+.sidebar.collapsed .nav-link .chevron {
+    display: none; /* Hide chevrons for submenus */
+}
+
+.sidebar.collapsed .logo-container div {
+    display: none; /* Hide company text */
+}
+
+.sidebar.collapsed .main-content,
+.sidebar.collapsed .main-iframe {
+    margin-left: 80px;
+    width: calc(100vw - 80px);
+}
+
+.sidebar-toggle {
+    text-align: right;
+}
+
         }
     </style>
     
     @stack('styles')
 </head>
 <body>
+
+   <!-- Default Password Reminder Modal -->
+    <div class="modal fade" id="defaultPasswordModal" tabindex="-1" aria-labelledby="defaultPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-2 shadow-sm">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="defaultPasswordModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Security Reminder
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="fw-semibold fs-6">
+                        You are currently using your <strong>default password</strong>.
+                    </p>
+                    <p>
+                        For your account security, we strongly recommend updating it as soon as possible.
+                    </p>
+                    <i class="bi bi-shield-lock text-warning fs-1"></i>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" id="dismissDefaultPasswordModal">Remind Me Later</button>
+                    <a href="{{ route('account.settings') }}" class="btn btn-warning fw-semibold" id="changeNowBtn">Change Password</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @include('components.sidebar')
     
     <!-- Everything else is one big iframe -->
@@ -203,59 +261,113 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-        const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
-        
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                // If it's a collapse toggle (has data-bs-toggle="collapse"), don't prevent default
-                if (this.getAttribute('data-bs-toggle') === 'collapse') {
-                    // Let Bootstrap handle the collapse
-                    return;
-                }
-                
-                // If it's a regular navigation link (has href and not #), let it navigate normally
-                const href = this.getAttribute('href');
-                if (href && href !== '#') {
-                    // Let the browser navigate to the page normally
-                    return;
-                }
-                
-                // Only prevent default for links that don't navigate anywhere
-                e.preventDefault();
-                
-                // Update active state for non-navigation links
-                sidebarLinks.forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        // Auto-expand sidebar sections based on current page
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('/roles') || currentPath.includes('/users')) {
-            const userCollapse = document.getElementById('collapseUser');
-            if (userCollapse) {
-                userCollapse.classList.add('show');
-                const trigger = document.querySelector('[aria-controls="collapseUser"]');
-                if (trigger) {
-                    trigger.classList.remove('collapsed');
-                }
-            }
-        }
-        
-        // Auto-expand inventory section if on related pages
-        if (currentPath.includes('/products') || currentPath.includes('/categories') || currentPath.includes('/suppliers')) {
-            const inventoryCollapse = document.getElementById('collapseInventory');
-            if (inventoryCollapse) {
-                inventoryCollapse.classList.add('show');
-                const trigger = document.querySelector('[aria-controls="collapseInventory"]');
-                if (trigger) {
-                    trigger.classList.remove('collapsed');
-                }
-            }
-        }
-    });
-    </script>
+            const modalEl = document.getElementById('defaultPasswordModal');
     
+            // Check the session flag that you set in login controller
+            const shouldShowModal = {{ session('show_default_password_modal') ? 'true' : 'false' }};
+    
+            console.log('Session flag - show modal:', shouldShowModal);
+            console.log('User password changed:', {{ auth()->check() ? (auth()->user()->password_changed ? 'true' : 'false') : 'false' }});
+    
+            if (modalEl && shouldShowModal) {
+                console.log('Showing default password modal from session flag');
+                const defaultModal = new bootstrap.Modal(modalEl);
+                defaultModal.show();
+    
+                // Clear the session flag so it doesn't show again on page refresh
+                fetch('{{ route("clear-password-modal-flag") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).catch(err => console.log('Flag clear request failed:', err));
+    
+                // Later button hides modal
+                document.getElementById('dismissDefaultPasswordModal').addEventListener('click', function() {
+                    defaultModal.hide();
+                });
+    
+                // Change Now button navigates to settings
+                document.getElementById('changeNowBtn').addEventListener('click', function() {
+                    // The href will handle navigation
+                });
+            }
+    
+            // Sidebar functionality
+            const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+            
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // If it's a collapse toggle (has data-bs-toggle="collapse"), don't prevent default
+                    if (this.getAttribute('data-bs-toggle') === 'collapse') {
+                        // Let Bootstrap handle the collapse
+                        return;
+                    }
+                    
+                    // If it's a regular navigation link (has href and not #), let it navigate normally
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#') {
+                        // Let the browser navigate to the page normally
+                        return;
+                    }
+                    
+                    // Only prevent default for links that don't navigate anywhere
+                    e.preventDefault();
+                    
+                    // Update active state for non-navigation links
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+    
+            // Auto-expand sidebar sections based on current page
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('/roles') || currentPath.includes('/users')) {
+                const userCollapse = document.getElementById('collapseUser');
+                if (userCollapse) {
+                    userCollapse.classList.add('show');
+                    const trigger = document.querySelector('[aria-controls="collapseUser"]');
+                    if (trigger) {
+                        trigger.classList.remove('collapsed');
+                    }
+                }
+            }
+            
+            // Auto-expand inventory section if on related pages
+            if (currentPath.includes('/products') || currentPath.includes('/categories') || currentPath.includes('/suppliers')) {
+                const inventoryCollapse = document.getElementById('collapseInventory');
+                if (inventoryCollapse) {
+                    inventoryCollapse.classList.add('show');
+                    const trigger = document.querySelector('[aria-controls="collapseInventory"]');
+                    if (trigger) {
+                        trigger.classList.remove('collapsed');
+                    }
+                }
+            }
+
+            // Sidebar collapse/expand
+const toggleBtn = document.getElementById('toggleSidebar');
+const sidebar = document.querySelector('.sidebar');
+
+toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+
+    // Optional: save state in localStorage
+    if (sidebar.classList.contains('collapsed')) {
+        localStorage.setItem('sidebarCollapsed', 'true');
+    } else {
+        localStorage.setItem('sidebarCollapsed', 'false');
+    }
+});
+
+// Restore state on page load
+if (localStorage.getItem('sidebarCollapsed') === 'true') {
+    sidebar.classList.add('collapsed');
+}
+
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

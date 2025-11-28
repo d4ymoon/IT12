@@ -92,6 +92,10 @@ Route::middleware(['auth.simple'])->group(function () {
 
     // Both admin and employee can access these
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    Route::post('/clear-password-modal-flag', function() {
+        session()->forget('show_default_password_modal');
+        return response()->json(['success' => true]);
+    })->name('clear-password-modal-flag');
 
     // Shared POS functionality routes
     Route::prefix('pos')->group(function () {

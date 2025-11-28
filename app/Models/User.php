@@ -29,6 +29,7 @@ class User extends Authenticatable
         'disabled_by_user_id',
         'email',
         'password',
+        'password_changed'
     ];
 
     /**
@@ -53,6 +54,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_changed' => 'boolean',
             'is_active' => 'boolean',
             'date_disabled' => 'datetime',
             'created_at' => 'datetime',

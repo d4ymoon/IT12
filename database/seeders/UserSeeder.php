@@ -27,7 +27,8 @@ class UserSeeder extends Seeder
                 'email'      => 'admin@atinhardware.com',
                 'role_id'    => $adminRole->id, 
                 'is_active'  => true,
-                'password'   => Hash::make('admin1234'), 
+                'password'   => Hash::make('admin1234'),
+                'password_changed' => false,
             ]);
         }
 
@@ -40,6 +41,7 @@ class UserSeeder extends Seeder
                 'role_id'    => $employeeRole->id, 
                 'is_active'  => true,
                 'password'   => Hash::make('employee1234'), 
+                'password_changed' => false,
             ]);
         }
     }

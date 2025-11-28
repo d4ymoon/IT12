@@ -41,7 +41,11 @@ class AuthController extends Controller
                 'role_id' => $user->role_id,
                 'username' => $user->username,
             ]);
-
+            
+            if ($user->password_changed == 0) {
+                session(['show_default_password_modal' => true]);
+            }
+            
             if ($user->role_id == 1) { // Administrator
                 return redirect('/dashboard')->with('success', 'Welcome back, ' . $user->f_name . '!');
             } else { // Employee

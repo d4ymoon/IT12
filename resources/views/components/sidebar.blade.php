@@ -2,14 +2,19 @@
 <nav class="sidebar">
     <div class="sidebar-content">
         <div class="logo-container">
-            <div class="d-flex align-items-center">
-                <img src="{{ asset('images/atin_logo.png') }}" alt="Company Logo" class="img-fluid me-3" style="max-height: 50px;">
-                <div>
-                    <div class="fw-bold fs-4 mb-0" style="color: var(--congress-blue);">ATIN</div>
-                    <div class="small text-muted mb-0" style="line-height: 1.2;">
-                        Industrial Hardware<br>Supply Inc.
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <img src="{{ asset('images/atin_logo.png') }}" alt="Company Logo" class="img-fluid me-3 sidebar-logo" style="max-height: 50px;">
+                    <div class="logo-text">
+                        <div class="fw-bold fs-4 mb-0" style="color: var(--congress-blue);">ATIN</div>
+                        <div class="small text-muted mb-0" style="line-height: 1.2;">
+                            Industrial Hardware<br>Supply Inc.
+                        </div>
                     </div>
                 </div>
+                <button id="toggleSidebar" class="btn btn-link p-0 sidebar-toggle-btn" type="button" title="Toggle Sidebar">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
             </div>
         </div>
         
@@ -149,35 +154,37 @@
                     </ul>
                 </div>
             </li>
-            @endif
-
-            <!-- Settings - Show for both roles -->
-            <li class="nav-item mt-4">
-                <a href="{{ route('account.settings') }}" class="nav-link {{ request()->is('account/settings*') ? 'active' : '' }}">
-                    <i class="bi bi-gear me-3"></i>
-                    <span>Settings</span>
-                </a>
-            </li>
+            @endif            
         </ul>
     </div> <!-- End sidebar-content -->
 
-    <!-- Logout Section -->
-    <div class="p-4 border-top border-secondary">
-        <div class="d-flex align-items-center">
-            <div class="user-avatar me-3">
-                {{ strtoupper(substr(session('user_name'), 0, 1)) }}
-            </div>
-            <div class="flex-grow-1">
-                <div class="fw-bold" style="color: var(--congress-blue);">{{ session('user_name') }}</div>
-                <small class="text-muted">{{ session('user_role') }}</small>
-            </div>
+    <div class="p-3 border-top border-secondary sidebar-footer">
+        <div class="dropdown">
+            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle sidebar-user-link" data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="user-avatar me-3">
+                    {{ strtoupper(substr(session('user_name'), 0, 1)) }}
+                </div>
+                <div class="flex-grow-1 sidebar-user-info">
+                    <div class="fw-bold small" style="color: var(--congress-blue);">{{ session('user_name') }}</div>
+                    <small class="text-muted">{{ session('user_role') }}</small>
+                </div>
+            </a>
+            <ul class="dropdown-menu dropdown-menu shadow">
+                <li>
+                    <a class="dropdown-item" href="{{ route('account.settings') }}">
+                        <i class="bi bi-gear me-2"></i>Settings
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form action="/logout" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
-        <form action="/logout" method="POST" class="mt-3">
-            @csrf
-            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
-                <i class="bi bi-box-arrow-right me-1"></i>
-                Logout
-            </button>
-        </form>
     </div>
 </nav>

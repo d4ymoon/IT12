@@ -72,7 +72,6 @@
             </div>
         </div>
     </div>
-
     <!-- Users Table -->
     <div class="table-container">
         <div class="table-responsive">
@@ -207,15 +206,10 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required maxlength="100">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm password" required maxlength="100">
-                                </div>
                             </div>
+                        </div>
+                        <div class="alert alert-warning mt-2 small">
+                            * Password will be automatically generated.
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -295,72 +289,72 @@
     </div>
 
     <!-- View User Modal - Compact -->
-<div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="viewUserModalLabel">
-                    <i class="bi bi-person-circle me-2"></i>
-                    User Details
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- User Info in a more compact list -->
-                <div class="list-group list-group-flush">
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Username:</small>
-                        <span class="fw-semibold" id="viewUsername"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Full Name:</small>
-                        <span class="fw-semibold" id="viewFullName"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Email:</small>
-                        <span class="fw-semibold" id="viewEmail"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Contact:</small>
-                        <span class="fw-semibold" id="viewContactNo">N/A</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Role:</small>
-                        <span class="fw-semibold" id="viewRole"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Status:</small>
-                        <span class="fw-semibold" id="viewStatusText"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Created:</small>
-                        <span class="fw-semibold" id="viewCreatedAt"></span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between px-0">
-                        <small class="text-muted">Updated:</small>
-                        <span class="fw-semibold" id="viewUpdatedAt"></span>
-                    </div>
+    <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel">
+                        <i class="bi bi-person-circle me-2"></i>
+                        User Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                <div class="modal-body">
+                    <!-- User Info in a more compact list -->
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Username:</small>
+                            <span class="fw-semibold" id="viewUsername"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Full Name:</small>
+                            <span class="fw-semibold" id="viewFullName"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Email:</small>
+                            <span class="fw-semibold" id="viewEmail"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Contact:</small>
+                            <span class="fw-semibold" id="viewContactNo">N/A</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Role:</small>
+                            <span class="fw-semibold" id="viewRole"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Status:</small>
+                            <span class="fw-semibold" id="viewStatusText"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Created:</small>
+                            <span class="fw-semibold" id="viewCreatedAt"></span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Updated:</small>
+                            <span class="fw-semibold" id="viewUpdatedAt"></span>
+                        </div>
+                    </div>
 
-                <!-- Archive Info -->
-                <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
-                    <small class="text-muted d-block">Archive Information</small>
-                    <div class="d-flex justify-content-between">
-                        <small>Date:</small>
-                        <small class="fw-semibold" id="viewDateDisabled"></small>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <small>By:</small>
-                        <small class="fw-semibold" id="viewDisabledBy"></small>
-                    </div>
-                </div>               
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <!-- Archive Info -->
+                    <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
+                        <small class="text-muted d-block">Archive Information</small>
+                        <div class="d-flex justify-content-between">
+                            <small>Date:</small>
+                            <small class="fw-semibold" id="viewDateDisabled"></small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small>By:</small>
+                            <small class="fw-semibold" id="viewDisabledBy"></small>
+                        </div>
+                    </div>               
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Archive Confirmation Modal -->
     <div class="modal fade" id="archiveUserModal" tabindex="-1" aria-labelledby="archiveUserModalLabel" aria-hidden="true">
@@ -428,11 +422,55 @@
         </div>
     </div>
 
+    <!-- Temporary Password Modal -->
+    <div class="modal fade" id="tempPasswordModal" tabindex="-1" aria-labelledby="tempPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tempPasswordModalLabel">
+                        <i class="bi bi-person-plus me-2"></i> New User Created
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <!-- User Info -->
+                    <div class="mb-3">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2">User Created Successfully!</h5>
+                    </div>
+                    
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title mb-2">User Details</h6>
+                            <p class="mb-1"><strong>Name:</strong> <span id="newUserName"></span></p>
+                            <p class="mb-1"><strong>Username:</strong> <span id="newUserUsername"></span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Temporary Password -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading mb-2">
+                            <i class="bi bi-key me-1"></i>Temporary Password
+                        </h6>
+                        <p class="mb-2 fw-bold fs-5" id="tempPasswordDisplay"></p>
+                        <small class="mb-0">
+                            Please provide this password to the user. They will be required to change it upon first login.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Reset Password Modal -->
     <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="resetPasswordForm" method="POST">
+                <form id="resetPasswordForm" method="POST" action="/users/{{ $user->id }}/reset-password">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="resetPasswordModalLabel">
@@ -473,6 +511,18 @@
 
     @push('scripts')
     <script>
+
+    @if(session('temp_password'))
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('newUserName').textContent = '{{ session('new_user_name') }}';
+            document.getElementById('newUserUsername').textContent = '{{ session('new_user_username') }}';
+            document.getElementById('tempPasswordDisplay').textContent = '{{ session('temp_password') }}';
+            
+            var tempModal = new bootstrap.Modal(document.getElementById('tempPasswordModal'));
+            tempModal.show();
+        });
+    @endif
+
         let currentViewUserId = null;
     
         // Edit User
@@ -598,41 +648,7 @@
             });
         });
             
-        // Handle reset password form submission - Check if element exists first
-        const resetPasswordForm = document.getElementById('resetPasswordForm');
-        if (resetPasswordForm) {
-            resetPasswordForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData(this);
-                const url = this.action;
-                
-                fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show success message
-                        alert('Password reset successfully!');
-                        
-                        // Close the reset modal
-                        const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
-                        resetModal.hide();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error resetting password');
-                });
-            });
-        }
+        
     </script>
     @endpush
 @endsection

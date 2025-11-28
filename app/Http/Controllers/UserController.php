@@ -8,6 +8,7 @@ use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -69,10 +70,12 @@ class UserController extends Controller
                 'contactNo' => 'nullable|string|max:50',
                 'role_id' => 'required|exists:roles,id',
                 'email' => 'required|string|email|max:255|unique:users',
-                'password' => ['required', 'confirmed', Rules\Password::defaults()],
             ]);
 
-            User::create([
+            // TEMPORARY PASSWORD
+            $tempPassword = strtoupper(Str::random(2)) . random_int(1000, 9999);
+
+            $user = User::create([
                 'username' => $request->username,
                 'f_name' => ucwords(strtolower($request->f_name)),
                 'm_name' => $request->m_name ? ucwords(strtolower($request->m_name)) : null,
@@ -80,11 +83,13 @@ class UserController extends Controller
                 'contactNo' => $request->contactNo,
                 'role_id' => $request->role_id,
                 'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'password' => Hash::make($tempPassword),
+                'password_changed' => false,
                 'is_active' => true,
             ]);
 
-            return redirect()->route('users.index')->with('success', 'User added successfully.');
+            return redirect()->route('users.index')->with('temp_password', $tempPassword)->with('new_user_name', $user->full_name) 
+            ->with('new_user_username', $user->username)->with('success', 'User added successfully!');
             
         } catch (Exception $e) {
             return redirect()->route('users.index')->with('error', 'Error: ' . $e->getMessage());
@@ -205,16 +210,12 @@ class UserController extends Controller
                 'password' => Hash::make($request->password),
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Password reset successfully.'
-            ]);
-            
+            return redirect()->route('users.index')
+                ->with('success', 'Password for ' . $user->full_name . ' has been successfully reset.');
+
         } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
+            return redirect()->route('users.index')
+                ->with('error', 'Error: ' . $e->getMessage());
         }
     }
 }
