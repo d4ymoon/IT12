@@ -53,7 +53,7 @@
                         <li class="nav-item">
                             <a href="{{ route('products.index') }}" class="nav-link {{ request()->is('products*') ? 'active' : '' }}">
                                 <i class="bi bi-box-seam me-3"></i>
-                                <span>Product List</span>
+                                <span>Products</span>
                             </a>
                         </li>
                         <li class="nav-item">

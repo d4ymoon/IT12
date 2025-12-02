@@ -176,7 +176,9 @@
                         </td>
                         <td>
                             @if($product->latestProductPrice)
-                                {{ $product->latestProductPrice->updated_at->format('Y-m-d') }}
+                                <span title="{{ $product->latestProductPrice->updated_at->format('Y-m-d') }}">
+                                    {{ $product->latestProductPrice->updated_at->format('M j, Y') }}
+                                </span>
                                 <br>
                                 <small class="text-muted">
                                     by {{ $product->latestProductPrice->updatedBy->full_name ?? 'System' }}
@@ -340,7 +342,11 @@
                                     <td class="fw-bold">₱${parseFloat(price.retail_price).toFixed(2)}</td>
                                     <td>${price.updated_by ? price.updated_by.full_name : 'System'}</td>
                                     <td>${price.stock_in ? price.stock_in.reference_no : 'Manual Update'}</td>
-                                    <td>${new Date(price.updated_at).toLocaleString()}</td>
+                                    <td>${new Date(price.updated_at).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric', 
+                                        year: 'numeric' 
+                                    })}</td>
                                 `;
                                 table.appendChild(row);
                             });

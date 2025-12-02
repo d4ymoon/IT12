@@ -260,7 +260,7 @@
                     <!-- Reason Notes -->
                     <div class="mt-3">
                         <small class="text-muted">Reason Notes:</small>
-                        <div class="border rounded p-3 bg-light">
+                        <div class="border rounded p-3 bg-light" style="word-break: break-word; white-space: normal;">
                             <span id="viewReasonNotes"></span>
                         </div>
                     </div>

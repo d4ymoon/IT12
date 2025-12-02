@@ -65,7 +65,6 @@
                         <th>Category Name</th>
                         <th>SKU Prefix</th>
                         <th>Description</th>
-                        <th>Created Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -76,7 +75,6 @@
                         <td>{{ $category->name }}</td>
                         <td><code>{{ $category->sku_prefix }}</code></td> 
                         <td class="description-cell" title="{{ $category->description }}">{{ $category->description ?? 'No description' }}</td>
-                        <td>{{ $category->created_at->format('Y-m-d') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-category" data-id="{{ $category->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -304,8 +302,17 @@
                         document.getElementById('viewCategoryName').textContent = category.name;
                         document.getElementById('viewCategorySkuPrefix').textContent = category.sku_prefix;
                         document.getElementById('viewCategoryDescription').textContent = category.description || 'No description';
-                        document.getElementById('viewCategoryCreatedAt').textContent = new Date(category.created_at).toLocaleString();
-                        document.getElementById('viewCategoryUpdatedAt').textContent = new Date(category.updated_at).toLocaleString();
+                        document.getElementById('viewCategoryCreatedAt').textContent = new Date(category.created_at).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric'
+                        });
+
+                        document.getElementById('viewCategoryUpdatedAt').textContent = new Date(category.updated_at).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric'
+                        });
                         
                         const modal = new bootstrap.Modal(document.getElementById('viewCategoryModal'));
                         modal.show();

@@ -32,6 +32,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Protected routes - require login
 Route::middleware(['auth.simple'])->group(function () {
     
+    Route::get('/products/search', [ProductController::class, 'search'])->name('products.search')->withoutMiddleware('auth.simple');
     // Admin only routes - use the new 'admin' middleware
     Route::middleware(['role:Administrator'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -50,6 +51,7 @@ Route::middleware(['auth.simple'])->group(function () {
 
         Route::post('/suppliers/{supplier}/archive', [SupplierController::class, 'archive'])->name('suppliers.archive');
         Route::post('/suppliers/{supplier}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
+
 
         Route::post('/products/{product}/archive', [ProductController::class, 'archive'])->name('products.archive');
         Route::post('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');

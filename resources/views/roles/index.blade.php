@@ -74,7 +74,7 @@
                         <td>{{ $role->id }}</td>
                         <td>{{ $role->name }}</td>
                         <td class="description-cell" title="{{ $role->description }}">{{ $role->description ?? 'No description' }}</td>
-                        <td>{{ $role->created_at->format('Y-m-d') }}</td>
+                        <td>{{ $role->created_at->format('M j, Y') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-role" data-id="{{ $role->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -281,9 +281,17 @@
                         document.getElementById('viewRoleId').textContent = role.id;
                         document.getElementById('viewRoleName').textContent = role.name;
                         document.getElementById('viewRoleDescription').textContent = role.description || 'No description';
-                        document.getElementById('viewRoleCreatedAt').textContent = new Date(role.created_at).toLocaleString();
-                        document.getElementById('viewRoleUpdatedAt').textContent = new Date(role.updated_at).toLocaleString();
-                        
+                        document.getElementById('viewRoleCreatedAt').textContent = new Date(role.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                        document.getElementById('viewRoleUpdatedAt').textContent = new Date(role.updated_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                                                
                         const modal = new bootstrap.Modal(document.getElementById('viewRoleModal'));
                         modal.show();
                     })

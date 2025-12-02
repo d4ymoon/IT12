@@ -94,7 +94,6 @@
                         <th>Email</th>
                         <th>Contact No.</th>
                         <th>Role</th>
-                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -109,7 +108,6 @@
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->contactNo ?? 'N/A' }}</td>
                         <td class="primary">{{ $user->role->name }}</td>
-                        <td>{{ $user->updated_at->format('Y-m-d') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-secondary btn-action reset-password" 
                                     data-id="{{ $user->id }}" 
@@ -563,9 +561,17 @@
                         document.getElementById('viewEmail').textContent = user.email;
                         document.getElementById('viewContactNo').textContent = user.contactNo || 'N/A';
                         document.getElementById('viewRole').textContent = user.role.name;
-                        document.getElementById('viewCreatedAt').textContent = new Date(user.created_at).toLocaleString();
-                        document.getElementById('viewUpdatedAt').textContent = new Date(user.updated_at).toLocaleString();
-                        
+                        document.getElementById('viewCreatedAt').textContent = new Date(user.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                        document.getElementById('viewUpdatedAt').textContent = new Date(user.updated_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                                                
                         const statusText = document.getElementById('viewStatusText');
                         if (user.is_active) {
                             statusText.textContent = 'Active';
@@ -579,7 +585,11 @@
                             // Date disabled
                             if (user.date_disabled) {
                                 document.getElementById('viewDateDisabled').textContent = 
-                                    new Date(user.date_disabled).toLocaleString();
+                                new Date(user.date_disabled).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                });
                             } else {
                                 document.getElementById('viewDateDisabled').textContent = 'N/A';
                             }

@@ -472,7 +472,7 @@
                         } else {
                             supplierElement.textContent = 'No supplier assigned';
                         }
-
+        
                         const createdAtElement = document.getElementById('viewCreatedAt');
                         const updatedAtElement = document.getElementById('viewUpdatedAt');
                         if (product.created_at) {
@@ -485,7 +485,7 @@
                         } else {
                             createdAtElement.textContent = 'N/A';
                         }
-
+        
                         if (product.updated_at) {
                             const updatedDate = new Date(product.updated_at);
                             updatedAtElement.textContent = updatedDate.toLocaleDateString('en-US', {
@@ -496,7 +496,7 @@
                         } else {
                             updatedAtElement.textContent = 'N/A';
                         }
-
+        
                         // Handle archive info
                         if (product.is_active) {
                             document.getElementById('archiveInfo').style.display = 'none';
@@ -506,7 +506,11 @@
                             // Date disabled
                             if (product.date_disabled) {
                                 document.getElementById('viewDateDisabled').textContent = 
-                                    new Date(product.date_disabled).toLocaleString();
+                                new Date(product.date_disabled).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                });
                             } else {
                                 document.getElementById('viewDateDisabled').textContent = 'N/A';
                             }
@@ -560,6 +564,6 @@
                 modal.show();
             });
         });
-    </script>
+        </script>
     @endpush
 @endsection

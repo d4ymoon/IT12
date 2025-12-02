@@ -93,7 +93,6 @@
                         <th>Supplier Name</th>
                         <th>Contact No.</th>
                         <th>Address</th>
-                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -106,7 +105,6 @@
                         <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
                             {{ $supplier->address ?? 'N/A' }}
                         </td>
-                        <td>{{ $supplier->updated_at->format('Y-m-d') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-supplier" data-id="{{ $supplier->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -399,8 +397,16 @@
                         document.getElementById('viewSupplierName').textContent = supplier.supplier_name;
                         document.getElementById('viewContactInfo').textContent = supplier.contactNO || 'N/A';
                         document.getElementById('viewAddress').textContent = supplier.address || 'N/A';
-                        document.getElementById('viewCreatedAt').textContent = new Date(supplier.created_at).toLocaleString();
-                        document.getElementById('viewUpdatedAt').textContent = new Date(supplier.updated_at).toLocaleString();
+                        document.getElementById('viewCreatedAt').textContent = new Date(supplier.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
+                        document.getElementById('viewUpdatedAt').textContent = new Date(supplier.updated_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                        });
                         
                         const statusText = document.getElementById('viewStatusText');
                         if (supplier.is_active) {
@@ -415,7 +421,12 @@
                             // Date disabled
                             if (supplier.date_disabled) {
                                 document.getElementById('viewDateDisabled').textContent = 
-                                    new Date(supplier.date_disabled).toLocaleString();
+                                document.getElementById('viewDateDisabled').textContent = 
+                                new Date(supplier.date_disabled).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric', 
+                                    year: 'numeric' 
+                                });
                             } else {
                                 document.getElementById('viewDateDisabled').textContent = 'N/A';
                             }

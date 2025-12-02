@@ -123,11 +123,7 @@ class Product extends Model
     {
         return $query->where('name', 'like', '%' . $search . '%')
                     ->orWhere('sku', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%')
                     ->orWhere('manufacturer_barcode', 'like', '%' . $search . '%')
-                    ->orWhereHas('category', function($q) use ($search) {
-                        $q->where('name', 'like', '%' . $search . '%');
-                    })
                     ->orWhereHas('defaultSupplier', function($q) use ($search) {
                         $q->where('supplier_name', 'like', '%' . $search . '%');
                     });
