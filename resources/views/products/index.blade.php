@@ -84,6 +84,25 @@
                     </select>
                 </div>
 
+                <!-- After the Category Filter section -->
+                <div class="col-md-2">
+                    <select class="form-select" onchange="window.location.href=this.value">
+                        <option value="{{ request()->fullUrlWithQuery(['stock_filter' => null]) }}">All Stock</option>
+                        <option value="{{ request()->fullUrlWithQuery(['stock_filter' => 'okay_stock']) }}" 
+                                {{ request('stock_filter') == 'okay_stock' ? 'selected' : '' }}>
+                            Normal Stock
+                        </option>
+                        <option value="{{ request()->fullUrlWithQuery(['stock_filter' => 'low_stock']) }}" 
+                                {{ request('stock_filter') == 'low_stock' ? 'selected' : '' }}>
+                            Low Stock
+                        </option>
+                        <option value="{{ request()->fullUrlWithQuery(['stock_filter' => 'out_of_stock']) }}" 
+                                {{ request('stock_filter') == 'out_of_stock' ? 'selected' : '' }}>
+                            Out of Stock
+                        </option>
+                    </select>
+                </div>
+
                 <!-- Archive Toggle & Sort -->
                 <div class="col-md-3">
                     <div class="d-flex gap-2 justify-content-between">
@@ -150,7 +169,6 @@
                         <th>Category</th>
                         <th>Stock</th>
                         <th>Supplier</th>
-                        <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -187,12 +205,18 @@
                                 <span class="text-muted">No supplier</span>
                             @endif
                         </td>
-                        <td>{{ $product->updated_at->format('Y-m-d') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-product" data-id="{{ $product->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
                             @if($product->is_active)
+                            <!-- Restock Button -->
+                                <a href="{{ route('stock-ins.create', ['product_id' => $product->id]) }}" 
+                                    class="btn btn-sm btn-outline-success btn-action" 
+                                    title="Restock"
+                                    data-bs-toggle="tooltip">
+                                    <i class="bi bi-box-arrow-in-down"></i>
+                                </a>
                                 <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-outline-warning btn-action" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
@@ -213,7 +237,7 @@
                     @empty
                     <tr>
                         <td colspan="8" class="text-center py-4">
-                            No {{ $showArchived ? 'archived' : 'active' }} products found
+                            No products found
                         </td>
                     </tr>
                     @endforelse
@@ -301,6 +325,21 @@
                                 <div class="col-7">
                                     <span class="fw-semibold" id="viewSupplier">N/A</span>
                                 </div>
+
+                                <div class="col-5">
+                                    <small class="text-muted">Created at:</small>
+                                </div>
+                                <div class="col-7">
+                                    <span class="fw-semibold" id="viewCreatedAt">N/A</span>
+                                </div>
+
+                                <div class="col-5">
+                                    <small class="text-muted">Last Updated:</small>
+                                </div>
+                                <div class="col-7">
+                                    <span class="fw-semibold" id="viewUpdatedAt">N/A</span>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -433,7 +472,31 @@
                         } else {
                             supplierElement.textContent = 'No supplier assigned';
                         }
-                        
+
+                        const createdAtElement = document.getElementById('viewCreatedAt');
+                        const updatedAtElement = document.getElementById('viewUpdatedAt');
+                        if (product.created_at) {
+                            const createdDate = new Date(product.created_at);
+                            createdAtElement.textContent = createdDate.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
+                        } else {
+                            createdAtElement.textContent = 'N/A';
+                        }
+
+                        if (product.updated_at) {
+                            const updatedDate = new Date(product.updated_at);
+                            updatedAtElement.textContent = updatedDate.toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            });
+                        } else {
+                            updatedAtElement.textContent = 'N/A';
+                        }
+
                         // Handle archive info
                         if (product.is_active) {
                             document.getElementById('archiveInfo').style.display = 'none';

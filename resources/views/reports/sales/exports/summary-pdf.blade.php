@@ -15,9 +15,8 @@
         .table th { background-color: #f8f9fa; border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table td { border: 1px solid #ddd; padding: 8px; }
         .section-title { background-color: #e9ecef; padding: 8px; margin: 15px 0 10px 0; font-weight: bold; }
-        .negative { color: #dc3545; }
-        .positive { color: #28a745; }
         .footer { margin-top: 30px; text-align: center; color: #666; font-size: 10px; }
+        .no-data { text-align: center; padding: 20px; color: #999; font-style: italic; }
     </style>
 </head>
 <body>
@@ -29,35 +28,42 @@
 
     <!-- Summary Statistics -->
     <div class="section-title">Summary Statistics</div>
-    <div class="kpi-grid">
-        <div class="kpi-card">
-            <div class="kpi-label">Total Transactions</div>
-            <div class="kpi-value">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Items Sold</div>
-            <div class="kpi-value">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Gross Revenue</div>
-            <div class="kpi-value">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Total Refunds</div>
-            <div class="kpi-value negative">-₱{{ number_format($salesData['summaryStats']->total_returns ?? 0, 2) }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Net Revenue</div>
-            <div class="kpi-value positive">₱{{ number_format($salesData['summaryStats']->net_revenue ?? 0, 2) }}</div>
-        </div>
-        <div class="kpi-card">
-            <div class="kpi-label">Avg. Transaction</div>
-            <div class="kpi-value">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</div>
-        </div>
-    </div>
+    <table class="table" style="margin-bottom: 20px; width: 100%;">
+        <tr>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Total Transactions</div>
+                <div class="kpi-value">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</div>
+            </td>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Items Sold</div>
+                <div class="kpi-value">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Gross Revenue</div>
+                <div class="kpi-value" style="text-align: right;">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</div>
+            </td>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Total Refunds</div>
+                <div class="kpi-value" style="text-align: right;">-₱{{ number_format($salesData['summaryStats']->total_returns ?? 0, 2) }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Net Revenue</div>
+                <div class="kpi-value" style="text-align: right;">₱{{ number_format($salesData['summaryStats']->net_revenue ?? 0, 2) }}</div>
+            </td>
+            <td style="width: 50%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; vertical-align: top;">
+                <div class="kpi-label">Avg. Transaction</div>
+                <div class="kpi-value" style="text-align: right;">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</div>
+            </td>
+        </tr>
+    </table>
 
     <!-- Sales by Date -->
     <div class="section-title">Sales by Date Range</div>
+    @if(count($salesData['salesByDate']) > 0)
     <table class="table">
         <thead>
             <tr>
@@ -78,9 +84,13 @@
             @endforeach
         </tbody>
     </table>
+    @else
+    <div class="no-data">No sales data for this period</div>
+    @endif
 
     <!-- Top Products by Quantity -->
     <div class="section-title">Top 10 Products by Items Sold</div>
+    @if(count($salesData['topProductsByQuantity']) > 0)
     <table class="table">
         <thead>
             <tr>
@@ -101,9 +111,13 @@
             @endforeach
         </tbody>
     </table>
+    @else
+    <div class="no-data">No product sales data for this period</div>
+    @endif
 
     <!-- Top Products by Revenue -->
     <div class="section-title">Top 10 Products by Revenue</div>
+    @if(count($salesData['topProductsByRevenue']) > 0)
     <table class="table">
         <thead>
             <tr>
@@ -124,9 +138,13 @@
             @endforeach
         </tbody>
     </table>
+    @else
+    <div class="no-data">No product revenue data for this period</div>
+    @endif
 
     <!-- Sales by Category -->
     <div class="section-title">Sales by Category</div>
+    @if(count($salesData['categoryAnalysis']) > 0)
     <table class="table">
         <thead>
             <tr>
@@ -147,6 +165,50 @@
             @endforeach
         </tbody>
     </table>
+    @else
+    <div class="no-data">No category sales data for this period</div>
+    @endif
+
+    <!-- Payment Methods Analysis -->
+    <div class="section-title">Payment Methods Analysis</div>
+    @if(isset($salesData['paymentMethods']) && count($salesData['paymentMethods']) > 0)
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Payment Method</th>
+                <th>Transactions</th>
+                <th>Total Amount</th>
+                <th>Average per Transaction</th>
+                <th>Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
+            @endphp
+            @foreach($salesData['paymentMethods'] as $payment)
+            <tr>
+                <td>{{ $payment->payment_method }}</td>
+                <td>{{ $payment->transaction_count }}</td>
+                <td>₱{{ number_format($payment->total_amount, 2) }}</td>
+                <td>₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
+                <td>{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
+            </tr>
+            @endforeach
+            @if($totalAmount > 0)
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+                <td>Total</td>
+                <td>{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
+                <td>₱{{ number_format($totalAmount, 2) }}</td>
+                <td>₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
+                <td>100%</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+    @else
+    <div class="no-data">No payment methods data for this period</div>
+    @endif
 
     <div class="footer">
         ATIN Sales Report | Confidential Business Document

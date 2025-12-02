@@ -224,62 +224,6 @@
         </div>
     </div>
 
-    <div class="col-12 mb-4">
-        <div class="card report-card">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Payment Methods Analysis</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportPaymentAnalysis()">
-                    <i class="bi bi-file-pdf me-1"></i>Export
-                </button>
-            </div>
-            <div class="card-body">
-                @if($financialData['paymentMethods']->count() > 0)
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Payment Method</th>
-                                <th class="text-center">Transactions</th>
-                                <th class="text-end">Total Amount</th>
-                                <th class="text-end">Average per Transaction</th>
-                                <th class="text-center">Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $totalAmount = $financialData['paymentMethods']->sum('total_amount');
-                            @endphp
-                            @foreach($financialData['paymentMethods'] as $payment)
-                            <tr>
-                                <td>{{ $payment->payment_method }}</td>
-                                <td class="text-center">{{ $payment->transaction_count }}</td>
-                                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
-                                <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
-                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
-                            </tr>
-                            @endforeach
-                            @if($totalAmount > 0)
-                            <tr class="table-light">
-                                <td class="fw-bold">Total</td>
-                                <td class="text-center fw-bold">{{ $financialData['paymentMethods']->sum('transaction_count') }}</td>
-                                <td class="text-end fw-bold">₱{{ number_format($totalAmount, 2) }}</td>
-                                <td class="text-end fw-bold">₱{{ number_format($totalAmount / $financialData['paymentMethods']->sum('transaction_count'), 2) }}</td>
-                                <td class="text-center fw-bold">100%</td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-                @else
-                <div class="text-center py-4">
-                    <i class="bi bi-credit-card text-muted" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 text-muted">No Payment Data</h5>
-                    <p class="text-muted">No payment transactions available for the selected period.</p>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
 @push('styles')
@@ -384,22 +328,5 @@
         }, 3000);
     }
 
-    function exportPaymentAnalysisCSV() {
-        const form = document.getElementById('reportFilterForm');
-        const formData = new FormData(form);
-        const params = new URLSearchParams(formData);
-        
-        const btn = event.target;
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
-        btn.disabled = true;
-        
-        window.location.href = `/reports/financial/export-payment-analysis?${params.toString()}`;
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHtml;
-            btn.disabled = false;
-        }, 3000);
-    }
 </script>
 @endpush

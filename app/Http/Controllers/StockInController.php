@@ -59,13 +59,18 @@ class StockInController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-{
-    $suppliers = Supplier::active()->get();
-    $products = Product::active()->with('defaultSupplier')->get(); // Changed from with('suppliers')
-    
-    return view('stock-in.create', compact('suppliers', 'products'));
-}
+    public function create(Request $request)
+    {
+        $suppliers = Supplier::active()->get();
+        $products = Product::active()->with('defaultSupplier')->get(); 
+
+        $selectedProduct = null;
+        if ($request->has('product_id')) {
+            $selectedProduct = Product::with('defaultSupplier')->find($request->product_id);
+        }
+        
+        return view('stock-in.create', compact('suppliers', 'products', 'selectedProduct'));    
+    }
 
     /**
      * Store a newly created resource in storage.

@@ -172,7 +172,7 @@
                         </td>
                         <td>
                             <span title="{{ $adjustment->reason_notes }}">
-                                {{ Str::limit($adjustment->reason_notes, 50) }}
+                                {{ Str::limit($adjustment->reason_notes, 25) }}
                             </span>
                         </td>
                         <td>{{ $adjustment->items->count() }}</td>

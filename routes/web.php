@@ -61,6 +61,7 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales.index');
         Route::get('/reports/sales/export-summary', [SalesReportController::class, 'exportSummaryPDF']);
         Route::get('/reports/sales/export-detailed', [SalesReportController::class, 'exportDetailedCSV']);
+        Route::get('/reports/sales/export-payment-methods', [SalesReportController::class, 'exportPaymentMethodsCSV']);
 
         Route::get('/reports/inventory', [InventoryReportController::class, 'index'])->name('reports.inventory.index');
         // Inventory Report CSV Exports

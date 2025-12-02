@@ -13,7 +13,7 @@
                     @if(request('filter_type') == 'custom')
                         Custom: {{ request('start_date') }} to {{ request('end_date') }}
                     @else
-                        {{ ucfirst(request('filter', 'this month')) }}
+                        {{ ucfirst(str_replace('_', ' ', request('filter', 'this month'))) }}
                     @endif
                 </span>
             </button>
@@ -34,82 +34,108 @@
     </div>
 </div>
 
-<!-- Key Metrics -->
+@if($lowStockAlerts->where('current_stock', 0)->count() > 0)
+<div class="alert alert-danger d-flex align-items-center mb-4">
+    <i class="bi bi-exclamation-triangle fs-4 me-3"></i>
+    <div class="flex-grow-1">
+        <strong>Urgent: {{ $lowStockAlerts->where('current_stock', 0)->count() }} product(s) out of stock!</strong>
+        <p class="mb-0">Restock immediately to prevent lost sales.</p>
+    </div>
+    <a href="{{ route('products.index') }}?stock_filter=out_of_stock" class="btn btn-outline-danger">
+        <i class="bi bi-box-arrow-in-down me-1"></i> Restock Now
+    </a>
+</div>
+@endif
+
+
+<!-- KEY METRICS -->
 <div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card dashboard-card bg-sales text-white">
-            <div class="card-body stat-card">
-                <i class="bi bi-currency-dollar stat-icon"></i>
-                <div class="stat-value">₱{{ number_format($totalRevenue, 2) }}</div>
-                <div class="stat-label">Total Revenue</div>
+    <!-- Total Revenue -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
+            <div class="card dashboard-card bg-primary text-white h-100 clickable-card">
+                <div class="card-body stat-card">
+                    <i class="bi bi-currency-dollar stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($totalRevenue, 0) }}</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card dashboard-card bg-success text-white">
-            <div class="card-body stat-card">
-                <i class="bi bi-graph-up stat-icon"></i>
-                <div class="stat-value">₱{{ number_format($grossProfit, 2) }}</div>
-                <div class="stat-label">Gross Profit</div>
+    
+    <!-- Gross Profit -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
+            <div class="card dashboard-card bg-success text-white h-100">
+                <div class="card-body stat-card">
+                    <i class="bi bi-graph-up stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($grossProfit, 0) }}</div>
+                    <div class="stat-label">Gross Profit</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card dashboard-card bg-info text-white">
-            <div class="card-body stat-card">
-                <i class="bi bi-cart-check stat-icon"></i>
-                <div class="stat-value">₱{{ number_format($averageOrderValue, 2) }}</div>
-                <div class="stat-label">Avg Order Value</div>
+
+    <!-- Total Transactions -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
+            <div class="card dashboard-card bg-secondary text-white h-100">
+                <div class="card-body stat-card">
+                    <i class="bi bi-receipt stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">{{ $totalTransactions }}</div>
+                    <div class="stat-label">Transactions</div>
+                </div>
             </div>
-        </div>
+        </a>
     </div>
-    <div class="col-md-3 mb-3">
-        <div class="card dashboard-card bg-primary text-white">
-            <div class="card-body stat-card">
-                <i class="bi bi-box-seam stat-icon"></i>
-                <div class="stat-value">₱{{ number_format($inventoryValue, 2) }}</div>
-                <div class="stat-label">Inventory Value</div>
+    
+    <!-- Avg Order Value -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
+            <div class="card dashboard-card bg-info text-white h-100">
+                <div class="card-body stat-card">
+                    <i class="bi bi-cart-check stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($averageOrderValue, 0) }}</div>
+                    <div class="stat-label">Avg Order</div>
+                </div>
             </div>
-        </div>
+        </a>
+    </div>
+    
+    <!-- Inventory Value -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('reports.inventory.index') }}" class="text-decoration-none">
+            <div class="card dashboard-card bg-secondary text-white h-100">
+                <div class="card-body stat-card">
+                    <i class="bi bi-box-seam stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($inventoryValue, 0) }}</div>
+                    <div class="stat-label">Inventory Value</div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <!-- Low Stock Alerts -->
+    <div class="col-md-2 mb-3">
+        <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none">
+            <div class="card dashboard-card {{ $lowStockAlerts->count() > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
+                <div class="card-body stat-card">
+                    <i class="bi bi-exclamation-triangle stat-icon" style="font-size: 1.5rem;"></i>
+                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts->count() }}</div>
+                    <div class="stat-label">Low Stock</div>
+                    @if($lowStockAlerts->where('current_stock', 0)->count() > 0)
+                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts->where('current_stock', 0)->count() }} out of stock</small>
+                    @endif
+                </div>
+            </div>
+        </a>
     </div>
 </div>
 
-<!-- Custom Date Range Modal -->
-<div class="modal fade" id="customDateModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Custom Date Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="GET" action="{{ route('dashboard') }}">
-                <div class="modal-body">
-                    <input type="hidden" name="filter_type" value="custom">
-                    <div class="mb-3">
-                        <label for="start_date" class="form-label">Start Date</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" 
-                               value="{{ request('start_date', Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')) }}" 
-                               required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="end_date" class="form-label">End Date</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date" 
-                               value="{{ request('end_date', Carbon\Carbon::now()->format('Y-m-d')) }}" 
-                               required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Charts and Data -->
+<!-- CHARTS SECTION -->
 <div class="row mb-4">
     <div class="col-md-8 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Sales Overview</span>
@@ -126,21 +152,25 @@
                 </div>
             </div>
         </div>
+        </a>
     </div>
     <div class="col-md-4 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
         <div class="card dashboard-card">
-            <div class="card-header">Sales by Category</div>
+            <div class="card-header">Items Sold by Category</div>
             <div class="card-body">
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
         </div>
+        </a>
     </div>
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-8 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
         <div class="card dashboard-card">
             <div class="card-header">Top 5 Bestselling Products</div>
             <div class="card-body">
@@ -149,106 +179,201 @@
                 </div>
             </div>
         </div>
+        </a>
+    </div>
+
+    <!-- Payment Methods Pie Chart (col-6) -->
+    <div class="col-md-4 mb-3">
+        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
+        <div class="card dashboard-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Payment Methods Distribution</span>
+                <span class="badge bg-success">₱{{ number_format($paymentMethods->sum('total_amount'), 0) }}</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="paymentMethodsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        </a>
+    </div>
+</div>
+
+<!-- TABLES SECTION -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none chart-clickable">
+            <div class="card dashboard-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Low Stock Alerts</span>
+                    <span class="badge bg-danger">{{ $lowStockAlerts->count() }} Alerts</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Reorder Level</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($lowStockAlerts as $product)
+                                    <tr class="{{ $product->current_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
+                                        <td>{{ $product->name }}</td>
+                                        <td>{{ $product->category_name }}</td>
+                                        <td>{{ $product->current_stock }}</td>
+                                        <td>{{ $product->reorder_level }}</td>
+                                        <td>
+                                            @if($product->current_stock == 0)
+                                                <span class="fw-bold text-danger">Out of Stock</span>
+                                            @else
+                                                <span class="fw-bold text-warning">Low Stock</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">No low stock alerts</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </a>
     </div>
     <div class="col-md-6 mb-3">
+        <a href="{{ route('reports.inventory.index') }}?stock_filter=low_stock" class="text-decoration-none chart-clickable">
+            <div class="card dashboard-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Adjustments</span>
+                    <span class="badge bg-warning">{{ $recentAdjustments->count() }} Recent</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Product</th>
+                                    <th>Type</th>
+                                    <th>Qty</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentAdjustments as $adjustment)
+                                    <tr class="{{ $adjustment->quantity_change < 0 ? 'table-danger' : 'table-info' }}">
+                                        <td>{{ $adjustment->adjustment_date->format('M d, H:i') }}</td>
+                                        <td>{{ $adjustment->product_name }}</td>
+                                        <td>{{ $adjustment->adjustment_type }}</td>
+                                        <td>
+                                            <span class="{{ $adjustment->quantity_change < 0 ? 'text-danger' : 'text-success' }}">
+                                                {{ $adjustment->quantity_change > 0 ? '+' : '' }}{{ $adjustment->quantity_change }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ Str::limit($adjustment->reason_notes, 10) }}</small>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-3">No recent adjustments</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- QUICK ACTIONS SECTION -->
+<div class="row mb-4">
+    <div class="col-12">
         <div class="card dashboard-card">
-            <div class="card-header">Total Sales Transactions</div>
-            <div class="card-body text-center py-5">
-                <div class="display-1 fw-bold text-primary">{{ $totalTransactions }}</div>
-                <p class="text-muted">Transactions this period</p>
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('pos.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-cart-plus fs-4 mb-2"></i>
+                            <span>New Sale</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('products.create') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-plus-circle fs-4 mb-2"></i>
+                            <span>Add Product</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('stock-ins.create') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-box-arrow-in-down fs-4 mb-2"></i>
+                            <span>Stock In</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('stock-adjustments.create') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-sliders fs-4 mb-2"></i>
+                            <span>Adjust Stock</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('reports.sales.index') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-graph-up fs-4 mb-2"></i>
+                            <span>Sales Reports</span>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-4 mb-3">
+                        <a href="{{ route('reports.inventory.index') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                            <i class="bi bi-box-seam fs-4 mb-2"></i>
+                            <span>Inventory Reports</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tables Section -->
-<div class="row mb-4">
-    <div class="col-md-6 mb-3">
-        <div class="card dashboard-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Low Stock Alerts</span>
-                <span class="badge bg-danger">{{ $lowStockAlerts->count() }} Alerts</span>
+<!-- CUSTOM DATE MODAL -->
+<div class="modal fade" id="customDateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Custom Date Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Product</th>
-                                <th>Category</th>
-                                <th>Current Stock</th>
-                                <th>Reorder Level</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($lowStockAlerts as $product)
-                                <tr class="{{ $product->current_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
-                                    <td>{{ $product->name }}</td>
-                                    <td>{{ $product->category_name }}</td>
-                                    <td>{{ $product->current_stock }}</td>
-                                    <td>{{ $product->reorder_level }}</td>
-                                    <td>
-                                        @if($product->current_stock == 0)
-                                            <span class="badge badge-out">Out of Stock</span>
-                                        @else
-                                            <span class="badge badge-low">Low Stock</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-3">No low stock alerts</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+            <form method="GET" action="{{ route('dashboard') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="filter_type" value="custom">
+                    <div class="mb-3">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                            value="{{ request('start_date', Carbon\Carbon::now()->startOfMonth()->format('Y-m-d')) }}" 
+                            required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                            value="{{ request('end_date', Carbon\Carbon::now()->format('Y-m-d')) }}" 
+                            required>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card dashboard-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Recent Voids & Adjustments</span>
-                <span class="badge bg-warning">{{ $recentAdjustments->count() }} Recent</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Product</th>
-                                <th>Type</th>
-                                <th>Qty Change</th>
-                                <th>Reason</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($recentAdjustments as $adjustment)
-                                <tr class="{{ $adjustment->quantity_change < 0 ? 'table-danger' : 'table-info' }}">
-                                    <td>{{ $adjustment->adjustment_date->format('M d, H:i') }}</td>
-                                    <td>{{ $adjustment->product_name }}</td>
-                                    <td>{{ $adjustment->adjustment_type }}</td>
-                                    <td>
-                                        <span class="{{ $adjustment->quantity_change < 0 ? 'text-danger' : 'text-success' }}">
-                                            {{ $adjustment->quantity_change > 0 ? '+' : '' }}{{ $adjustment->quantity_change }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ Str::limit($adjustment->reason_notes, 30) }}</small>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-3">No recent adjustments</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -276,33 +401,28 @@
         border-bottom: none;
     }
     
-    .stat-card {
-        text-align: center;
-        padding: 20px;
-    }
-    
     .stat-value {
-        font-size: 1.8rem;
+        font-size: 1.4rem !important;  
         font-weight: 700;
-        margin: 10px 0;
+        margin: 5px 0; 
     }
-    
+
     .stat-label {
-        font-size: 0.8rem;
+        font-size: 0.7rem !important; 
         color: rgba(255, 255, 255, 0.9);
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
-    
+
     .stat-icon {
-        font-size: 1.8rem;
-        margin-bottom: 15px;
+        font-size: 1.5rem !important; 
+        margin-bottom: 10px;  
         opacity: 0.9;
     }
-    
-    .bg-sales {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
+
+    .stat-card {
+        text-align: center;
+        padding: 15px 10px !important;
     }
     
     .low-stock {
@@ -336,6 +456,22 @@
         background-color: #e20615;
         color: white;
     }
+
+    .quick-action-btn {
+        height: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
 </style>
 @endpush
 
@@ -346,6 +482,7 @@
         let salesChart;
         let topProductsChart;
         let categoryChart;
+        let paymentMethodsChart; 
 
         // Filter functionality
         const filterOptions = document.querySelectorAll('.filter-option');
@@ -467,11 +604,8 @@
                         label: 'Quantity Sold',
                         data: @json($topProducts['data']),
                         backgroundColor: [
-                            '#06448a',
-                            '#28a745',
-                            '#ffc107',
-                            '#dc3545',
-                            '#6f42c1'
+                            '#06448a',  '#28a745',  '#ffc107',  '#dc3545',  '#6f42c1',  
+                            '#17a2b8',  '#fd7e14',  '#20c997',  '#e83e8c',  '#6c757d'   
                         ],
                         borderWidth: 0
                     }]
@@ -491,7 +625,7 @@
                                 drawBorder: false
                             },
                             ticks: {
-                                precision: 0 // This ensures no decimals
+                                precision: 0 
                             }
                         },
                         x: {
@@ -500,6 +634,55 @@
                             }
                         }
                     }
+                }
+            });
+
+            // Payment Methods Chart (Pie/Doughnut)
+            const paymentCtx = document.getElementById('paymentMethodsChart').getContext('2d');
+            paymentMethodsChart = new Chart(paymentCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @json($paymentMethods->pluck('payment_method')),
+                    datasets: [{
+                        data: @json($paymentMethods->pluck('total_amount')),
+                        backgroundColor: [
+                            '#28a745',  // Cash - Green
+                            '#06448a',  // Card - Blue
+                            '#6f42c1',  // GCash - Purple
+                        ],
+                        borderWidth: 1,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = Number(context.raw) || 0; 
+                                    const total = context.dataset.data
+                                        .map(x => Number(x))     
+                                        .reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ₱${value.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
                 }
             });
 

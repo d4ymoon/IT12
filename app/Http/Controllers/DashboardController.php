@@ -39,6 +39,8 @@ class DashboardController extends Controller
         // Top Products (Net of Returns)
         $topProducts = $this->getTopProducts($startDate, $endDate);
 
+        $paymentMethods = $this->getPaymentMethodsData($startDate, $endDate);
+
         // Sales by Category (Net of Returns)
         $categorySales = $this->getCategorySales($startDate, $endDate);
 
@@ -63,6 +65,7 @@ class DashboardController extends Controller
             'lowStockAlerts',
             'recentAdjustments',
             'returnsData',
+            'paymentMethods',
             'startDate',
             'endDate'
         ));
@@ -280,6 +283,21 @@ class DashboardController extends Controller
         ];
     }
 
+    private function getPaymentMethodsData($startDate, $endDate)
+    {
+        return DB::table('payments')
+            ->join('sales', 'payments.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'payment_method',
+                DB::raw('COUNT(*) as transaction_count'),
+                DB::raw('SUM(amount_tendered - change_given) as total_amount')
+            )
+            ->groupBy('payment_method')
+            ->orderByDesc('total_amount')
+            ->get();
+    }
+
     private function getCategorySales($startDate, $endDate)
     {
         $categorySales = DB::table('sale_items')
@@ -289,7 +307,7 @@ class DashboardController extends Controller
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
             ->select(
                 'categories.name',
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as total_sales')
+                DB::raw('SUM(sale_items.quantity_sold) as total_sales')
             )
             ->groupBy('categories.id', 'categories.name')
             ->get();

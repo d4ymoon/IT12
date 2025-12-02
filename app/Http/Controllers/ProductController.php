@@ -9,6 +9,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -19,7 +20,7 @@ class ProductController extends Controller
     {
         $showArchived = $request->has('archived');
         
-        $query = Product::with(['category', 'disabledBy', 'defaultSupplier']); // Changed from suppliers to defaultSupplier
+        $query = Product::with(['category', 'disabledBy', 'defaultSupplier']);
 
         if ($showArchived) {
             $query->archived();
@@ -32,19 +33,36 @@ class ProductController extends Controller
             $query->search($request->search);
         }
 
+        // Category Filter
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
 
+        // Stock Filter - NEW
+        if ($request->filled('stock_filter') && !$showArchived) {
+            switch ($request->stock_filter) {
+                case 'okay_stock':
+                    $query->where('quantity_in_stock', '>', DB::raw('reorder_level'));
+                    break;
+                case 'low_stock':
+                    $query->where('quantity_in_stock', '>', 0)
+                        ->where('quantity_in_stock', '<=', DB::raw('reorder_level'));
+                    break;
+                case 'out_of_stock':
+                    $query->where('quantity_in_stock', 0);
+                    break;
+            }
+        }
+
         // Sorting
-        $sort = $request->get('sort', 'id');
+        $sort = $request->get('sort', 'name');
         $direction = $request->get('direction', 'asc');
         
-        $allowedSorts = ['id', 'name', 'quantity_in_stock', 'created_at'];
+        $allowedSorts = ['name', 'sku', 'quantity_in_stock', 'created_at'];
         if (in_array($sort, $allowedSorts)) {
             $query->orderBy($sort, $direction);
         } else {
-            $query->orderBy('id', 'asc');
+            $query->orderBy('name', 'asc');
         }
 
         $products = $query->paginate(10);

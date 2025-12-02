@@ -55,7 +55,7 @@ class Product extends Model
     public function latestProductPrice()
     {
         return $this->hasOne(ProductPrice::class)
-                    ->latest('created_at'); // get the most recent price
+                    ->latest('created_at'); 
     }   
   
     public function getPriceAttribute()
@@ -65,7 +65,6 @@ class Product extends Model
 
     public function defaultSupplier()
     {
-        // This links the default_supplier_id column to the Supplier model.
         return $this->belongsTo(Supplier::class, 'default_supplier_id');
     }
 
@@ -123,10 +122,14 @@ class Product extends Model
     public function scopeSearch($query, $search)
     {
         return $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('sku', 'like', '%' . $search . '%')
                     ->orWhere('description', 'like', '%' . $search . '%')
                     ->orWhere('manufacturer_barcode', 'like', '%' . $search . '%')
                     ->orWhereHas('category', function($q) use ($search) {
                         $q->where('name', 'like', '%' . $search . '%');
+                    })
+                    ->orWhereHas('defaultSupplier', function($q) use ($search) {
+                        $q->where('supplier_name', 'like', '%' . $search . '%');
                     });
     }
 

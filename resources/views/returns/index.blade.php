@@ -112,8 +112,6 @@
                             <p class="mt-3 mb-0">No returns found</p>
                             @if(request('search') || request('start_date') || request('end_date'))
                                 <a href="{{ route('returns.index') }}" class="btn btn-primary mt-2">Clear Filters</a>
-                            @else
-                                <a href="{{ route('returns.create') }}" class="btn btn-primary mt-2">Process First Return</a>
                             @endif
                         </td>
                     </tr>

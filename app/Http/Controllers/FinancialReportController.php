@@ -108,19 +108,6 @@ class FinancialReportController extends Controller
             ->orderByDesc('total_cogs')
             ->get();
 
-        // Payment Methods
-        $paymentMethods = DB::table('payments')
-            ->join('sales', 'payments.sale_id', '=', 'sales.id')
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->select(
-                'payment_method',
-                DB::raw('COUNT(*) as transaction_count'),
-                DB::raw('SUM(amount_tendered - change_given) as total_amount')
-            )
-            ->groupBy('payment_method')
-            ->orderByDesc('total_amount')
-            ->get();
-
         // Additional Financial Metrics
         $totalTransactions = DB::table('sales')
             ->whereBetween('sale_date', [$startDate, $endDate])
@@ -140,7 +127,6 @@ class FinancialReportController extends Controller
                 'grossMargin' => $netRevenue > 0 ? ($grossProfit / $netRevenue) * 100 : 0
             ],
             'cogsAnalysis' => $cogsAnalysis,
-            'paymentMethods' => $paymentMethods,
             'additionalMetrics' => [
                 'total_transactions' => $totalTransactions,
                 'average_transaction_value' => $averageTransactionValue,
@@ -287,57 +273,4 @@ class FinancialReportController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function exportPaymentAnalysisCSV(Request $request)
-    {
-        // Get date range from request
-        $dateRange = $request->get('date_range', 'thismonth');
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
-        
-        // Set dates based on selection
-        list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
-
-        // Get financial data
-        $financialData = $this->getFinancialReportsData($startDate, $endDate);
-
-        $filename = "Payment_Analysis_{$startDate->format('Y-m-d')}_to_{$endDate->format('Y-m-d')}.csv";
-        
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
-
-        $callback = function() use ($financialData) {
-            $file = fopen('php://output', 'w');
-            
-            fwrite($file, "\xEF\xBB\xBF");
-            
-            // Headers
-            fputcsv($file, [
-                'Payment_Method', 'Transaction_Count', 'Total_Amount', 
-                'Percentage_of_Total_Sales', 'Average_Transaction_Value'
-            ]);
-            
-            // Calculate total for percentages
-            $totalAmount = $financialData['paymentMethods']->sum('total_amount');
-            
-            // Data
-            foreach ($financialData['paymentMethods'] as $payment) {
-                $percentage = $totalAmount > 0 ? ($payment->total_amount / $totalAmount) * 100 : 0;
-                $avgValue = $payment->transaction_count > 0 ? $payment->total_amount / $payment->transaction_count : 0;
-                
-                fputcsv($file, [
-                    $payment->payment_method,
-                    $payment->transaction_count,
-                    $payment->total_amount,
-                    $percentage,
-                    $avgValue
-                ]);
-            }
-            
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
 }

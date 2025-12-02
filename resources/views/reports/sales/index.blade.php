@@ -120,6 +120,7 @@
                 <small>{{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</small>
             </div>
             <div class="card-body">
+                @if(count($salesData['salesByDate']) > 0)
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -142,6 +143,13 @@
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Sales Data</h5>
+                    <p>No sales transactions found for the selected period.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -152,6 +160,7 @@
                 <h5 class="mb-0">Top 10 Products by Items Sold</h5>
             </div>
             <div class="card-body">
+                @if(count($salesData['topProductsByQuantity']) > 0)
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -174,6 +183,13 @@
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-box" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Product Sales Data</h5>
+                    <p>No product sales found for the selected period.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -184,6 +200,7 @@
                 <h5 class="mb-0">Top 10 Products by Revenue</h5>
             </div>
             <div class="card-body">
+                @if(count($salesData['topProductsByRevenue']) > 0)
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -206,6 +223,13 @@
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-currency-dollar" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Revenue Data</h5>
+                    <p>No product revenue found for the selected period.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -216,6 +240,7 @@
                 <h5 class="mb-0">Sales by Category</h5>
             </div>
             <div class="card-body">
+                @if(count($salesData['categoryAnalysis']) > 0)
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -238,6 +263,68 @@
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-tags" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Category Sales Data</h5>
+                    <p>No sales found for the selected period.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods Analysis -->
+    <div class="col-12 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Payment Methods Analysis</h5>
+            </div>
+            <div class="card-body">
+                @if(isset($salesData['paymentMethods']) && $salesData['paymentMethods']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Payment Method</th>
+                                <th class="text-center">Transactions</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Average per Transaction</th>
+                                <th class="text-center">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
+                            @endphp
+                            @foreach($salesData['paymentMethods'] as $payment)
+                            <tr>
+                                <td>{{ $payment->payment_method }}</td>
+                                <td class="text-center">{{ $payment->transaction_count }}</td>
+                                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
+                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
+                            </tr>
+                            @endforeach
+                            @if($totalAmount > 0)
+                            <tr class="table-light">
+                                <td class="fw-bold">Total</td>
+                                <td class="text-center fw-bold">{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
+                                <td class="text-end fw-bold">₱{{ number_format($totalAmount, 2) }}</td>
+                                <td class="text-end fw-bold">₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
+                                <td class="text-center fw-bold">100%</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-credit-card " style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Payment Data</h5>
+                    <p>No payment transactions available for the selected period.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -288,8 +375,10 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4">
-                                    No sales found for the selected period
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">No Sales Transactions</h5>
+                                    <p>No sales records found for the selected period.</p>
                                 </td>
                             </tr>
                             @endforelse

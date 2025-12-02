@@ -120,7 +120,7 @@
                     <ul class="nav flex-column ps-3">
                         <li class="nav-item">
                             <a href="{{ route('reports.sales.index') }}" class="nav-link {{ request()->is('reports/sales*') ? 'active' : '' }}">
-                                <i class="bi bi-cash-stack me-3"></i>
+                                <i class="bi bi-graph-up me-3"></i>
                                 <span>Sales Reports</span>
                             </a>                            
                         </li>
@@ -129,12 +129,6 @@
                                 <i class="bi bi-box-seam me-3"></i>
                                 <span>Inventory Reports</span>
                             </a>                            
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('reports.financial.index') }}" class="nav-link {{ request()->is('reports/financial*') ? 'active' : '' }}">
-                                <i class="bi bi-wallet2 me-3"></i>
-                                <span>Financial Reports</span>
-                            </a>
                         </li>
                     </ul>
                 </div>

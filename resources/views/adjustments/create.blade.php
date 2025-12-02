@@ -97,7 +97,8 @@
 
                     <div class="mb-3">
                         <label class="form-label">Reason Notes <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="reason_notes" name="reason_notes" rows="3" placeholder="Detailed explanation for this adjustment..." required></textarea>
+                        <textarea class="form-control" id="reason_notes" name="reason_notes" rows="3" placeholder="Detailed explanation for this adjustment..."  maxlength="250" required></textarea>
+                        <div class="form-text text-start">Maximum 250 characters</div>
                     </div>
                 </div>
 
@@ -169,7 +170,8 @@
                     </div>
                     
                     <div class="mb-3">
-                        <strong>Reason:</strong> <span id="confirm_reason"></span>
+                        <strong>Reason:</strong>
+                        <div style="word-wrap: break-word; white-space: pre-wrap; overflow-wrap: break-word;" id="confirm_reason"></div>
                     </div>
 
                     <h6>Items Summary:</h6>

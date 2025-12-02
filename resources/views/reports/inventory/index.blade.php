@@ -101,9 +101,9 @@
                                 <td>₱{{ number_format($product->latest_unit_cost, 2) }}</td>
                                 <td>
                                     @if($product->quantity_in_stock == 0)
-                                        <span class="badge bg-danger">Out of Stock</span>
+                                        <span class="fw-bold text-danger">Out of Stock</span>
                                     @else
-                                        <span class="badge bg-warning">Low Stock</span>
+                                        <span class="fw-bold text-warning">Low Stock</span>
                                     @endif
                                 </td>
                             </tr>
@@ -130,10 +130,15 @@
     <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Stock Movement</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockMovementCSV()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
-                </button>
+                <div><h5 class="mb-0">Recent Stock Ins</h5></div>
+                <div>
+                    <a href="{{ route('stock-ins.index') }}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-list-ul me-1"></i> View All
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockMovementCSV()">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 @if($inventoryData['stockMovement']->count() > 0)
@@ -164,7 +169,7 @@
                 @else
                 <div class="text-center py-4">
                     <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3 text-muted">No Recent Stock Movement</h5>
+                    <h5 class="mt-3 text-muted">No Recent Stock Ins</h5>
                     <p class="text-muted">No stock received recently.</p>
                 </div>
                 @endif
@@ -218,10 +223,15 @@
     <div class="col-md-6 mb-3">
         <div class="card report-card">
             <div class="card-header bg-secondary text-white d-flex justify-content-between">
-                <h5 class="mb-0">Recent Stock Adjustments</h5>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportAdjustmentsCSV()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
-                </button>
+                <div><h5 class="mb-0">Recent Stock Adjustments</h5></div>
+                <div>
+                    <a href="{{ route('stock-adjustments.index') }}" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-list-ul me-1"></i> View All
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="exportAdjustmentsCSV()">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 @if(count($inventoryData['stockAdjustments']) > 0)
@@ -256,7 +266,11 @@
                     </table>
                 </div>
                 @else
-                    <div class="text-center text-muted">No stock adjustments found.</div>
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-sliders" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Stock Adjustments</h5>
+                    <p>No stock adjustments found for the selected period.</p>
+                </div>
                 @endif
             </div>
         </div>
@@ -303,7 +317,11 @@
                     </table>
                 </div>
                 @else
-                    <div class="text-center text-muted">No product returns found.</div>
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-arrow-return-left" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Product Returns</h5>
+                    <p>No product returns found for the selected period.</p>
+                </div>
                 @endif
             </div>
         </div>
@@ -318,6 +336,7 @@
                 </button>
             </div>
             <div class="card-body">
+                @if(count($inventoryData['bestSellers']) > 0)
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -342,6 +361,13 @@
                         </tbody>
                     </table>
                 </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-trophy" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Best Sellers Data</h5>
+                    <p>No product sales data available for the selected period.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -412,6 +438,7 @@
                 </button>
             </div>
             <div class="card-body">
+                @if($inventoryData['stockLevels']->count() > 0)
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
@@ -451,6 +478,13 @@
                 @if($inventoryData['stockLevels']->hasPages())
                 <div class="d-flex justify-content-center mt-3">
                     {{ $inventoryData['stockLevels']->links('pagination::bootstrap-4') }}
+                </div>
+                @endif
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-box-seam" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Stock Levels Data</h5>
+                    <p>No products found in inventory.</p>
                 </div>
                 @endif
             </div>

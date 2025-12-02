@@ -152,7 +152,8 @@
                             <div class="mb-3">
                                 <label for="notes" class="form-label">Notes (Optional)</label>
                                 <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                          placeholder="Additional notes about this return..."></textarea>
+                                          placeholder="Additional notes about this return..." maxlength="250"></textarea>
+                                          <div class="form-text text-start">Maximum 250 characters</div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">

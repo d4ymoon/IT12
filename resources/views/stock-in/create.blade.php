@@ -159,6 +159,19 @@
     @push('scripts')
         <script>
             let itemCount = 0;
+            const urlParams = new URLSearchParams(window.location.search);
+            const preSelectedProductId = urlParams.get('product_id');
+
+            // Initialize with one empty row OR pre-filled row
+            document.addEventListener('DOMContentLoaded', () => {
+                if (preSelectedProductId) {
+                    // Auto-add the pre-selected product
+                    addItemRow(preSelectedProductId);
+                } else {
+                    // Normal empty row
+                    addItemRow();
+                }
+            });
             const addedProducts = new Set();
         
             // Product data from Laravel
@@ -302,7 +315,9 @@
 
                 // Auto-select product if provided
                 if (productId) {
-                    productSelect.val(productId).trigger('change');
+                    setTimeout(() => {
+                        productSelect.val(productId).trigger('change');
+                    }, 100);
                 }
             }
         
@@ -489,11 +504,6 @@
                     console.error('Error:', error);
                     alert('Network error: ' + error.message);
                 });
-            });
-        
-            // Initialize with one empty row
-            document.addEventListener('DOMContentLoaded', () => {
-                addItemRow();
             });
         </script>
     @endpush

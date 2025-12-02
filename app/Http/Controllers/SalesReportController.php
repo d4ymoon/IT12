@@ -60,6 +60,21 @@ class SalesReportController extends Controller
         }
     }
 
+    private function getPaymentMethodsData($startDate, $endDate)
+    {
+        return DB::table('payments')
+            ->join('sales', 'payments.sale_id', '=', 'sales.id')
+            ->whereBetween('sales.sale_date', [$startDate, $endDate])
+            ->select(
+                'payment_method',
+                DB::raw('COUNT(*) as transaction_count'),
+                DB::raw('SUM(amount_tendered - change_given) as total_amount')
+            )
+            ->groupBy('payment_method')
+            ->orderByDesc('total_amount')
+            ->get();
+    }
+
     private function getSalesReportsData($startDate, $endDate)
     {
         // Net Sales by Date Range (Sales minus Returns)
@@ -173,16 +188,20 @@ class SalesReportController extends Controller
         )
         ->first();
 
+        $paymentMethods = $this->getPaymentMethodsData($startDate, $endDate);
+
         return [
             'salesByDate' => $salesByDate,
             'detailedSales' => $detailedSales,
             'topProductsByQuantity' => $topProductsByQuantity,
             'topProductsByRevenue' => $topProductsByRevenue,
             'categoryAnalysis' => $categoryAnalysis,
+            'paymentMethods' => $paymentMethods,
             'summaryStats' => $summaryStats,
             'dateRange' => ['start' => $startDate, 'end' => $endDate]
         ];
     }
+    
 
     public function exportSummaryPDF(Request $request)
     {
