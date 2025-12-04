@@ -170,7 +170,6 @@ class SalesReportController extends Controller
             ->get();
 
         // Summary Statistics
-        // Summary Statistics
         $summaryStats = DB::table('sales')
         ->join('sale_items', 'sales.id', '=', 'sale_items.sale_id')
         ->leftJoin('product_returns', function ($join) use ($startDate, $endDate) {

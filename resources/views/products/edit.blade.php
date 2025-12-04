@@ -98,40 +98,51 @@
                         </div>
                         
                         <!-- Product Image -->
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Product Image</label>
+                        <div class="mb-0">
+                            <label for="image" class="form-label">Product Image:</label>
+                            
+                            <!-- File Input FIRST -->
+                            <input type="file" class="form-control" id="image" name="image" accept=".jpg,.jpeg,.png,.gif,.webp">
+                            <div class="form-text">JPEG, PNG, JPG, GIF, WEBP — Max 2MB</div>
+                            
+                            <!-- Current Image Display BELOW the file input -->
                             @if($product->image_path)
-                                <div class="position-relative d-inline-block">
-                                    <img src="{{ asset($product->image_path) }}" alt="Current Image" class="image-preview">
+                                <div id="currentImageContainer" class="mt-2">
+                                    <div class="position-relative d-inline-block">
+                                        <img src="{{ asset($product->image_path) }}" alt="Current Image" class="image-preview" id="currentImage">
+                                        <div class="position-absolute top-0 end-0 p-1">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="removeCurrentImage()">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-text mt-1 mb-0">Current product image</div>
                                 </div>
                             @endif
-                            <input type="file" class="form-control mt-2" id="image" name="image" accept=".jpg,.jpeg,.png,.gif,.webp">
-                            <div class="form-text">JPEG, PNG, JPG, GIF, WEBP — Max 2MB</div>
-                            <div id="imagePreview" class="mt-2 position-relative d-inline-block"></div>
+                            
+                            <!-- New Image Preview -->
+                            <div id="newImagePreview" class="mt-2 position-relative d-inline-block"></div>
                             <div id="imageError" class="text-danger small mt-1"></div>
                         </div>
-                        
+
                         <input type="hidden" id="delete_image" name="delete_image" value="0">
                 
                         <!-- Reorder Level -->
+                        <hr class="my-3">
+                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Inventory & Sourcing</h5>
+                
                         <div class="mb-3">
                             <label for="reorder_level" class="form-label">Reorder Level <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="reorder_level" name="reorder_level" 
-                                   value="{{ old('reorder_level', $product->reorder_level) }}" min="0" max="99999" required>
-                            <div class="form-text">Alert when stock falls below this level.</div>
+                            <input type="number" class="form-control" id="reorder_level" 
+                                   name="reorder_level" value="{{ old('reorder_level', 10) }}"
+                                   min="0" max="99999" required>
+                            <div class="form-text">
+                                Alert when stock falls below this level.
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Supplier Section -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <h5 class="mb-3"><i class="bi bi-truck me-2"></i>Supplier</h5>
-                        
-                        <!-- Supplier Selection -->
-                        <div class="row g-0">
-                            <div class="col-md-6 mb-3">
-                                <label for="default_supplier_id" class="form-label">Supplier <span class="text-danger">*</span></label>
+    
+                        <div class="mb-3">
+                            <label for="default_supplier_id" class="form-label">Default Supplier <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <select class="form-select" id="default_supplier_id" name="default_supplier_id" required>
                                         <option value="">Select Supplier</option>
@@ -147,7 +158,6 @@
                                     </button>
                                 </div>
                                 <div class="form-text">This supplier is used for tracking product costs and inventory.</div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -243,93 +253,75 @@
             });
         });
 
-        // Image preview and clear functionality
-        function clearImage() {
+// Function to remove current image
+function removeCurrentImage() {
+    document.getElementById('currentImageContainer').style.display = 'none';
+    document.getElementById('delete_image').value = '1';
+}
+
+// Image preview functionality
+document.getElementById('image').addEventListener('change', function(e) {
+    const newImagePreview = document.getElementById('newImagePreview');
+    const errorDiv = document.getElementById('imageError');
+    const currentImageContainer = document.getElementById('currentImageContainer');
+    
+    // Clear previous errors and new preview
+    errorDiv.textContent = '';
+    newImagePreview.innerHTML = '';
+    document.getElementById('delete_image').value = '0';
+    
+    if (!this.files || !this.files[0]) return;
+    
+    const file = this.files[0];
+    
+    // File type validation
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        errorDiv.textContent = 'Invalid file type. Please upload JPEG, PNG, JPG, GIF, or WEBP only.';
+        this.value = '';
+        return;
+    }
+    
+    // File size validation (2MB)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+        errorDiv.textContent = `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds 2MB limit.`;
+        this.value = '';
+        return;
+    }
+    
+    // Show new image preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.className = 'image-preview';
+        
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'btn btn-danger btn-sm position-absolute';
+        clearBtn.style.top = '5px';
+        clearBtn.style.right = '5px';
+        clearBtn.innerHTML = '<i class="bi bi-x"></i>';
+        clearBtn.onclick = function() {
             document.getElementById('image').value = '';
-            document.getElementById('imagePreview').innerHTML = '';
-            document.getElementById('imageError').textContent = '';
-            document.getElementById('delete_image').value = '1';
+            newImagePreview.innerHTML = '';
+            // Show current image again if user cancels new image
+            if (currentImageContainer && document.getElementById('delete_image').value === '0') {
+                currentImageContainer.style.display = 'block';
+            }
+        };
+        
+        newImagePreview.appendChild(img);
+        newImagePreview.appendChild(clearBtn);
+        
+        // Hide current image if exists (user is replacing it)
+        if (currentImageContainer) {
+            currentImageContainer.style.display = 'none';
         }
-
-        // Image preview
-        document.getElementById('image').addEventListener('change', function(e) {
-            const preview = document.getElementById('imagePreview');
-            const errorDiv = document.getElementById('imageError');
-            
-            // Clear previous errors and preview
-            errorDiv.textContent = '';
-            preview.innerHTML = '';
-            document.getElementById('delete_image').value = '0';
-            
-            if (!this.files || !this.files[0]) return;
-            
-            const file = this.files[0];
-            
-            // File type validation
-            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-            if (!validTypes.includes(file.type)) {
-                errorDiv.textContent = 'Invalid file type. Please upload JPEG, PNG, JPG, GIF, or WEBP only.';
-                this.value = '';
-                return;
-            }
-            
-            // File size validation (2MB)
-            const maxSize = 2 * 1024 * 1024;
-            if (file.size > maxSize) {
-                errorDiv.textContent = `File size (${(file.size / (1024 * 1024)).toFixed(2)}MB) exceeds 2MB limit.`;
-                this.value = '';
-                return;
-            }
-            
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.className = 'image-preview';
-                
-                const clearBtn = document.createElement('button');
-                clearBtn.type = 'button';
-                clearBtn.className = 'btn btn-danger btn-sm position-absolute';
-                clearBtn.style.top = '5px';
-                clearBtn.style.right = '5px';
-                clearBtn.innerHTML = '<i class="bi bi-x"></i>';
-                clearBtn.onclick = clearImage;
-                
-                preview.appendChild(img);
-                preview.appendChild(clearBtn);
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // Existing image clear functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const existingImage = document.querySelector('.image-preview');
-            if (existingImage) {
-                const clearBtn = document.createElement('button');
-                clearBtn.type = 'button';
-                clearBtn.className = 'btn btn-danger btn-sm position-absolute';
-                clearBtn.style.top = '5px';
-                clearBtn.style.right = '5px';
-                clearBtn.innerHTML = '<i class="bi bi-x"></i>';
-                clearBtn.onclick = function() {
-                    existingImage.remove();
-                    clearBtn.remove();
-                    document.getElementById('delete_image').value = '1';
-                };
-                
-                existingImage.parentElement.classList.add('position-relative');
-                existingImage.parentElement.appendChild(clearBtn);
-            }
-
-            // Prevent leading zeros in reorder level
-            const reorderInput = document.getElementById('reorder_level');
-            if (reorderInput) {
-                reorderInput.addEventListener("input", function () {
-                    this.value = this.value.replace(/^0+(?=\d)/, '');
-                });
-            }
-        });
+    };
+    reader.readAsDataURL(file);
+});
     </script>
     @endpush
 @endsection

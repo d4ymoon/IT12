@@ -220,9 +220,14 @@
                 </div>
         
                 <div id="cashFields" class="payment-field mb-2">
-                    <label>Amount Tendered</label>
-                    <input type="number" id="amountTendered" class="form-control form-control-sm" step="0.01" min="0">
-                    <div id="changeDisplay" class="change-display mt-1" style="display:none;"></div>
+                    <label class="form-label">Amount Tendered</label>
+                    <div class="input-group">
+                        <input type="number" id="amountTendered" class="form-control" step="0.01" min="0" placeholder="0.00">
+                        <button type="button" id="exactBtn" class="btn btn-outline-secondary">
+                            Exact
+                        </button>
+                    </div>
+                    <div id="changeDisplay" class="change-display mt-2" style="display:none;"></div>
                 </div>
         
                 <div id="digitalFields" class="payment-field mb-2" style="display:none;">
@@ -280,11 +285,23 @@
             this.updateCompleteButton();
         });
 
+        document.getElementById('exactBtn').addEventListener('click', () => {
+            this.setExactAmount();
+        });
+
+
         document.getElementById('referenceNo').addEventListener('input', () => {
             this.updateCompleteButton();
         });
 
         document.getElementById('completeSale').addEventListener('click', () => this.processPayment());
+    }
+
+    setExactAmount() {
+        const amountTenderedInput = document.getElementById('amountTendered');
+        amountTenderedInput.value = this.total.toFixed(2);
+        this.calculateChange();
+        this.updateCompleteButton();
     }
 
     async searchAndAddProduct() {
@@ -310,7 +327,8 @@
             const text = await response.text(); 
             console.log(text);                   
             const data = JSON.parse(text);   
-                if (!data.success) {
+            
+            if (!data.success) {
                 errorDiv.textContent = data.message;
                 errorDiv.style.display = 'block';
                 return;
@@ -324,15 +342,36 @@
                 return;
             }
 
+            // Check if product has a price
+            if (!product.latest_product_price) {
+                errorDiv.textContent = 'Product has no price set';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Check if product is out of stock
+            if (product.quantity_in_stock <= 0) {
+                errorDiv.textContent = 'Product out of stock';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
             // Add product to local cart (memory)
             const existingIndex = this.items.findIndex(item => item.product.id === product.id);
             if (existingIndex !== -1) {
+                // Check if adding more would exceed stock
+                const currentQty = this.items[existingIndex].quantity_sold;
+                if (currentQty + 1 > product.quantity_in_stock) {
+                    errorDiv.textContent = `Cannot exceed available stock (${product.quantity_in_stock} remaining)`;
+                    errorDiv.style.display = 'block';
+                    return;
+                }
                 this.items[existingIndex].quantity_sold++;
             } else {
                 this.items.push({
                     product: product,
                     quantity_sold: 1,
-                    unit_price: parseFloat(product.latest_product_price?.retail_price || 0)
+                    unit_price: parseFloat(product.latest_product_price.retail_price || 0)
                 });
             }
 
@@ -464,55 +503,92 @@
     }
 
     async processPayment() {
-        if (this.items.length === 0) return alert("No items in cart!");
+    if (this.items.length === 0) return alert("No items in cart!");
 
-        const method = document.querySelector('input[name="paymentMethod"]:checked').value;
-        const tendered = parseFloat(document.getElementById('amountTendered').value) || this.total;
-        const refNo = document.getElementById('referenceNo').value;
-        const customerName = document.getElementById('customerName').value;
-        const customerContact = document.getElementById('customerContact').value;
+    const method = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const tendered = parseFloat(document.getElementById('amountTendered').value) || this.total;
+    const refNo = document.getElementById('referenceNo').value;
+    const customerName = document.getElementById('customerName').value;
+    const customerContact = document.getElementById('customerContact').value;
 
+    try {
+        const res = await fetch('/pos/complete-sale', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                items: this.items,
+                payment_method: method,
+                amount_tendered: tendered,
+                reference_no: refNo,
+                customer_name: customerName,
+                customer_contact: customerContact
+            })
+        });
+
+        const text = await res.text();
+        console.log(text);
+        let data;
         try {
-            const res = await fetch('/pos/complete-sale', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    items: this.items,
-                    payment_method: method,
-                    amount_tendered: tendered,
-                    reference_no: refNo,
-                    customer_name: customerName,
-                    customer_contact: customerContact
-                })
-            });
-
-            const text = await res.text();
-            console.log(text);
-            let data;
-            try {
-                data = JSON.parse(text);
-            } catch(e) {
-                console.error('JSON parse error:', e, text);
-                return;
-            }            if (!data.success) throw new Error(data.message);
-
-            // Download receipt
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = `/pos/receipt/${data.sale.id}/pdf`;
-            document.body.appendChild(iframe);
-            setTimeout(() => document.body.removeChild(iframe), 1000);
-
-            alert("Sale completed successfully!");
-            this.resetCart();
-
-        } catch (err) {
-            alert("Error: " + err.message);
+            data = JSON.parse(text);
+        } catch(e) {
+            console.error('JSON parse error:', e, text);
+            return;
         }
+        if (!data.success) throw new Error(data.message);
+
+        // Download receipt - FIXED VERSION
+        this.downloadReceipt(data.sale.id);
+
+        alert("Sale completed successfully!");
+        this.resetCart();
+
+    } catch (err) {
+        alert("Error: " + err.message);
     }
+}
+
+// Add this new method to the POSSystem class
+downloadReceipt(saleId) {
+    return new Promise((resolve) => {
+        // Create iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        
+        // Add to DOM first
+        document.body.appendChild(iframe);
+        
+        // Set up load event listener
+        iframe.onload = () => {
+            console.log('Receipt downloaded successfully');
+            // Wait a bit before removing
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                resolve();
+            }, 1000);
+        };
+        
+        // Set error handler
+        iframe.onerror = () => {
+            console.warn('Receipt download failed or was blocked');
+            document.body.removeChild(iframe);
+            resolve();
+        };
+        
+        // Set the source AFTER adding to DOM
+        iframe.src = `/pos/receipt/${saleId}/pdf`;
+        
+        // Fallback timeout in case events don't fire
+        setTimeout(() => {
+            if (iframe.parentNode) {
+                document.body.removeChild(iframe);
+            }
+            resolve();
+        }, 5000);
+    });
+}
 
     resetCart() {
         this.items = [];

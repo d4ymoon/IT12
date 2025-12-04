@@ -31,39 +31,36 @@ class POSController extends Controller
      * Search products by name, SKU, or barcode
      */
     public function searchProduct(Request $request)
-{
-    try {
-        $searchTerm = $request->input('search_term');
+    {
+        try {
+            $searchTerm = $request->input('search_term');
 
-        $products = Product::with('latestProductPrice')
-            ->where('is_active', true)
-            ->where('quantity_in_stock', '>', 0)
-            ->whereHas('latestProductPrice') // <-- ensures product has at least one price
-            ->where(function($query) use ($searchTerm) {
-                $query->where('name', 'like', '%' . $searchTerm . '%')
-                      ->orWhere('sku', 'like', '%' . $searchTerm . '%')
-                      ->orWhere('manufacturer_barcode', 'like', '%' . $searchTerm . '%');
-            })
-            ->orderBy('name')
-            ->limit(50)
-            ->get();
+            $products = Product::with('latestProductPrice')
+                ->where('is_active', true)
+                ->whereHas('latestProductPrice') // ensures product has at least one price
+                ->where(function($query) use ($searchTerm) {
+                    $query->where('name', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('sku', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('manufacturer_barcode', 'like', '%' . $searchTerm . '%');
+                })
+                ->orderBy('name')
+                ->limit(50)
+                ->get();
 
-        return response()->json([
-            'success' => true,
-            'products' => $products
-        ]);
+            return response()->json([
+                'success' => true,
+                'products' => $products
+            ]);
 
-    } catch (\Exception $e) {
-        // Return JSON with the error
-        return response()->json([
-            'success' => false,
-            'products' => [],
-            'message' => $e->getMessage()
-        ], 500);
+        } catch (\Exception $e) {
+            // Return JSON with the error
+            return response()->json([
+                'success' => false,
+                'products' => [],
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
-
-    
 
     /**
      * Complete the sale: create Sale, SaleItems, and Payment in DB

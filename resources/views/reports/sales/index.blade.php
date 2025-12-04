@@ -85,7 +85,7 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-arrow-return-left text-danger me-2"></i>Total Refunds
                 </h6>
-                <h3 class="fw-bold text-danger mb-0 text-end">-₱{{ number_format($salesData['summaryStats']->total_returns_value ?? 0, 2) }}</h3>
+                <h3 class="fw-bold text-danger mb-0 text-end">-₱{{ number_format($salesData['summaryStats']->total_returns ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>

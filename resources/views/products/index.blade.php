@@ -191,7 +191,12 @@
                                 {{ $product->quantity_in_stock }}
                             </span>
                         
-                            @if($product->quantity_in_stock <= $product->reorder_level)
+                            @if($product->quantity_in_stock <= 0)
+                                <br>
+                                <small class="text-danger fw-bold">
+                                    OUT OF STOCK
+                                </small>
+                            @elseif($product->quantity_in_stock <= $product->reorder_level)
                                 <br>
                                 <small class="text-danger fw-bold">
                                     LOW STOCK
