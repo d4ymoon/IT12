@@ -163,8 +163,16 @@
                             <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
                                 {{ $product->quantity_in_stock }}
                             </span>
-                            @if($product->quantity_in_stock <= $product->reorder_level)
-                                <br><small class="text-danger">Low Stock</small>
+                            @if($product->quantity_in_stock <= 0)
+                                <br>
+                                <small class="text-danger fw-bold">
+                                    OUT OF STOCK
+                                </small>
+                            @elseif($product->quantity_in_stock <= $product->reorder_level)
+                                <br>
+                                <small class="text-warning fw-bold">
+                                    LOW STOCK
+                                </small>
                             @endif
                         </td>
                         <td>

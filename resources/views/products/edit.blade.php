@@ -176,6 +176,7 @@
     </div>
 
     <!-- Add Supplier Modal -->
+    <!-- Add Supplier Modal -->
     <div class="modal fade" id="addSupplierModal" tabindex="-1" aria-labelledby="addSupplierModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -190,16 +191,20 @@
                     <form id="quickSupplierForm">
                         @csrf
                         <div class="mb-3">
-                            <label for="quick_supplier_name" class="form-label">Supplier Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="quick_supplier_name" name="supplier_name" required maxlength="150">
+                            <label for="supplier_name" class="form-label">Supplier Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="supplier_name" name="supplier_name" placeholder="Enter supplier name" maxlength="150" required>
                         </div>
                         <div class="mb-3">
-                            <label for="quick_contactNO" class="form-label">Contact Information</label>
-                            <input type="text" class="form-control" id="quick_contactNO" name="contactNO" maxlength="50">
+                            <label for="contactNO" class="form-label">Contact Number</label>
+                            <input type="text" class="form-control" id="contactNO" name="contactNO" 
+                                   placeholder="Enter contact number" 
+                                   maxlength="11"
+                                   pattern="[0-9]{0,11}"
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
                         </div>
                         <div class="mb-3">
-                            <label for="quick_address" class="form-label">Address</label>
-                            <textarea class="form-control" id="quick_address" name="address" rows="3" maxlength="255"></textarea>
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" placeholder="Enter address" maxlength="255" rows="3"></textarea>
                         </div>
                     </form>
                 </div>

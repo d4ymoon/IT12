@@ -1,37 +1,67 @@
 @extends('layouts.app')
+@section('title', 'Process New Return - ATIN Admin')
 
-@section('title', 'Process Return')
+@push('styles')
+<link href="{{ asset('css/page-style.css') }}" rel="stylesheet">
+<style>
+    .return-panel {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: #f8f9fa;
+    }
+    .item-row {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: white;
+    }
+    .remove-item {
+        color: #dc3545;
+        cursor: pointer;
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <h4 class="page-title">Process Return</h4>
-            </div>
+    @include('components.alerts')
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">
+                <a href="{{ route('returns.index') }}" class="text-decoration-none text-dark">
+                    <b class="underline">Product Returns</b>
+                </a>
+                > Process New Return
+            </h2>
+            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Back to Returns
+            </a>
         </div>
     </div>
 
     <!-- Step 1: Locate Sale -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Locate Original Sale</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="sale_id" class="form-label">Enter Sale ID</label>
-                                <input type="text" class="form-control" id="sale_id" 
-                                       placeholder="Enter the original Sale ID">
-                                <div class="form-text">Enter the Sale ID from the original receipt.</div>
-                            </div>
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Locate Original Sale</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="sale_id" class="form-label">Enter Sale ID</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="sale_id" 
+                                   placeholder="Enter the original Sale ID">
                             <button type="button" class="btn btn-primary" id="lookup-sale">
-                                <i class="ri-search-line"></i> Lookup Sale
+                                <i class="bi bi-search me-1"></i> Lookup Sale
                             </button>
                         </div>
+                        <div class="form-text">Enter the Sale ID from the original receipt.</div>
                     </div>
                 </div>
             </div>
@@ -41,26 +71,34 @@
     <!-- Sale Details (Hidden until sale is found) -->
     <div id="sale-details-section" class="d-none">
         <!-- Sale Information -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title">Original Sale Information</h5>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Original Sale Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Sale ID</small>
+                            <strong id="sale-id-display">-</strong>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <strong>Sale ID:</strong> <span id="sale-id-display"></span>
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Sale Date:</strong> <span id="sale-date-display"></span>
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Customer:</strong> <span id="customer-name-display"></span>
-                            </div>
-                            <div class="col-md-3">
-                                <strong>Contact:</strong> <span id="customer-contact-display"></span>
-                            </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Sale Date</small>
+                            <strong id="sale-date-display">-</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Customer</small>
+                            <strong id="customer-name-display">-</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Contact</small>
+                            <strong id="customer-contact-display">-</strong>
                         </div>
                     </div>
                 </div>
@@ -73,121 +111,145 @@
             <input type="hidden" name="sale_id" id="form-sale-id">
             
             <!-- Step 2: Select Items & Condition -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title">Select Items & Condition</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>SKU</th>
-                                            <th>Original Price</th>
-                                            <th>Quantity Sold</th>
-                                            <th>Already Returned</th>
-                                            <th>Return Quantity</th>
-                                            <th>Condition</th>
-                                            <th>Refund Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="return-items-tbody">
-                                        <!-- Items will be populated here -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Select Items & Condition</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Original Price</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Already Returned</th>
+                                    <th>Return Quantity</th>
+                                    <th>Condition</th>
+                                    <th>Refund Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="return-items-tbody">
+                                <!-- Items will be populated here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <!-- Step 3: Finalize Financials -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title">Finalize Financials</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="return_reason" class="form-label">Return Reason <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="return_reason" name="return_reason" required>
-                                            <option value="">Select Reason</option>
-                                            <option value="Defective">Defective Product</option>
-                                            <option value="Wrong Item">Wrong Item Received</option>
-                                            <option value="Customer Change Mind">Customer Changed Mind</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="refund_method" class="form-label">Refund Method <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="refund_method" name="refund_method" required>
-                                            <option value="">Select Method</option>
-                                            <option value="Cash">Cash</option>
-                                            <option value="GCash">GCash</option>
-                                            <option value="Card">Card</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                             <!-- Reference Number Field (shown only for GCash and Card) -->
-                            <div class="row" id="reference_no_field" style="display: none;">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="reference_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="reference_no" name="reference_no" 
-                                            placeholder="Enter transaction reference number">
-                                        <div class="form-text">Required for GCash and Card refunds</div>
-                                    </div>
-                                </div>
-                            </div>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Step 3: Finalize Financials</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="notes" class="form-label">Notes (Optional)</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                          placeholder="Additional notes about this return..." maxlength="250"></textarea>
-                                          <div class="form-text text-start">Maximum 250 characters</div>
+                                <label for="return_reason" class="form-label">Return Reason <span class="text-danger">*</span></label>
+                                <select class="form-select" id="return_reason" name="return_reason" required>
+                                    <option value="">Select Reason</option>
+                                    <option value="Defective">Defective Product</option>
+                                    <option value="Wrong Item">Wrong Item Received</option>
+                                    <option value="Customer Change Mind">Customer Changed Mind</option>
+                                    <option value="Other">Other</option>
+                                </select>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="alert alert-info">
-                                        <h6>Refund Summary</h6>
-                                        <p><strong>Total Refund Amount:</strong> $<span id="total-refund-amount">0.00</span></p>
-                                        <p class="mb-0"><small>Items marked as "Damaged" will not be restocked.</small></p>
-                                    </div>
-                                </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Return Date</label>
+                                <input type="text" class="form-control" 
+                                       value="{{ now()->format('M d, Y h:i A') }}" 
+                                       readonly 
+                                       style="background-color: #f8f9fa;">
+                                <input type="hidden" id="return_date" name="return_date" 
+                                       value="{{ now()->format('Y-m-d H:i:s') }}">
+                                <div class="form-text">Automatically recorded</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="processed_by" class="form-label">Processed By</label>
+                                <input type="text" class="form-control" value="{{ session('user_name') ?? 'Current User' }}" readonly>
+                                <input type="hidden" id="processed_by_user_id" name="processed_by_user_id" value="{{ session('user_id') ?? '' }}">
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="refund_method" class="form-label">Refund Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="refund_method" name="refund_method" required>
+                                    <option value="">Select Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                        </div>
+        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="refund_method" class="form-label">Refund Method <span class="text-danger">*</span></label>
+                                <select class="form-select" id="refund_method" name="refund_method" required>
+                                    <option value="">Select Method</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="GCash">GCash</option>
+                                    <option value="Card">Card</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Submit Button -->
-            <div class="row">
-                <div class="col-12">
+                    <!-- Reference Number Field (shown only for GCash and Card) -->
+                    <div class="row" id="reference_no_field" style="display: none;">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="reference_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="reference_no" name="reference_no" 
+                                    placeholder="Enter transaction reference number">
+                                <div class="form-text">Required for GCash and Card refunds</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="Additional notes about this return..." maxlength="250"></textarea>
+                        <div class="form-text text-start">Maximum 250 characters</div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="alert alert-info mb-0">
+                                <h6 class="alert-heading">Refund Summary</h6>
+                                <p class="mb-1"><strong>Total Refund Amount:</strong> $<span id="total-refund-amount">0.00</span></p>
+                                <small class="d-block mt-1">Items marked as "Damaged" will not be restocked.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Submit Button -->
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('returns.index') }}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success" id="process-return-btn">
-                            <i class="ri-refund-line"></i> Process Return & Issue Refund
+                            Process Return & Issue Refund
                         </button>
                     </div>
                 </div>
             </div>
+
+            
         </form>
     </div>
 
     <!-- Error Alert -->
     <div id="error-alert" class="alert alert-danger d-none" role="alert">
-        <i class="ri-error-warning-line"></i> <span id="error-message"></span>
+        <i class="bi bi-exclamation-triangle me-2"></i> <span id="error-message"></span>
     </div>
-</div>
 @endsection
 
 @push('scripts')

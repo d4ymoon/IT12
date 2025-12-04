@@ -15,22 +15,65 @@ use Carbon\Carbon;
 class ReturnController extends Controller
 {
     public function index(Request $request)
-    {
-        $query = ProductReturn::with(['sale', 'user', 'returnItems.product'])
-            ->orderBy('created_at', 'desc');
+{
+    $query = ProductReturn::with(['sale', 'user', 'returnItems.product']);
 
-        // Search functionality
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('return_reason', 'like', "%{$search}%")
-                ->orWhereHas('sale', function($q2) use ($search) {
-                    $q2->where('id', 'like', "%{$search}%");
-                });
+    // Search functionality
+    if ($request->has('search') && $request->search != '') {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('return_reason', 'like', "%{$search}%")
+            ->orWhereHas('sale', function($q2) use ($search) {
+                $q2->where('id', 'like', "%{$search}%");
             });
-        }
+        });
+    }
 
-        // Date filter
+    // Return Reason filter
+    if ($request->has('return_reason') && $request->return_reason != '') {
+        $query->where('return_reason', $request->return_reason);
+    }
+
+    // Date filter logic
+    $dateFilter = $request->input('date_filter');
+    
+    if ($dateFilter) {
+        $today = Carbon::today();
+        
+        switch ($dateFilter) {
+            case 'today':
+                $query->whereDate('created_at', $today);
+                break;
+                
+            case 'this_week':
+                $query->whereBetween('created_at', [
+                    $today->copy()->startOfWeek(),
+                    $today->copy()->endOfWeek()
+                ]);
+                break;
+                
+            case 'this_month':
+                $query->whereBetween('created_at', [
+                    $today->copy()->startOfMonth(),
+                    $today->copy()->endOfMonth()
+                ]);
+                break;
+                
+            case 'this_year':
+                $query->whereBetween('created_at', [
+                    $today->copy()->startOfYear(),
+                    $today->copy()->endOfYear()
+                ]);
+                break;
+        }
+        
+        // Clear any custom date range values when quick filter is used
+        $request->merge([
+            'start_date' => null,
+            'end_date' => null
+        ]);
+    } else {
+        // Use custom date range if no quick filter is selected
         if ($request->has('start_date') && $request->start_date != '') {
             $query->whereDate('created_at', '>=', $request->start_date);
         }
@@ -38,29 +81,85 @@ class ReturnController extends Controller
         if ($request->has('end_date') && $request->end_date != '') {
             $query->whereDate('created_at', '<=', $request->end_date);
         }
-
-        $returns = $query->paginate(10);
-        
-        // Calculate total refunded amount for display
-        $totalRefunded = ProductReturn::when($request->has('search') && $request->search != '', function($q) use ($request) {
-                $search = $request->search;
-                $q->where(function($q2) use ($search) {
-                    $q2->where('return_reason', 'like', "%{$search}%")
-                    ->orWhereHas('sale', function($q3) use ($search) {
-                        $q3->where('id', 'like', "%{$search}%"); 
-                    });
-                });
-            })
-            ->when($request->has('start_date') && $request->start_date != '', function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->start_date);
-            })
-            ->when($request->has('end_date') && $request->end_date != '', function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->end_date);
-            })
-            ->sum('total_refund_amount');
-
-        return view('returns.index', compact('returns', 'totalRefunded'));
     }
+
+    // Sorting - NEW CODE
+    $sort = $request->get('sort', 'created_at');
+    $direction = $request->get('direction', 'desc');
+    
+    $allowedSorts = ['id', 'created_at', 'total_refund_amount'];
+    if (in_array($sort, $allowedSorts)) {
+        $query->orderBy($sort, $direction);
+    } else {
+        $query->orderBy('created_at', 'desc');
+    }
+    
+    $returns = $query->paginate(10);
+    
+    // Calculate total refunded amount for display (with same filters)
+    $totalQuery = ProductReturn::query();
+    
+    // Apply search filter to total
+    if ($request->has('search') && $request->search != '') {
+        $search = $request->search;
+        $totalQuery->where(function($q) use ($search) {
+            $q->where('return_reason', 'like', "%{$search}%")
+            ->orWhereHas('sale', function($q2) use ($search) {
+                $q2->where('id', 'like', "%{$search}%");
+            });
+        });
+    }
+    
+    // Apply return reason filter to total
+    if ($request->has('return_reason') && $request->return_reason != '') {
+        $totalQuery->where('return_reason', $request->return_reason);
+    }
+    
+    // Apply date filter to total
+    if ($dateFilter) {
+        $today = Carbon::today();
+        
+        switch ($dateFilter) {
+            case 'today':
+                $totalQuery->whereDate('created_at', $today);
+                break;
+                
+            case 'this_week':
+                $totalQuery->whereBetween('created_at', [
+                    $today->copy()->startOfWeek(),
+                    $today->copy()->endOfWeek()
+                ]);
+                break;
+                
+            case 'this_month':
+                $totalQuery->whereBetween('created_at', [
+                    $today->copy()->startOfMonth(),
+                    $today->copy()->endOfMonth()
+                ]);
+                break;
+                
+            case 'this_year':
+                $totalQuery->whereBetween('created_at', [
+                    $today->copy()->startOfYear(),
+                    $today->copy()->endOfYear()
+                ]);
+                break;
+        }
+    } else {
+        // Use custom date range if no quick filter is selected
+        if ($request->has('start_date') && $request->start_date != '') {
+            $totalQuery->whereDate('created_at', '>=', $request->start_date);
+        }
+        
+        if ($request->has('end_date') && $request->end_date != '') {
+            $totalQuery->whereDate('created_at', '<=', $request->end_date);
+        }
+    }
+    
+    $totalRefunded = $totalQuery->sum('total_refund_amount');
+
+    return view('returns.index', compact('returns', 'totalRefunded', 'sort', 'direction'));
+}
 
     // Add show method for viewing return details
     public function show($id)

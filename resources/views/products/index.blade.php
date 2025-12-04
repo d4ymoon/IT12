@@ -187,7 +187,7 @@
                         </td>
                         <td>{{ $product->category->name }}</td>
                         <td>
-                            <span class="text-{{ $product->quantity_in_stock == 0 ? 'danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'danger' : 'success') }} fw-semibold">
+                            <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
                                 {{ $product->quantity_in_stock }}
                             </span>
                         
@@ -198,7 +198,7 @@
                                 </small>
                             @elseif($product->quantity_in_stock <= $product->reorder_level)
                                 <br>
-                                <small class="text-danger fw-bold">
+                                <small class="text-warning fw-bold">
                                     LOW STOCK
                                 </small>
                             @endif

@@ -18,44 +18,113 @@
         </div>
     </div>
 
-    <!-- Search Card -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="row align-items-center">
+    <!-- Search & Filter Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('returns.index') }}" id="filterForm">
+            <!-- Hidden sort fields -->
+            <input type="hidden" name="sort" value="{{ $sort ?? 'created_at' }}">
+            <input type="hidden" name="direction" value="{{ $direction ?? 'desc' }}">
+            
+            <div class="row g-3 align-items-center">
                 <!-- Search & Clear -->
-                <div class="col-md-6">
-                    <div class="d-flex gap-2 align-items-center">
-                        <form action="{{ route('returns.index') }}" method="GET" class="d-flex w-90">
-                            <div class="input-group search-box w-100">
-                                <input type="text" class="form-control" name="search" placeholder="Search by Sale ID, or Return Reason..." value="{{ request('search') }}">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                        </form>
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <div class="input-group search-box w-100 me-2">
+                            <input type="text" class="form-control" name="search" placeholder="Search by Sale ID, or Return Reason..." value="{{ request('search') }}">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
                         
-                        @if(request('search'))
-                            <a href="{{ route('returns.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
+                        @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date') || (request('sort') && request('sort') != 'created_at') || (request('direction') && request('direction') != 'desc'))
+    <a href="{{ route('returns.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
+        <i class="bi bi-x-circle"></i> Clear
+    </a>
+@endif
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="col-md-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-sort-down me-1"></i>Sort
+                                @if($sort)
+                                    <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
+                                @endif
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item {{ $sort == 'created_at' ? 'active' : '' }}" 
+                                       href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => $sort == 'created_at' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Date @if($sort == 'created_at') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                                <li><a class="dropdown-item {{ $sort == 'total_refund_amount' ? 'active' : '' }}" 
+                                       href="{{ request()->fullUrlWithQuery(['sort' => 'total_refund_amount', 'direction' => $sort == 'total_refund_amount' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Total Refund @if($sort == 'total_refund_amount') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                                <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" 
+                                       href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Return ID @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Filters -->
+            <div class="row mt-3">
+                <!-- Return Reason Filter -->
+                <div class="col-md-3">
+                    <label class="form-label">Return Reason</label>
+                    <select class="form-select" name="return_reason" onchange="this.form.submit()">
+                        <option value="">All Reasons</option>
+                        <option value="Defective" {{ request('return_reason') == 'Defective' ? 'selected' : '' }}>Defective</option>
+                        <option value="Wrong Item" {{ request('return_reason') == 'Wrong Item' ? 'selected' : '' }}>Wrong Item</option>
+                        <option value="Customer Change Mind" {{ request('return_reason') == 'Customer Change Mind' ? 'selected' : '' }}>Customer Change Mind</option>
+                        <option value="Other" {{ request('return_reason') == 'Other' ? 'selected' : '' }}>Other</option>
+                    </select>
+                </div>
+
+                <!-- Quick Date Filters -->
+                <div class="col-md-3">
+                    <label class="form-label">Date Range</label>
+                    <select class="form-select" name="date_filter" id="dateFilter" onchange="handleDateFilterChange(this)">
+                        <option value="">Custom Date Range</option>
+                        <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="this_week" {{ request('date_filter') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                        <option value="this_month" {{ request('date_filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                        <option value="this_year" {{ request('date_filter') == 'this_year' ? 'selected' : '' }}>This Year</option>
+                    </select>
+                </div>
+                
+                <!-- Custom Date Range Filters (hidden by default) -->
+                <div id="customDateRange" class="col-md-4" style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="start_date" id="startDate" value="{{ request('start_date') }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="end_date" id="endDate" value="{{ request('end_date') }}">
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Date Filter -->
-                <div class="col-md-6">
-                    <form action="{{ route('returns.index') }}" method="GET" class="d-flex gap-2">
-                        <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}" placeholder="Start Date">
-                        <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}" placeholder="End Date">
-                        <button type="submit" class="btn btn-outline-primary">Filter</button>
-                        @if(request('start_date') || request('end_date'))
-                            <a href="{{ route('returns.index') }}" class="btn btn-outline-secondary">Clear Dates</a>
-                        @endif
-                    </form>
+                <!-- Apply Filters Button (only show when custom date range is active) -->
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" id="applyFiltersBtn" class="btn btn-primary w-100" 
+                            style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                        Apply Filters
+                    </button>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
+</div>
 
     <!-- Returns Table -->
     <div class="table-container"> 
@@ -63,8 +132,8 @@
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
-                    @if(request('search') || request('start_date') || request('end_date'))
-                        Displaying {{ $returns->count() }} of {{ $returns->total() }} results
+                    @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date'))
+                        Displaying {{ $returns->count() }} of {{ $returns->total() }} filtered results
                         @if(request('search'))
                             for "{{ request('search') }}"
                         @endif
@@ -82,10 +151,20 @@
                         <th>Return ID</th>
                         <th>Sale ID</th>
                         <th>Return Reason</th>
-                        <th>Total Refund</th>
+                        <th>
+                            Total Refund
+                            @if($sort == 'total_refund_amount')
+                                <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @endif
+                        </th>
                         <th>Items Returned</th>
                         <th>Processed By</th>
-                        <th>Return Date</th>
+                        <th>
+                            Return Date
+                            @if($sort == 'created_at')
+                                <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                            @endif
+                        </th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -110,7 +189,7 @@
                         <td colspan="9" class="text-center py-4">
                             <i class="bi bi-inbox display-4 text-muted"></i>
                             <p class="mt-3 mb-0">No returns found</p>
-                            @if(request('search') || request('start_date') || request('end_date'))
+                            @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date'))
                                 <a href="{{ route('returns.index') }}" class="btn btn-primary mt-2">Clear Filters</a>
                             @endif
                         </td>
@@ -225,6 +304,49 @@
 
     @push('scripts')
     <script>
+        function handleDateFilterChange(selectElement) {
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            if (selectElement.value === '') {
+                // Show custom date range and apply button when "Custom Date Range" is selected
+                customDateRange.style.display = 'block';
+                applyFiltersBtn.style.display = 'block';
+                
+                // Clear the date inputs (optional)
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+            } else {
+                // Hide custom date range and apply button
+                customDateRange.style.display = 'none';
+                applyFiltersBtn.style.display = 'none';
+                
+                // Clear any custom date values
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                
+                // Submit the form immediately for quick filters
+                selectElement.form.submit();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('dateFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            // Show/hide based on current selection
+            if (dateFilter && customDateRange && applyFiltersBtn) {
+                if (dateFilter.value === '') {
+                    customDateRange.style.display = 'block';
+                    applyFiltersBtn.style.display = 'block';
+                } else {
+                    customDateRange.style.display = 'none';
+                    applyFiltersBtn.style.display = 'none';
+                }
+            }
+        });
         // View Return Details
         document.querySelectorAll('.view-return').forEach(button => {
             button.addEventListener('click', function() {

@@ -3,21 +3,11 @@
 @push('styles')
 <link href="{{ asset('css/page-style.css') }}" rel="stylesheet">
 <style>
-    .financial-impact-negative {
-        color: #dc3545;
-        font-weight: bold;
+    .no-negative {
+        color: #dc3545 !important;
     }
-    .financial-impact-positive {
-        color: #198754;
-        font-weight: bold;
-    }
-    .quantity-negative {
-        color: #dc3545;
-        font-weight: bold;
-    }
-    .quantity-positive {
-        color: #198754;
-        font-weight: bold;
+    .no-positive {
+        color: #198754 !important;
     }
 </style>
 @endpush
@@ -57,37 +47,61 @@
                                     </button>
                                 </div>
                                 
-                                @if(request('search') || request('adjustment_type') || request('start_date') || request('end_date'))
+                                @if(request('search') || request('adjustment_type') || request('date_filter') || request('start_date') || request('end_date'))
                                     <a href="{{ route('stock-adjustments.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
                                         <i class="bi bi-x-circle"></i> Clear
                                     </a>
                                 @endif
                             </div>
                         </div>
-    
+
                         <!-- Sort -->
                         <div class="col-md-4">
                             <div class="d-flex gap-2 justify-content-end">
                                 <div class="dropdown">
-                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="min-width: 140px;">
                                         <i class="bi bi-sort-down me-1"></i>Sort
                                         @if($sort)
                                             <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
                                         @endif
                                     </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" 
-                                               href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                            ID @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                        </a></li>
-                                        <li><a class="dropdown-item {{ $sort == 'adjustment_date' ? 'active' : '' }}" 
-                                               href="{{ request()->fullUrlWithQuery(['sort' => 'adjustment_date', 'direction' => $sort == 'adjustment_date' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                            Date @if($sort == 'adjustment_date') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                        </a></li>
-                                        <li><a class="dropdown-item {{ $sort == 'adjustment_type' ? 'active' : '' }}" 
-                                               href="{{ request()->fullUrlWithQuery(['sort' => 'adjustment_type', 'direction' => $sort == 'adjustment_type' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                            Type @if($sort == 'adjustment_type') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                        </a></li>
+                                    <ul class="dropdown-menu" style="min-width: 220px;">
+                                        <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'id' ? 'active' : '' }}" 
+                                            href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                                <span>ID</span>
+                                                @if($sort == 'id')
+                                                    <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'adjustment_date' ? 'active' : '' }}" 
+                                            href="{{ request()->fullUrlWithQuery(['sort' => 'adjustment_date', 'direction' => $sort == 'adjustment_date' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                                <span>Date</span>
+                                                @if($sort == 'adjustment_date')
+                                                    <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'net_qty_change' ? 'active' : '' }}" 
+                                            href="{{ request()->fullUrlWithQuery(['sort' => 'net_qty_change', 'direction' => $sort == 'net_qty_change' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                                <span>Net Qty Change</span>
+                                                @if($sort == 'net_qty_change')
+                                                    <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                                @endif
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'financial_impact' ? 'active' : '' }}" 
+                                            href="{{ request()->fullUrlWithQuery(['sort' => 'financial_impact', 'direction' => $sort == 'financial_impact' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                                <span>Financial Impact</span>
+                                                @if($sort == 'financial_impact')
+                                                    <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                                @endif
+                                            </a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -107,16 +121,38 @@
                                 @endforeach
                             </select>
                         </div>
+                        <!-- Quick Date Filters -->
                         <div class="col-md-3">
-                            <label class="form-label">Start Date</label>
-                            <input type="date" class="form-control" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" name="date_filter" id="dateFilter" onchange="handleDateFilterChange(this)">
+                                <option value="">Custom Date Range</option>
+                                <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                                <option value="this_week" {{ request('date_filter') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                                <option value="this_month" {{ request('date_filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                                <option value="this_year" {{ request('date_filter') == 'this_year' ? 'selected' : '' }}>This Year</option>
+                            </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">End Date</label>
-                            <input type="date" class="form-control" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()">
+                        
+                        <!-- Custom Date Range Filters (hidden by default) -->
+                        <div id="customDateRange" class="col-md-4" style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" name="start_date" id="startDate" value="{{ request('start_date') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" name="end_date" id="endDate" value="{{ request('end_date') }}">
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100" style="display: none;">Apply Filters</button>
+                        
+                        <!-- Apply Filters Button (only show when custom date range is active) -->
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" id="applyFiltersBtn" class="btn btn-primary w-100" 
+                                    style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                                Apply Filters
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -128,7 +164,7 @@
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="text-muted mb-3">
-                @if(request('search') || request('adjustment_type') || request('start_date') || request('end_date'))
+                @if(request('search') || request('adjustment_type') || request('date_filter') || request('start_date') || request('end_date'))
                     Displaying {{ $stockAdjustments->count() }} of {{ $stockAdjustments->total() }} filtered results
                 @else
                     Displaying {{ $stockAdjustments->count() }} of {{ $stockAdjustments->total() }} adjustment records
@@ -138,13 +174,13 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Date</th>
                         <th>Type</th>
                         <th>Reason</th>
                         <th>Items</th>
                         <th>Processed By</th>
                         <th>Net Qty Change</th>
                         <th>Financial Impact</th>
+                        <th>Adjustment Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -160,29 +196,29 @@
                     @endphp
                     <tr>
                         <td>{{ $adjustment->id }}</td>
-                        <td>{{ $adjustment->adjustment_date->format('M d, Y h:i A') }}</td>
                         <td class="
                             @if($adjustment->adjustment_type == 'Damage/Scrap') text-danger
                             @elseif($adjustment->adjustment_type == 'Found Stock') text-success
                             @elseif($adjustment->adjustment_type == 'Physical Count') text-primary
                             @elseif($adjustment->adjustment_type == 'Internal Use') text-warning
                             @else text-secondary
-                            @endif fw-semibold">
+                            @endif">
                             {{ $adjustment->adjustment_type }}
                         </td>
                         <td>
                             <span title="{{ $adjustment->reason_notes }}">
-                                {{ Str::limit($adjustment->reason_notes, 25) }}
+                                {{ Str::limit($adjustment->reason_notes, 10) }}
                             </span>
                         </td>
                         <td>{{ $adjustment->items->count() }}</td>
                         <td>{{ $adjustment->processedBy ? $adjustment->processedBy->full_name : 'Unknown User' }}</td>
-                        <td class="{{ $totalQtyChange < 0 ? 'quantity-negative' : ($totalQtyChange > 0 ? 'quantity-positive' : '') }}">
+                        <td class="{{ $totalQtyChange < 0 ? 'no-negative' : ($totalQtyChange > 0 ? 'no-positive' : '') }}">
                             {{ $totalQtyChange > 0 ? '+' : '' }}{{ $totalQtyChange }}
                         </td>
-                        <td class="{{ $totalFinancialImpact < 0 ? 'financial-impact-negative' : ($totalFinancialImpact > 0 ? 'financial-impact-positive' : '') }}">
+                        <td class="{{ $totalFinancialImpact < 0 ? 'no-negative' : ($totalFinancialImpact > 0 ? 'no-positive' : '') }}">
                             ₱{{ number_format($totalFinancialImpact, 2) }}
                         </td>
+                        <td>{{ $adjustment->adjustment_date->format('M d, Y h:i A') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-adjustment" data-id="{{ $adjustment->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -303,6 +339,49 @@
 
     @push('scripts')
     <script>
+        function handleDateFilterChange(selectElement) {
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            if (selectElement.value === '') {
+                // Show custom date range and apply button when "Custom Date Range" is selected
+                customDateRange.style.display = 'block';
+                applyFiltersBtn.style.display = 'block';
+                
+                // Clear the date inputs (optional)
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+            } else {
+                // Hide custom date range and apply button
+                customDateRange.style.display = 'none';
+                applyFiltersBtn.style.display = 'none';
+                
+                // Clear any custom date values
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                
+                // Submit the form immediately for quick filters
+                selectElement.form.submit();
+            }
+        }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateFilter = document.getElementById('dateFilter');
+        const customDateRange = document.getElementById('customDateRange');
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        
+        // Show/hide based on current selection
+        if (dateFilter && customDateRange && applyFiltersBtn) {
+            if (dateFilter.value === '') {
+                customDateRange.style.display = 'block';
+                applyFiltersBtn.style.display = 'block';
+            } else {
+                customDateRange.style.display = 'none';
+                applyFiltersBtn.style.display = 'none';
+            }
+        }
+    });
         // View Adjustment
         document.querySelectorAll('.view-adjustment').forEach(button => {
             button.addEventListener('click', function() {
@@ -333,10 +412,10 @@
                         });
                         
                         document.getElementById('viewNetQtyChange').textContent = totalQtyChange > 0 ? `+${totalQtyChange}` : totalQtyChange;
-                        document.getElementById('viewNetQtyChange').className = totalQtyChange < 0 ? 'quantity-negative fw-semibold' : (totalQtyChange > 0 ? 'quantity-positive fw-semibold' : 'fw-semibold');
+                        document.getElementById('viewNetQtyChange').className = totalQtyChange < 0 ? 'no-negative fw-semibold' : (totalQtyChange > 0 ? 'no-positive fw-semibold' : 'fw-semibold');
                         
                         document.getElementById('viewFinancialImpact').textContent = '₱' + parseFloat(totalFinancialImpact).toFixed(2);
-                        document.getElementById('viewFinancialImpact').className = totalFinancialImpact < 0 ? 'financial-impact-negative fw-semibold' : (totalFinancialImpact > 0 ? 'financial-impact-positive fw-semibold' : 'fw-semibold');
+                        document.getElementById('viewFinancialImpact').className = totalFinancialImpact < 0 ? 'no-negative fw-semibold' : (totalFinancialImpact > 0 ? 'no-positive fw-semibold' : 'fw-semibold');
                         
                         // Populate items table
                         const itemsTable = document.getElementById('viewItemsTable');
@@ -354,11 +433,11 @@
                             row.innerHTML = `
                                 <td>${item.product.name}</td>
                                 <td>${item.product.sku}</td>
-                                <td class="${item.quantity_change < 0 ? 'quantity-negative' : (item.quantity_change > 0 ? 'quantity-positive' : '')}">
+                                <td class="${item.quantity_change < 0 ? 'no-negative' : (item.quantity_change > 0 ? 'no-positive' : '')}">
                                     ${item.quantity_change > 0 ? '+' : ''}${item.quantity_change}
                                 </td>
                                 <td>₱${parseFloat(item.unit_cost_at_adjustment).toFixed(2)}</td>
-                                <td class="${itemTotalValue < 0 ? 'financial-impact-negative' : (itemTotalValue > 0 ? 'financial-impact-positive' : '')}">
+                                <td class="${itemTotalValue < 0 ? 'no-negative' : (itemTotalValue > 0 ? 'no-positive' : '')}">
                                     ₱${parseFloat(itemTotalValue).toFixed(2)}
                                 </td>
                             `;
@@ -367,10 +446,10 @@
                         
                         // Update table footer totals
                         document.getElementById('viewTotalQtyChange').textContent = tableTotalQty > 0 ? `+${tableTotalQty}` : tableTotalQty;
-                        document.getElementById('viewTotalQtyChange').className = tableTotalQty < 0 ? 'quantity-negative' : (tableTotalQty > 0 ? 'quantity-positive' : '');
+                        document.getElementById('viewTotalQtyChange').className = tableTotalQty < 0 ? 'no-negative' : (tableTotalQty > 0 ? 'no-positive' : '');
                         
                         document.getElementById('viewTotalValue').textContent = '₱' + parseFloat(tableTotalValue).toFixed(2);
-                        document.getElementById('viewTotalValue').className = tableTotalValue < 0 ? 'financial-impact-negative' : (tableTotalValue > 0 ? 'financial-impact-positive' : '');
+                        document.getElementById('viewTotalValue').className = tableTotalValue < 0 ? 'no-negative' : (tableTotalValue > 0 ? 'no-positive' : '');
                         
                         const modal = new bootstrap.Modal(document.getElementById('viewAdjustmentModal'));
                         modal.show();

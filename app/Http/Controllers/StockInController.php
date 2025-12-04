@@ -8,6 +8,7 @@ use App\Models\StockInItem;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class StockInController extends Controller
 {
@@ -15,46 +16,94 @@ class StockInController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $query = StockIn::with([
-            'receivedBy' => function($q) {
-                $q->withDefault([
-                    'f_name' => 'Unknown',
-                    'l_name' => 'User'
-                ]);
-            },
-            'items.product',
-            'items.supplier'
-        ]);
+{
+    $query = StockIn::with([
+        'receivedBy' => function($q) {
+            $q->withDefault([
+                'f_name' => 'Unknown',
+                'l_name' => 'User'
+            ]);
+        },
+        'items.product',
+        'items.supplier'
+    ]);
 
-        // Search
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('reference_no', 'like', '%' . $request->search . '%')
-                ->orWhereHas('items.product', function($q) use ($request) {
-                    $q->where('name', 'like', '%' . $request->search . '%');
-                })
-                ->orWhereHas('items.supplier', function($q) use ($request) { 
-                    $q->where('supplier_name', 'like', '%' . $request->search . '%');
-                });
+    // Search
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('reference_no', 'like', '%' . $request->search . '%')
+            ->orWhereHas('items.product', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            })
+            ->orWhereHas('items.supplier', function($q) use ($request) { 
+                $q->where('supplier_name', 'like', '%' . $request->search . '%');
             });
-        }
-
-        // Sorting
-        $sort = $request->get('sort', 'stock_in_date');
-        $direction = $request->get('direction', 'desc');
-        
-        $allowedSorts = ['id', 'stock_in_date', 'reference_no', 'created_at'];
-        if (in_array($sort, $allowedSorts)) {
-            $query->orderBy($sort, $direction);
-        } else {
-            $query->orderBy('stock_in_date', 'desc');
-        }
-
-        $stockIns = $query->paginate(10);
-
-        return view('stock-in.index', compact('stockIns', 'sort', 'direction'));
+        });
     }
+
+    // Date filter logic - NEW CODE
+    $dateFilter = $request->input('date_filter');
+    
+    if ($dateFilter) {
+        $today = Carbon::today();
+        
+        switch ($dateFilter) {
+            case 'today':
+                $query->whereDate('stock_in_date', $today);
+                break;
+                
+            case 'this_week':
+                $query->whereBetween('stock_in_date', [
+                    $today->copy()->startOfWeek(),
+                    $today->copy()->endOfWeek()
+                ]);
+                break;
+                
+            case 'this_month':
+                $query->whereBetween('stock_in_date', [
+                    $today->copy()->startOfMonth(),
+                    $today->copy()->endOfMonth()
+                ]);
+                break;
+                
+            case 'this_year':
+                $query->whereBetween('stock_in_date', [
+                    $today->copy()->startOfYear(),
+                    $today->copy()->endOfYear()
+                ]);
+                break;
+        }
+        
+        // Clear any custom date range values when quick filter is used
+        $request->merge([
+            'start_date' => null,
+            'end_date' => null
+        ]);
+    } else {
+        // Use custom date range if no quick filter is selected
+        if ($request->filled('start_date')) {
+            $query->whereDate('stock_in_date', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('stock_in_date', '<=', $request->end_date);
+        }
+    }
+
+    // Sorting
+    $sort = $request->get('sort', 'stock_in_date');
+    $direction = $request->get('direction', 'desc');
+    
+    $allowedSorts = ['id', 'stock_in_date', 'reference_no', 'created_at'];
+    if (in_array($sort, $allowedSorts)) {
+        $query->orderBy($sort, $direction);
+    } else {
+        $query->orderBy('stock_in_date', 'desc');
+    }
+
+    $stockIns = $query->paginate(10);
+
+    return view('stock-in.index', compact('stockIns', 'sort', 'direction'));
+}
 
     /**
      * Show the form for creating a new resource.

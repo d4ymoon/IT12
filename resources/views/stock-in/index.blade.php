@@ -22,57 +22,95 @@
     <!-- Search & Filter Card -->
     <div class="card mb-4">
         <div class="card-body">
-            <div class="row g-3 align-items-center">
-                <!-- Search & Clear -->
-                <div class="col-md-8">
-                    <div class="d-flex align-items-center">
-                        <form action="{{ route('stock-ins.index') }}" method="GET" class="d-flex flex-grow-1 me-2">
-                            <input type="hidden" name="sort" value="{{ $sort }}">
-                            <input type="hidden" name="direction" value="{{ $direction }}">
-                            <div class="input-group search-box w-100">
+            <form method="GET" action="{{ route('stock-ins.index') }}" id="filterForm">
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="direction" value="{{ $direction }}">
+                
+                <div class="row g-3 align-items-center">
+                    <!-- Search & Clear -->
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="input-group search-box w-100 me-2">
                                 <input type="text" class="form-control" name="search" placeholder="Search by reference or product..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
-                        </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('stock-ins.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
+                            
+                            @if(request('search') || request('date_filter') || request('start_date') || request('end_date'))
+                                <a href="{{ route('stock-ins.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
+                        </div>
                     </div>
-                </div>
 
-                <!-- Sort -->
-                <div class="col-md-4">
-                    <div class="d-flex gap-2 justify-content-end">
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-sort-down me-1"></i>Sort
-                                @if($sort)
-                                    <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
-                                @endif
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                    ID @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                </a></li>
-                                <li><a class="dropdown-item {{ $sort == 'stock_in_date' ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['sort' => 'stock_in_date', 'direction' => $sort == 'stock_in_date' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                    Date @if($sort == 'stock_in_date') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                </a></li>
-                                <li><a class="dropdown-item {{ $sort == 'reference_no' ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['sort' => 'reference_no', 'direction' => $sort == 'reference_no' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                    Reference @if($sort == 'reference_no') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
-                                </a></li>
-                            </ul>
+                    <!-- Sort -->
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-sort-down me-1"></i>Sort
+                                    @if($sort)
+                                        <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
+                                    @endif
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item {{ $sort == 'id' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                        ID @if($sort == 'id') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                    </a></li>
+                                    <li><a class="dropdown-item {{ $sort == 'stock_in_date' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'stock_in_date', 'direction' => $sort == 'stock_in_date' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                        Date @if($sort == 'stock_in_date') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                    </a></li>
+                                    <li><a class="dropdown-item {{ $sort == 'reference_no' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'reference_no', 'direction' => $sort == 'reference_no' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                        Reference @if($sort == 'reference_no') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                    </a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- Date Filters Section -->
+                <div class="row mt-3">
+                    <!-- Quick Date Filters -->
+                    <div class="col-md-3">
+                        <label class="form-label">  Date Range</label>
+                        <select class="form-select" name="date_filter" id="dateFilter" onchange="handleDateFilterChange(this)">
+                            <option value="">Custom Date Range</option>
+                            <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                            <option value="this_week" {{ request('date_filter') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                            <option value="this_month" {{ request('date_filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                            <option value="this_year" {{ request('date_filter') == 'this_year' ? 'selected' : '' }}>This Year</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Custom Date Range Filters (hidden by default) -->
+                    <div id="customDateRange" class="col-md-6" style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" name="start_date" id="startDate" value="{{ request('start_date') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" name="end_date" id="endDate" value="{{ request('end_date') }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Apply Filters Button (only show when custom date range is active) -->
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" id="applyFiltersBtn" class="btn btn-primary w-100" 
+                                style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -81,8 +119,8 @@
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="text-muted mb-3">
-                @if(request('search'))
-                    Displaying {{ $stockIns->count() }} of {{ $stockIns->total() }} results for "{{ request('search') }}"
+                @if(request('search') || request('date_filter') || request('start_date') || request('end_date'))
+                    Displaying {{ $stockIns->count() }} of {{ $stockIns->total() }} filtered results
                 @else
                     Displaying {{ $stockIns->count() }} of {{ $stockIns->total() }} stock in records
                 @endif
@@ -91,12 +129,12 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Date</th>
                         <th>Reference No</th>
                         <th>Received By</th>
                         <th>Items</th>
                         <th>Total Quantity</th>
                         <th>Total Cost</th>
+                        <th>Stock-In Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -104,12 +142,12 @@
                     @forelse($stockIns as $stockIn)
                     <tr>
                         <td>{{ $stockIn->id }}</td>
-                        <td>{{ $stockIn->stock_in_date->format('M d, Y h:i A') }}</td>
                         <td>{{ $stockIn->reference_no ?? 'N/A' }}</td>
                         <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $stockIn->items->count() }}</td>
                         <td>{{ $stockIn->items->sum('quantity_received') }}</td>
                         <td>₱{{ number_format($stockIn->items->sum(function($item) { return $item->quantity_received * $item->actual_unit_cost; }), 2) }}</td>
+                        <td>{{ $stockIn->stock_in_date->format('M d, Y h:i A') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-stock-in" data-id="{{ $stockIn->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -214,6 +252,50 @@
 
     @push('scripts')
     <script>
+
+        function handleDateFilterChange(selectElement) {
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            if (selectElement.value === '') {
+                // Show custom date range and apply button when "Custom Date Range" is selected
+                customDateRange.style.display = 'block';
+                applyFiltersBtn.style.display = 'block';
+                
+                // Clear the date inputs (optional)
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+            } else {
+                // Hide custom date range and apply button
+                customDateRange.style.display = 'none';
+                applyFiltersBtn.style.display = 'none';
+                
+                // Clear any custom date values
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                
+                // Submit the form immediately for quick filters
+                selectElement.form.submit();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('dateFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            // Show/hide based on current selection
+            if (dateFilter && customDateRange && applyFiltersBtn) {
+                if (dateFilter.value === '') {
+                    customDateRange.style.display = 'block';
+                    applyFiltersBtn.style.display = 'block';
+                } else {
+                    customDateRange.style.display = 'none';
+                    applyFiltersBtn.style.display = 'none';
+                }
+            }
+        });
         // View Stock In
         document.querySelectorAll('.view-stock-in').forEach(button => {
             button.addEventListener('click', function() {

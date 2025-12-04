@@ -8,6 +8,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class StockAdjustmentController extends Controller
 {
@@ -25,7 +26,7 @@ class StockAdjustmentController extends Controller
             },
             'items.product'
         ]);
-
+    
         // Search
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
@@ -41,31 +42,88 @@ class StockAdjustmentController extends Controller
                   });
             });
         }
-
+    
         // Filter by adjustment type
         if ($request->filled('adjustment_type')) {
             $query->where('adjustment_type', $request->adjustment_type);
         }
-
-        // Date range filter
-        if ($request->filled('start_date')) {
-            $query->whereDate('adjustment_date', '>=', $request->start_date);
+    
+        // Date filter logic
+        $dateFilter = $request->input('date_filter');
+        
+        if ($dateFilter) {
+            $today = Carbon::today();
+            
+            switch ($dateFilter) {
+                case 'today':
+                    $query->whereDate('adjustment_date', $today);
+                    break;
+                    
+                case 'this_week':
+                    $query->whereBetween('adjustment_date', [
+                        $today->copy()->startOfWeek(),
+                        $today->copy()->endOfWeek()
+                    ]);
+                    break;
+                    
+                case 'this_month':
+                    $query->whereBetween('adjustment_date', [
+                        $today->copy()->startOfMonth(),
+                        $today->copy()->endOfMonth()
+                    ]);
+                    break;
+                    
+                case 'this_year':
+                    $query->whereBetween('adjustment_date', [
+                        $today->copy()->startOfYear(),
+                        $today->copy()->endOfYear()
+                    ]);
+                    break;
+            }
+            
+            // Clear any custom date range values when quick filter is used
+            $request->merge([
+                'start_date' => null,
+                'end_date' => null
+            ]);
+        } else {
+            // Use custom date range if no quick filter is selected
+            if ($request->filled('start_date')) {
+                $query->whereDate('adjustment_date', '>=', $request->start_date);
+            }
+            if ($request->filled('end_date')) {
+                $query->whereDate('adjustment_date', '<=', $request->end_date);
+            }
         }
-        if ($request->filled('end_date')) {
-            $query->whereDate('adjustment_date', '<=', $request->end_date);
-        }
-
+    
         // Sorting
         $sort = $request->get('sort', 'adjustment_date');
         $direction = $request->get('direction', 'desc');
         
-        $allowedSorts = ['id', 'adjustment_date', 'adjustment_type', 'created_at'];
+        $allowedSorts = ['id', 'adjustment_date'];
+        
         if (in_array($sort, $allowedSorts)) {
+            // Direct column sorts
             $query->orderBy($sort, $direction);
+        } elseif ($sort == 'net_qty_change') {
+            // Sort by calculated net quantity change - FIXED VERSION
+            $query->addSelect(['net_qty_change' => function($q) {
+                $q->selectRaw('COALESCE(SUM(quantity_change), 0)')
+                  ->from('stock_adjustment_items')
+                  ->whereColumn('stock_adjustment_id', 'stock_adjustments.id');
+            }])->orderBy('net_qty_change', $direction);
+        } elseif ($sort == 'financial_impact') {
+            // Sort by calculated financial impact - FIXED VERSION
+            $query->addSelect(['financial_impact' => function($q) {
+                $q->selectRaw('COALESCE(SUM(quantity_change * unit_cost_at_adjustment), 0)')
+                  ->from('stock_adjustment_items')
+                  ->whereColumn('stock_adjustment_id', 'stock_adjustments.id');
+            }])->orderBy('financial_impact', $direction);
         } else {
+            // Default sort
             $query->orderBy('adjustment_date', 'desc');
         }
-
+    
         $stockAdjustments = $query->paginate(10);
         $adjustmentTypes = [
             'Physical Count',
@@ -74,7 +132,7 @@ class StockAdjustmentController extends Controller
             'Error Correction',
             'Found Stock'
         ];
-
+    
         return view('adjustments.index', compact('stockAdjustments', 'adjustmentTypes', 'sort', 'direction'));
     }
 
