@@ -135,7 +135,6 @@
 <!-- CHARTS SECTION -->
 <div class="row mb-4">
     <div class="col-md-8 mb-3">
-        <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Sales Overview</span>
@@ -152,18 +151,25 @@
                 </div>
             </div>
         </div>
-        </a>
     </div>
+    <!-- Items Sold by Category Chart Section -->
     <div class="col-md-4 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
-        <div class="card dashboard-card">
-            <div class="card-header">Items Sold by Category</div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="categoryChart"></canvas>
+            <div class="card dashboard-card">
+                <div class="card-header">Items Sold by Category</div>
+                <div class="card-body">
+                    @empty($categorySales['data'])
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-pie-chart fs-1 opacity-50 mb-3"></i>
+                            <p class="mb-0">No items sold by category in this period</p>
+                        </div>
+                    @else
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    @endempty
                 </div>
             </div>
-        </div>
         </a>
     </div>
 </div>
@@ -171,31 +177,45 @@
 <div class="row mb-4">
     <div class="col-md-8 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
-        <div class="card dashboard-card">
-            <div class="card-header">Top 5 Bestselling Products</div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="topProductsChart"></canvas>
+            <div class="card dashboard-card">
+                <div class="card-header">Top 5 Bestselling Products</div>
+                <div class="card-body">
+                    @empty($topProducts['data'])
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-bar-chart fs-1 opacity-50 mb-3"></i>
+                            <p class="mb-0">No bestselling products in this period</p>
+                        </div>
+                    @else
+                        <div class="chart-container">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    @endempty
                 </div>
             </div>
-        </div>
         </a>
     </div>
 
     <!-- Payment Methods Pie Chart (col-6) -->
     <div class="col-md-4 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none chart-clickable">
-        <div class="card dashboard-card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Payment Methods Distribution</span>
-                <span class="badge bg-success">₱{{ number_format($paymentMethods->sum('total_amount'), 0) }}</span>
-            </div>
-            <div class="card-body">
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="paymentMethodsChart"></canvas>
+            <div class="card dashboard-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Payment Methods Distribution</span>
+                    <span class="badge bg-success">₱{{ number_format($paymentMethods->sum('total_amount'), 0) }}</span>
+                </div>
+                <div class="card-body">
+                    @empty($paymentMethods)
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-credit-card fs-1 opacity-50 mb-3"></i>
+                            <p class="mb-0">No payment data in this period</p>
+                        </div>
+                    @else
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="paymentMethodsChart"></canvas>
+                        </div>
+                    @endempty
                 </div>
             </div>
-        </div>
         </a>
     </div>
 </div>

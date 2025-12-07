@@ -44,6 +44,18 @@ class Supplier extends Model
         return $this->products()->exists();
     }
 
+    public function products()
+    {
+        return $this->hasMany(Product::class, 'default_supplier_id');
+    }
+
+    public function scopeWithProductsCount($query)
+    {
+        return $query->withCount(['products' => function($q) {
+            $q->where('is_active', true);
+        }]);
+    }
+
     // Check if supplier has associated stock ins
     public function hasStockIns()
     {

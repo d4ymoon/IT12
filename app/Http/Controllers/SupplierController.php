@@ -17,6 +17,9 @@ class SupplierController extends Controller
         $showArchived = $request->has('archived');
         
         $query = Supplier::with(['disabledBy']);
+        $query = Supplier::with(['products' => function($q) {
+            $q->where('is_active', true); // Only count active products
+        }]);
 
         if ($showArchived) {
             $query->archived();

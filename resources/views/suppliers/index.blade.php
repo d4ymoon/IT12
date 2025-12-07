@@ -93,6 +93,7 @@
                         <th>Supplier Name</th>
                         <th>Contact No.</th>
                         <th>Address</th>
+                        <th>Products</th> <!-- NEW COLUMN -->
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -105,11 +106,17 @@
                         <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
                             {{ $supplier->address ?? 'N/A' }}
                         </td>
+                        <td>{{ $supplier->products_count ?? $supplier->products->count() }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-supplier" data-id="{{ $supplier->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
                             @if($supplier->is_active)
+                                <a href="{{ route('products.index', ['search' => $supplier->supplier_name]) }}" 
+                                    class="btn btn-sm btn-outline-primary btn-action"
+                                    title="View Products from this supplier">
+                                        <i class="bi bi-box"></i>
+                                </a>
                                 <button class="btn btn-sm btn-outline-warning btn-action edit-supplier" data-id="{{ $supplier->id }}" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </button>

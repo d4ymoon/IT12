@@ -12,11 +12,9 @@
                         </div>
                     </div>
                 </div>
-                @if(session('role_id') != 1)
-                {{-- Toggle button hidden for employees (always collapsed) --}}
-                @else
-                {{-- Toggle button hidden for admins (always expanded) --}}
-                @endif
+                <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
             </div>
         </div>
         
