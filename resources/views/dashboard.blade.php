@@ -23,6 +23,7 @@
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_month">This Month</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="last_month">Last Month</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_year">This Year</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="all_time">All Time</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customDateModal">Custom Range</a></li>
             </ul>
@@ -138,14 +139,38 @@
     <div class="col-md-8 mb-3">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Sales Overview</span>
-                <div class="btn-group btn-group-sm" id="salesChartType">
-                    <button type="button" class="btn btn-outline-primary" data-type="daily">Daily</button>
-                    <button type="button" class="btn btn-outline-primary active" data-type="weekly">Weekly</button>
-                    <button type="button" class="btn btn-outline-primary" data-type="monthly">Monthly</button>
-                    <button type="button" class="btn btn-outline-primary" data-type="yearly">Yearly</button>
-                </div>
+            <span>Sales Overview</span>
+            <div class="btn-group btn-group-sm" id="salesChartType">
+                @php
+                    $filter = request('filter', 'this_month');
+                @endphp
+                
+                @if($filter === 'today')
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'hourly' ? 'active' : '' }}" 
+                        data-type="hourly">By Hour</button>
+                @endif
+                
+                @if(!in_array($filter, ['today']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'daily' ? 'active' : '' }}" 
+                        data-type="daily">By Day</button>
+                @endif
+                
+                @if(!in_array($filter, ['today', 'this_week']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'weekly' ? 'active' : '' }}" 
+                        data-type="weekly">By Week</button>
+                @endif
+                
+                @if(!in_array($filter, ['today', 'this_week', 'this_month', 'last_month']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'monthly' ? 'active' : '' }}" 
+                        data-type="monthly">By Month</button>
+                @endif
+                
+                @if(in_array($filter, ['all_time']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'yearly' ? 'active' : '' }}" 
+                        data-type="yearly">By Year</button>
+                @endif
             </div>
+        </div>
             <div class="card-body">
                 <div class="chart-container">
                     <canvas id="salesChart"></canvas>
@@ -281,7 +306,7 @@
         </a>
     </div>
     <div class="col-md-6 mb-3">
-        <a href="{{ route('reports.inventory.index') }}?stock_filter=low_stock" class="text-decoration-none chart-clickable">
+        <a href="{{ route('stock-adjustments.index') }}" class="text-decoration-none chart-clickable">
             <div class="card dashboard-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Recent Adjustments</span>
@@ -504,6 +529,30 @@
         transform: translateY(-3px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+
+    .btn-group-sm .btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-group-sm .btn {
+        position: relative;
+    }
+
+    .btn-group-sm .btn[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
 </style>
 @endpush
 
@@ -559,6 +608,8 @@
         const salesChartTypeButtons = document.querySelectorAll('#salesChartType button');
         salesChartTypeButtons.forEach(button => {
             button.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+                
                 // Remove active class from all buttons
                 salesChartTypeButtons.forEach(btn => btn.classList.remove('active'));
                 // Add active class to clicked button
@@ -777,6 +828,7 @@
                 .catch(error => {
                     console.error('Error fetching chart data:', error);
                     salesChartCanvas.style.opacity = '1';
+                    alert('Error loading chart data. Please try again.');
                 });
         }
     });

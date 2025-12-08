@@ -94,7 +94,7 @@ class SalesReportController extends Controller
             )
             ->groupBy(DB::raw('DATE(sales.sale_date)'))
             ->orderBy('date', 'asc')
-            ->get();
+            ->paginate(10);
 
         // Detailed Sales with pagination
         $detailedSales = DB::table('sales')
