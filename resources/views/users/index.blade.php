@@ -29,27 +29,28 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex gap-2 align-items-center">
-                        <form action="{{ route('users.index') }}" method="GET" class="d-flex flex-grow-1 w-90">
+                        <!-- Move the entire search and clear button into a single flex container -->
+                        <form action="{{ route('users.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
                             @if($showArchived)
                                 <input type="hidden" name="archived" value="true">
                             @endif
-                            <div class="input-group search-box w-100">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search users..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
-                        </form>
-                        
-                        @if(request('search'))
-                            @if($showArchived)
-                                <a href="{{ route('users.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                            @else
-                                <a href="{{ route('users.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            
+                            @if(request('search'))
+                                @if($showArchived)
+                                    <a href="{{ route('users.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                @else
+                                    <a href="{{ route('users.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                @endif
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
                             @endif
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
+                        </form>
                     </div>
                 </div>
                 
@@ -109,12 +110,14 @@
                         <td>{{ $user->contactNo ?? 'N/A' }}</td>
                         <td class="primary">{{ $user->role->name }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-secondary btn-action reset-password" 
-                                    data-id="{{ $user->id }}" 
-                                    data-name="{{ $user->full_name }}"
-                                    title="Reset Password">
-                                <i class="bi bi-key"></i>
-                            </button>
+                             @if($user->is_active)
+                                <button class="btn btn-sm btn-outline-secondary btn-action reset-password" 
+                                        data-id="{{ $user->id }}" 
+                                        data-name="{{ $user->full_name }}"
+                                        title="Reset Password">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            @endif
                             <button class="btn btn-sm btn-outline-info btn-action view-user" data-id="{{ $user->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -463,12 +466,11 @@
         </div>
     </div>
 
-
     <!-- Reset Password Modal -->
     <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="resetPasswordForm" method="POST" action="/users/{{ $user->id }}/reset-password">
+                <form id="resetPasswordForm" method="POST">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="resetPasswordModalLabel">
@@ -648,6 +650,7 @@
                 const userName = this.getAttribute('data-name');
                 
                 document.getElementById('resetPasswordUserName').textContent = userName;
+                // Set the form action dynamically
                 document.getElementById('resetPasswordForm').action = `/users/${userId}/reset-password`;
                 
                 document.getElementById('newPassword').value = '';

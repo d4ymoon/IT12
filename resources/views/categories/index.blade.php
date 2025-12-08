@@ -25,20 +25,20 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex flex-grow-1 w-90 me-2">
-                            <div class="input-group search-box w-90">
+                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search categories..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
+                            
+                            @if(request('search'))
+                                <a href="{{ route('categories.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
                         </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('categories.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>

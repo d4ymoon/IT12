@@ -45,22 +45,21 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('product-prices.index') }}" method="GET" class="d-flex flex-grow-1 me-2">
+                        <form action="{{ route('product-prices.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
                             <input type="hidden" name="sort" value="{{ $sort }}">
                             <input type="hidden" name="direction" value="{{ $direction }}">
-                            <div class="input-group search-box w-100">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search by product name or SKU..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
+                            @if(request('search'))
+                                <a href="{{ route('product-prices.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
                         </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('product-prices.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
                     </div>
                 </div>
 
