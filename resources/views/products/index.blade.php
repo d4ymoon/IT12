@@ -35,7 +35,6 @@
             </a>
         </div>
     </div>
-    
 
     <!-- Search & Filter Card -->
     <div class="card mb-4">
@@ -58,7 +57,6 @@
                                 </button>
                             </div>
                         </form>
-                        
                         @if(request('search'))
                             @if($showArchived)
                                 <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
@@ -84,7 +82,7 @@
                     </select>
                 </div>
 
-                <!-- After the Category Filter section -->
+                <!-- Stock Filter -->
                 <div class="col-md-2">
                     <select class="form-select" onchange="window.location.href=this.value">
                         <option value="{{ request()->fullUrlWithQuery(['stock_filter' => null]) }}">All Stock</option>
@@ -104,8 +102,20 @@
                 </div>
 
                 <!-- Archive Toggle & Sort -->
-                <div class="col-md-3">
-                    <div class="d-flex gap-2 justify-content-between">
+                <div class="col-md-4">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <!-- Archive Toggle -->
+                        @if($showArchived)
+                            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Active
+                            </a>
+                        @else
+                            <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
+                                <i class="bi bi-archive me-1"></i>
+                                View Archive
+                            </a>
+                        @endif
                         <!-- Sort Dropdown -->
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -124,18 +134,6 @@
                                 </a></li>
                             </ul>
                         </div>
-                        <!-- Archive Toggle -->
-                        @if($showArchived)
-                            <a href="{{ route('products.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-1"></i>
-                                Back to Active
-                            </a>
-                        @else
-                            <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
-                                <i class="bi bi-archive me-1"></i>
-                                View Archive
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>

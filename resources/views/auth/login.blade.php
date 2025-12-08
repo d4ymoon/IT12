@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ATIN</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap-icons.css') }}" rel="stylesheet">
     <style>
         body {
             background: #f8f9fa;
@@ -95,7 +95,20 @@
                     {{ session('message') }}
                 </div>
             @endif
-            
+            <div class="alert alert-info py-2 mb-3 permanent-alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <span class="fw-bold">Test Accounts:</span> 
+                <ul class="list-unstyled mb-0 mt-1 small">
+                    <li>
+                        <span class="">Admin:</span> 
+                        <span class="fw-bold">admin</span> / Password: <span class="fw-bold">admin1234</span>
+                    </li>
+                    <li>
+                        <span class="">Employee:</span> 
+                        <span class="fw-bold">employee</span> / Password: <span class="fw-bold">employee1234</span>
+                    </li>
+                </ul>
+            </div>
             <form method="POST" action="/login">
                 @csrf
                 
@@ -130,13 +143,14 @@
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
                     <i class="bi bi-box-arrow-in-right me-2"></i>
                     Sign In
-                </button>
+                </button> 
             </form>
             
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
         const togglePassword = document.querySelector("#togglePassword");
         const passwordInput = document.querySelector("#password");
@@ -148,7 +162,7 @@
           this.querySelector("i").classList.toggle("bi-eye");
           this.querySelector("i").classList.toggle("bi-eye-slash");
         });
-        const alerts = document.querySelectorAll('.alert');
+        const alerts = document.querySelectorAll('.alert-success, .alert-danger, .alert-warning');
         alerts.forEach(alert => {
             setTimeout(() => {
                 const bsAlert = new bootstrap.Alert(alert);

@@ -25,7 +25,7 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex w-90 me-2">
+                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex flex-grow-1 w-90 me-2">
                             <div class="input-group search-box w-90">
                                 <input type="text" class="form-control" name="search" placeholder="Search categories..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">

@@ -23,16 +23,17 @@
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="mb-0">
                 <b>Product Prices</b>
+                @if($showArchived)
+                    <span class="text-secondary small ms-2">(Archive View)</span>
+                @endif
             </h2>
             <div>
-                <a href="{{ route('products.index') }}" class="btn btn-outline-secondary me-2">
-                    <i class="bi bi-box me-1"></i>
-                    View Products
-                </a>
-                <a href="{{ route('stock-ins.create') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>
-                    New Stock In
-                </a>
+                @if(!$showArchived)
+                    <a href="{{ route('stock-ins.create') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        New Stock In
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -66,27 +67,19 @@
                 <!-- Sort & Filters -->
                 <div class="col-md-6">
                     <div class="d-flex gap-2 justify-content-end">
-                        <!-- Price Status Filter -->
-                        <div class="dropdown">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-filter me-1"></i>Price Status
-                            </button>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item {{ !request('price_status') ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['price_status' => null]) }}">
-                                    All Products
-                                </a></li>
-                                <li><a class="dropdown-item {{ request('price_status') == 'with_price' ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['price_status' => 'with_price']) }}">
-                                    With Price
-                                </a></li>
-                                <li><a class="dropdown-item {{ request('price_status') == 'no_price' ? 'active' : '' }}" 
-                                       href="{{ request()->fullUrlWithQuery(['price_status' => 'no_price']) }}">
-                                    No Price Set
-                                </a></li>
-                            </ul>
-                        </div>
-
+                        <!-- Archive Toggle -->
+                        @if($showArchived)
+                            <a href="{{ route('product-prices.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Back to Active
+                            </a>
+                        @else
+                            <a href="{{ route('product-prices.index', ['archived' => true]) }}" class="btn btn-outline-warning">
+                                <i class="bi bi-archive me-1"></i>
+                                View Archive
+                            </a>
+                        @endif
+                        
                         <!-- Sort Dropdown -->
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -102,11 +95,11 @@
                                 </a></li>
                                 <li><a class="dropdown-item {{ $sort == 'retail_price' ? 'active' : '' }}" 
                                     href="{{ request()->fullUrlWithQuery(['sort' => 'retail_price', 'direction' => $sort == 'retail_price' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                    Price @if($sort == 'retail_price') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                    Retail Price @if($sort == 'retail_price') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
                                 </a></li>
-                                <li><a class="dropdown-item {{ $sort == 'quantity_in_stock' ? 'active' : '' }}" 
-                                    href="{{ request()->fullUrlWithQuery(['sort' => 'quantity_in_stock', 'direction' => $sort == 'quantity_in_stock' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                    Stock @if($sort == 'quantity_in_stock') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
+                                <li><a class="dropdown-item {{ $sort == 'cost_price' ? 'active' : '' }}" 
+                                    href="{{ request()->fullUrlWithQuery(['sort' => 'cost_price', 'direction' => $sort == 'cost_price' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                    Cost Price @if($sort == 'cost_price') <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} float-end"></i> @endif
                                 </a></li>
                             </ul>
                         </div>
@@ -138,15 +131,16 @@
                     <tr>
                         <th>SKU</th>
                         <th>Product Name</th>
-                        <th>Current Stock</th>
+                        <th>Cost Price</th>
                         <th>Retail Price</th>
+                        <th>Margin (%)</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($products as $product)
-                    <tr>
+                    <tr class="{{ $showArchived ? 'archived-row' : '' }}">
                         <td><code>{{ $product->sku }}</code></td>
                         <td>
                             <div class="d-flex align-items-center">
@@ -160,24 +154,35 @@
                             </div>
                         </td>
                         <td>
-                            <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
-                                {{ $product->quantity_in_stock }}
-                            </span>
-                            @if($product->quantity_in_stock <= 0)
+                            @if($product->latestStockInItem)
+                                <span class="fw-semibold text-primary">
+                                    ₱{{ number_format($product->latestStockInItem->actual_unit_cost, 2) }}
+                                </span>
                                 <br>
-                                <small class="text-danger fw-bold">
-                                    OUT OF STOCK
+                                <small class="text-muted">
+                                    {{ $product->latestStockInItem->stockIn->reference_no ?? 'N/A' }}
                                 </small>
-                            @elseif($product->quantity_in_stock <= $product->reorder_level)
-                                <br>
-                                <small class="text-warning fw-bold">
-                                    LOW STOCK
-                                </small>
+                            @else
+                                <span class="no-price">N/A</span>
                             @endif
                         </td>
                         <td>
                             @if($product->latestProductPrice)
                                 <span class="fw-bold text-success">₱{{ number_format($product->latestProductPrice->retail_price, 2) }}</span>
+                            @else
+                                <span class="no-price">N/A</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($product->latestProductPrice && $product->latestStockInItem && $product->latestStockInItem->actual_unit_cost > 0)
+                                @php
+                                    $cost = $product->latestStockInItem->actual_unit_cost;
+                                    $retail = $product->latestProductPrice->retail_price;
+                                    $margin = (($retail - $cost) / $cost) * 100;
+                                @endphp
+                                <span class="fw-bold {{ $margin >= 0 ? 'text-success' : 'text-danger' }}">
+                                    {{ number_format($margin, 1) }}%
+                                </span>
                             @else
                                 <span class="no-price">N/A</span>
                             @endif
@@ -205,13 +210,16 @@
                                         <i class="bi bi-clock-history"></i>
                                     </button>
                                 @endif
-                                <button class="btn btn-sm btn-outline-warning edit-price" 
-                                        data-product-id="{{ $product->id }}"
-                                        data-product-name="{{ $product->name }}"
-                                        data-current-price="{{ $product->latestProductPrice ? $product->latestProductPrice->retail_price : '' }}"
-                                        title="Edit Price">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
+                                @if(!$showArchived && $product->is_active)
+                                    <button class="btn btn-sm btn-outline-warning edit-price" 
+                                            data-product-id="{{ $product->id }}"
+                                            data-product-name="{{ $product->name }}"
+                                            data-current-price="{{ $product->latestProductPrice ? $product->latestProductPrice->retail_price : '' }}"
+                                            data-cost-price="{{ $product->latestStockInItem ? $product->latestStockInItem->actual_unit_cost : '0' }}"
+                                            title="Edit Price">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -251,14 +259,50 @@
                             <input type="text" class="form-control" id="editProductName" readonly>
                             <input type="hidden" id="editProductId" name="product_id">
                         </div>
-                        <div class="mb-3">
-                            <label for="retail_price" class="form-label">Retail Price <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₱</span>
-                                <input type="number" class="form-control" id="retail_price" name="retail_price" step="0.01" min="0" required>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Cost Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="text" class="form-control bg-light" id="costPrice" readonly style="cursor: not-allowed;">
+                                    </div>
+                                    <div class="form-text text-muted">Latest stock in cost</div>
+                                </div>
                             </div>
-                            <div class="form-text">Enter the new selling price for this product</div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="retail_price" class="form-label">Retail Price <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₱</span>
+                                        <input type="number" class="form-control" id="retail_price" name="retail_price" 
+                                            step="0.01" min="0" max="1000000" required
+                                            oninput="validatePrice(this)">
+                                    </div>
+                                    <div class="form-text">Enter new selling price (max: ₱1,000,000)</div>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Margin Display -->
+                        <div class="mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body py-2">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <label class="form-label mb-0">Profit Margin:</label>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <span id="marginDisplay" class="fw-bold fs-5">0.0%</span>
+                                            <br>
+                                            <small id="profitAmount" class="text-muted">₱0.00 profit</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
                             This will create a new price record in the price history.
@@ -310,23 +354,93 @@
     </div>
 
     @push('scripts')
-    <script>
+        <script>
+        // Price validation function
+        function validatePrice(input) {
+            const maxPrice = 1000000;
+            const value = parseFloat(input.value);
+            
+            if (value > maxPrice) {
+                input.value = maxPrice;
+
+            } else if (value < 0) {
+                input.value = 0;
+            }
+            
+            // Calculate margin after validation
+            calculateMargin();
+        }
+
         // Edit Price
         document.querySelectorAll('.edit-price').forEach(button => {
             button.addEventListener('click', function() {
                 const productId = this.getAttribute('data-product-id');
                 const productName = this.getAttribute('data-product-name');
                 const currentPrice = this.getAttribute('data-current-price');
+                const costPrice = this.getAttribute('data-cost-price') || '0';
                 
                 document.getElementById('editProductId').value = productId;
                 document.getElementById('editProductName').value = productName;
                 document.getElementById('retail_price').value = currentPrice;
+                document.getElementById('costPrice').value = parseFloat(costPrice).toFixed(2);
                 document.getElementById('editPriceForm').action = '{{ route("product-prices.update") }}';
+                
+                // Remove any existing warning
+                const existingWarning = document.getElementById('priceWarning');
+                if (existingWarning) {
+                    existingWarning.remove();
+                }
+                
+                // Calculate initial margin
+                calculateMargin();
                 
                 const modal = new bootstrap.Modal(document.getElementById('editPriceModal'));
                 modal.show();
             });
         });
+
+        // Function to calculate margin
+        function calculateMargin() {
+            const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+            const retailPrice = parseFloat(document.getElementById('retail_price').value) || 0;
+            const marginDisplay = document.getElementById('marginDisplay');
+            const profitAmount = document.getElementById('profitAmount');
+            
+            if (costPrice > 0 && retailPrice > 0) {
+                const profit = retailPrice - costPrice;
+                const marginPercentage = (profit / costPrice) * 100;
+                
+                // Update margin display
+                marginDisplay.textContent = marginPercentage.toFixed(1) + '%';
+                
+                // Update profit amount
+                profitAmount.textContent = `₱${profit.toFixed(2)} ${profit >= 0 ? 'profit' : 'loss'}`;
+                
+                // Color code based on margin
+                if (marginPercentage > 0) {
+                    marginDisplay.className = 'fw-bold fs-5 text-success';
+                    profitAmount.className = 'text-muted text-success';
+                } else if (marginPercentage < 0) {
+                    marginDisplay.className = 'fw-bold fs-5 text-danger';
+                    profitAmount.className = 'text-muted text-danger';
+                } else {
+                    marginDisplay.className = 'fw-bold fs-5 text-secondary';
+                    profitAmount.className = 'text-muted';
+                }
+            } else {
+                marginDisplay.textContent = '0.0%';
+                profitAmount.textContent = '₱0.00 profit';
+                marginDisplay.className = 'fw-bold fs-5 text-secondary';
+                profitAmount.className = 'text-muted';
+            }
+        }
+
+        // Add event listener for retail price input changes
+        document.getElementById('retail_price').addEventListener('input', function() {
+            validatePrice(this);
+        });
+        
+        document.getElementById('retail_price').addEventListener('change', calculateMargin);
 
         // View Price History
         document.querySelectorAll('.view-price-history').forEach(button => {
@@ -372,9 +486,13 @@
             });
         });
 
-        // Price form submission
+        // Price form submission - add final validation
         document.getElementById('editPriceForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            const retailPrice = parseFloat(document.getElementById('retail_price').value);
+            const maxPrice = 1000000;
+            
             
             const formData = new FormData(this);
             

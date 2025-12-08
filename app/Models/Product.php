@@ -129,6 +129,13 @@ class Product extends Model
                     });
     }
 
+    public function latestStockInItem()
+    {
+        return $this->hasOne(StockInItem::class, 'product_id')
+            ->latestOfMany()
+            ->with('stockIn');
+    }
+
     public static function generateSku($categoryId, $suffix = null)
     {
         $category = Category::find($categoryId);

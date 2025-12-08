@@ -29,7 +29,7 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex w-90 me-2">
+                        <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex flex-grow-1 w-90 me-2">
                             @if($showArchived)
                                 <input type="hidden" name="archived" value="true">
                             @endif

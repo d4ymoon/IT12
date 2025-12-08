@@ -329,7 +329,7 @@
         </div>
     </div>
 
-    <!-- Detailed Sales Table -->
+   <!-- Detailed Sales Table -->
     <div class="col-12 mb-4">
         <div class="card report-card">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -337,9 +337,14 @@
                     <h5 class="mb-0">Detailed Sales Transactions</h5>
                     <small>Individual sales records for the selected period</small>
                 </div>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDetailedCSV()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV  
-                </button>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('sales.index') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-list me-1"></i> See All Sales
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDetailedCSV()">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV  
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

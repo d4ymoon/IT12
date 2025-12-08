@@ -89,6 +89,10 @@ class DashboardController extends Controller
                     $startDate = Carbon::now()->startOfWeek();
                     $endDate = Carbon::now()->endOfWeek();
                     break;
+                case 'last_month': 
+                    $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
                 case 'this_year':
                     $startDate = Carbon::now()->startOfYear();
                     $endDate = Carbon::now()->endOfYear();
@@ -319,23 +323,47 @@ class DashboardController extends Controller
     }
 
     private function getLowStockAlerts()
-    {
-        return DB::table('products')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->where('products.is_active', true)
-            ->where(function($query) {
-                $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
-                      ->orWhere('products.quantity_in_stock', 0);
-            })
-            ->select(
-                'products.name',
-                'products.quantity_in_stock as current_stock',
-                'products.reorder_level',
-                'categories.name as category_name'
-            )
-            ->orderBy('products.quantity_in_stock')
-            ->get();
-    }
+{
+    // First get the total count
+    $totalCount = DB::table('products')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->where('products.is_active', true)
+        ->where(function($query) {
+            $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
+                  ->orWhere('products.quantity_in_stock', 0);
+        })
+        ->count();
+
+    // Get out of stock count for the alert banner
+    $outOfStockCount = DB::table('products')
+        ->where('products.is_active', true)
+        ->where('products.quantity_in_stock', 0)
+        ->count();
+
+    // Get limited results for display (10 rows)
+    $alerts = DB::table('products')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->where('products.is_active', true)
+        ->where(function($query) {
+            $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
+                  ->orWhere('products.quantity_in_stock', 0);
+        })
+        ->select(
+            'products.name',
+            'products.quantity_in_stock as current_stock',
+            'products.reorder_level',
+            'categories.name as category_name'
+        )
+        ->orderBy('products.quantity_in_stock')
+        ->limit(10)
+        ->get();
+
+    return [
+        'total_count' => $totalCount,
+        'out_of_stock_count' => $outOfStockCount,
+        'alerts' => $alerts
+    ];
+}
 
     private function getRecentAdjustments()
     {

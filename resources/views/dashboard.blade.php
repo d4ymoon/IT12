@@ -21,6 +21,7 @@
                 <li><a class="dropdown-item filter-option" href="#" data-filter="today">Today</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_week">This Week</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_month">This Month</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="last_month">Last Month</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_year">This Year</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customDateModal">Custom Range</a></li>
@@ -34,11 +35,11 @@
     </div>
 </div>
 
-@if($lowStockAlerts->where('current_stock', 0)->count() > 0)
+@if($lowStockAlerts['out_of_stock_count'] > 0)
 <div class="alert alert-danger d-flex align-items-center mb-4">
     <i class="bi bi-exclamation-triangle fs-4 me-3"></i>
     <div class="flex-grow-1">
-        <strong>Urgent: {{ $lowStockAlerts->where('current_stock', 0)->count() }} product(s) out of stock!</strong>
+        <strong>Urgent: {{ $lowStockAlerts['out_of_stock_count'] }} product(s) out of stock!</strong>
         <p class="mb-0">Restock immediately to prevent lost sales.</p>
     </div>
     <a href="{{ route('products.index') }}?stock_filter=out_of_stock" class="btn btn-outline-danger">
@@ -118,13 +119,13 @@
     <!-- Low Stock Alerts -->
     <div class="col-md-2 mb-3">
         <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none">
-            <div class="card dashboard-card {{ $lowStockAlerts->count() > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
+            <div class="card dashboard-card {{ $lowStockAlerts['total_count'] > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
                 <div class="card-body stat-card">
                     <i class="bi bi-exclamation-triangle stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts->count() }}</div>
+                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts['total_count'] }}</div>
                     <div class="stat-label">Low Stock</div>
-                    @if($lowStockAlerts->where('current_stock', 0)->count() > 0)
-                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts->where('current_stock', 0)->count() }} out of stock</small>
+                    @if($lowStockAlerts['out_of_stock_count'] > 0)
+                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts['out_of_stock_count'] }} out of stock</small>
                     @endif
                 </div>
             </div>
@@ -227,7 +228,7 @@
             <div class="card dashboard-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Low Stock Alerts</span>
-                    <span class="badge bg-danger">{{ $lowStockAlerts->count() }} Alerts</span>
+                    <span class="badge bg-danger">{{ $lowStockAlerts['total_count'] }} Alerts</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -242,7 +243,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($lowStockAlerts as $product)
+                                @forelse($lowStockAlerts['alerts'] as $product)
                                     <tr class="{{ $product->current_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
                                         <td>{{ $product->name }}</td>
                                         <td>{{ $product->category_name }}</td>
@@ -261,6 +262,17 @@
                                         <td colspan="5" class="text-center text-muted py-3">No low stock alerts</td>
                                     </tr>
                                 @endforelse
+                                
+                                @if($lowStockAlerts['total_count'] > 10)
+                                    <tr class="bg-light">
+                                        <td colspan="5" class="text-center py-2">
+                                            <small class="text-muted">
+                                                Showing 10 of {{ $lowStockAlerts['total_count'] }} alerts. 
+                                                <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-primary">View all</a>
+                                            </small>
+                                        </td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>
