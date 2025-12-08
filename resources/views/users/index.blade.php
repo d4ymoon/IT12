@@ -29,7 +29,7 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex gap-2 align-items-center">
-                        <form action="{{ route('users.index') }}" method="GET" class="d-flex w-90">
+                        <form action="{{ route('users.index') }}" method="GET" class="d-flex flex-grow-1 w-90">
                             @if($showArchived)
                                 <input type="hidden" name="archived" value="true">
                             @endif

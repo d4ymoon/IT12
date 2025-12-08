@@ -463,11 +463,11 @@
                                 <td>₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
                                     @if($product->quantity_in_stock == 0)
-                                        <span class="badge bg-danger">Out of Stock</span>
+                                        <span class="fw-bold text-danger">Out of Stock</span>
                                     @elseif($product->quantity_in_stock <= $product->reorder_level)
-                                        <span class="badge bg-warning">Low Stock</span>
+                                        <span class="fw-bold text-warning">Low Stock</span>
                                     @else
-                                        <span class="badge bg-success">In Stock</span>
+                                        <span class="fw-bold text-success">In Stock</span>
                                     @endif
                                 </td>
                             </tr>

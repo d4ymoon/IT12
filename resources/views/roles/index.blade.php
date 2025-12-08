@@ -25,7 +25,7 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex gap-2 align-items-center">
-                        <form action="{{ route('roles.index') }}" method="GET" class="d-flex w-90">
+                        <form action="{{ route('roles.index') }}" method="GET" class="d-flex flex-grow-1 w-90">
                             <div class="input-group search-box w-100">
                                 <input type="text" class="form-control" name="search" placeholder="Search roles..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
