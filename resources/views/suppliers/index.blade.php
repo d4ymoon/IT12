@@ -137,7 +137,8 @@
                     @empty
                     <tr>
                         <td colspan="6" class="text-center py-4">
-                            No {{ $showArchived ? 'archived' : 'active' }} suppliers found
+                            <i class="bi bi-truck display-4 text-muted"></i>
+                            <p class="mt-3 mb-0"> No {{ $showArchived ? 'archived' : 'active' }} suppliers found</p>
                         </td>
                     </tr>
                     @endforelse

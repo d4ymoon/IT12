@@ -276,103 +276,103 @@ class ReturnController extends Controller
     }
 
    public function store(Request $request)
-{
-    // Debug: Log what's coming in
-    Log::info('Return Store Request Data:', $request->all());
-    
-    // First, filter out items with quantity 0
-    $items = $request->input('items', []);
-    $filteredItems = array_filter($items, function($item) {
-        return ($item['quantity'] ?? 0) > 0;
-    });
-    
-    // Replace the items in the request
-    $request->merge(['items' => $filteredItems]);
-    
-    $validated = $request->validate([
-        'sale_id' => 'required|exists:sales,id',
-        'return_reason' => 'required|in:Defective,Wrong Item,Customer Change Mind,Other',
-        'notes' => 'nullable|string',
-        'refund_method' => 'required|in:Cash,GCash,Card',
-        'reference_no' => 'required_if:refund_method,GCash,Card|nullable|string|max:100',
-        'items' => 'required|array|min:1',
-        'items.*.sale_item_id' => 'required|exists:sale_items,id',
-        'items.*.quantity' => 'required|integer|min:1',
-        'items.*.condition' => 'required|in:resaleable,damaged',
-        'items.*.refund_amount' => 'required|numeric|min:0'
-    ]);
-    
-    Log::info('Validated Data:', $validated);
-    
-    try {
-        DB::beginTransaction();
-
-        // Get sale and verify it's within 7 days
-        $sale = Sale::findOrFail($validated['sale_id']);
-        $saleDate = Carbon::parse($sale->sale_date);
-        $sevenDaysAgo = Carbon::now()->subDays(7);
+    {
+        // Debug: Log what's coming in
+        Log::info('Return Store Request Data:', $request->all());
         
-        if ($saleDate->lt($sevenDaysAgo)) {
-            return back()->withErrors(['sale_id' => 'Returns are only accepted within 7 days of purchase.']);
-        }
-
-        // Calculate total refund amount
-        $totalRefundAmount = collect($validated['items'])->sum('refund_amount');
-
-        // Create negative payment record for refund
-        $refundPayment = Payment::create([
-            'sale_id' => $sale->id,
-            'payment_method' => $validated['refund_method'],
-            'amount_tendered' => -$totalRefundAmount,
-            'change_given' => 0,
-            'reference_no' => $validated['reference_no'] ?? null,
-            'payment_date' => now()
+        // First, filter out items with quantity 0
+        $items = $request->input('items', []);
+        $filteredItems = array_filter($items, function($item) {
+            return ($item['quantity'] ?? 0) > 0;
+        });
+        
+        // Replace the items in the request
+        $request->merge(['items' => $filteredItems]);
+        
+        $validated = $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'return_reason' => 'required|in:Defective,Wrong Item,Customer Change Mind,Other',
+            'notes' => 'nullable|string',
+            'refund_method' => 'required|in:Cash,GCash,Card',
+            'reference_no' => 'required_if:refund_method,GCash,Card|nullable|string|max:100',
+            'items' => 'required|array|min:1',
+            'items.*.sale_item_id' => 'required|exists:sale_items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.condition' => 'required|in:resaleable,damaged',
+            'items.*.refund_amount' => 'required|numeric|min:0'
         ]);
+        
+        Log::info('Validated Data:', $validated);
+        
+        try {
+            DB::beginTransaction();
 
-        // Create return header
-        $productReturn = ProductReturn::create([
-            'sale_id' => $sale->id,
-            'user_id' => session('user_id'), 
-            'refund_payment_id' => $refundPayment->id,
-            'total_refund_amount' => $totalRefundAmount,
-            'return_reason' => $validated['return_reason'],
-            'notes' => $validated['notes']
-        ]);
-
-        // Create return items and update inventory
-        foreach ($validated['items'] as $itemData) {
-            $saleItem = SaleItem::find($itemData['sale_item_id']);
+            // Get sale and verify it's within 7 days
+            $sale = Sale::findOrFail($validated['sale_id']);
+            $saleDate = Carbon::parse($sale->sale_date);
+            $sevenDaysAgo = Carbon::now()->subDays(7);
             
-            $returnItem = ReturnItem::create([
-                'product_return_id' => $productReturn->id,
-                'product_id' => $saleItem->product_id,
-                'sale_item_id' => $saleItem->id,
-                'quantity_returned' => $itemData['quantity'],
-                'refunded_price_per_unit' => $itemData['refund_amount'] / $itemData['quantity'],
-                'total_line_refund' => $itemData['refund_amount'],
-                'inventory_adjusted' => $itemData['condition'] === 'resaleable'
+            if ($saleDate->lt($sevenDaysAgo)) {
+                return back()->withErrors(['sale_id' => 'Returns are only accepted within 7 days of purchase.']);
+            }
+
+            // Calculate total refund amount
+            $totalRefundAmount = collect($validated['items'])->sum('refund_amount');
+
+            // Create negative payment record for refund
+            $refundPayment = Payment::create([
+                'sale_id' => $sale->id,
+                'payment_method' => $validated['refund_method'],
+                'amount_tendered' => -$totalRefundAmount,
+                'change_given' => 0,
+                'reference_no' => $validated['reference_no'] ?? null,
+                'payment_date' => now()
             ]);
 
-            // Update inventory if item is resaleable
-            if ($itemData['condition'] === 'resaleable') {
-                $product = Product::find($saleItem->product_id);
-                $product->quantity_in_stock += $itemData['quantity'];
-                $product->save();
+            // Create return header
+            $productReturn = ProductReturn::create([
+                'sale_id' => $sale->id,
+                'user_id' => session('user_id'), 
+                'refund_payment_id' => $refundPayment->id,
+                'total_refund_amount' => $totalRefundAmount,
+                'return_reason' => $validated['return_reason'],
+                'notes' => $validated['notes']
+            ]);
+
+            // Create return items and update inventory
+            foreach ($validated['items'] as $itemData) {
+                $saleItem = SaleItem::find($itemData['sale_item_id']);
+                
+                $returnItem = ReturnItem::create([
+                    'product_return_id' => $productReturn->id,
+                    'product_id' => $saleItem->product_id,
+                    'sale_item_id' => $saleItem->id,
+                    'quantity_returned' => $itemData['quantity'],
+                    'refunded_price_per_unit' => $itemData['refund_amount'] / $itemData['quantity'],
+                    'total_line_refund' => $itemData['refund_amount'],
+                    'inventory_adjusted' => $itemData['condition'] === 'resaleable'
+                ]);
+
+                // Update inventory if item is resaleable
+                if ($itemData['condition'] === 'resaleable') {
+                    $product = Product::find($saleItem->product_id);
+                    $product->quantity_in_stock += $itemData['quantity'];
+                    $product->save();
+                }
             }
+
+            DB::commit();
+
+            return redirect()->route('returns.index')
+                ->with('success', 'Return processed successfully. Total refund: $' . number_format($totalRefundAmount, 2));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Return processing failed: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return back()->withErrors(['error' => 'Failed to process return: ' . $e->getMessage()]);
         }
-
-        DB::commit();
-
-        return redirect()->route('returns.index')
-            ->with('success', 'Return processed successfully. Total refund: $' . number_format($totalRefundAmount, 2));
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Return processing failed: ' . $e->getMessage());
-        Log::error($e->getTraceAsString());
-        return back()->withErrors(['error' => 'Failed to process return: ' . $e->getMessage()]);
     }
-}
 
     // You can add these methods later if needed:
     

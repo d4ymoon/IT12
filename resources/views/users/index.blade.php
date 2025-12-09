@@ -138,7 +138,8 @@
                     @empty
                     <tr>
                         <td colspan="9" class="text-center py-4">
-                            No {{ $showArchived ? 'archived' : 'active' }} users found
+                            <i class="bi bi-people display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No {{ $showArchived ? 'archived' : 'active' }} users found</p>
                         </td>
                     </tr>
                     @endforelse

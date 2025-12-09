@@ -186,8 +186,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4">
-                            No sales found
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-receipt display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No transactions found</p>
                         </td>
                     </tr>
                     @endforelse

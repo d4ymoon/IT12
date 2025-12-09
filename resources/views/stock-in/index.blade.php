@@ -157,7 +157,8 @@
                     @empty
                     <tr>
                         <td colspan="9" class="text-center py-4">
-                            No stock in records found
+                            <i class="bi bi-box-arrow-in-down display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No stock in records found</p>
                         </td>
                     </tr>
                     @endforelse

@@ -71,7 +71,6 @@
             <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">Low Stock Alerts</h5>
-                    <small>{{ $inventoryData['lowStockAlerts']->count() }} products need attention</small>
                 </div>
                 <button type="button" class="btn btn-outline-light btn-sm" onclick="exportLowStockCSV()">
                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV

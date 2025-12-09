@@ -91,7 +91,8 @@
                     @empty
                     <tr>
                         <td colspan="6" class="text-center py-4">
-                            No roles found
+                            <i class="bi bi-person-badge display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No roles found</p>
                         </td>
                     </tr>
                     @endforelse

@@ -121,7 +121,8 @@
             </div>
 
             <!-- Post Button -->
-            <div class="d-flex justify-content-end mt-4">
+            <div class="d-flex justify-content-end mt-4 gap-2">
+                <a href="{{ route('stock-ins.index') }}" class="btn btn-secondary">Cancel</a>
                 <button type="button" class="btn btn-success" id="post-shipment">
                     Post Shipment
                 </button>
