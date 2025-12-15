@@ -12,6 +12,7 @@
     <!-- Select 2 CSS -->
     <link href="{{ asset('css/vendor/select2.min.css') }}" rel="stylesheet">
     
+<<<<<<< HEAD
 <style>
     /* Company Color Variables */
     :root {
@@ -378,6 +379,18 @@
     }
     
     @media (max-width: 992px) {
+=======
+    <style>
+        
+        /* Company Color Variables */
+        :root {
+            --congress-blue: #06448a;
+            --amber: #fac307;
+            --white: #f8f9fa;
+            --monza: #e20615;
+        }
+        
+>>>>>>> main
         .sidebar {
             width: var(--sidebar-width-collapsed);
         }
@@ -432,17 +445,16 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <p class="fw-semibold fs-6">
+                <div class="modal-body text-start">
+                    <p class="fs-6">
                         You are currently using your <strong>default password</strong>.
                     </p>
                     <p>
                         For your account security, we strongly recommend updating it as soon as possible.
                     </p>
-                    <i class="bi bi-shield-lock text-warning fs-1"></i>
                 </div>
-                <div class="modal-footer justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" id="dismissDefaultPasswordModal">Remind Me Later</button>
+                <div class="modal-footer justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" id="dismissDefaultPasswordModal">Later</button>
                     <a href="{{ route('account.settings') }}" class="btn btn-warning fw-semibold" id="changeNowBtn">Change Password</a>
                 </div>
             </div>

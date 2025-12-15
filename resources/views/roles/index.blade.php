@@ -25,20 +25,21 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex gap-2 align-items-center">
-                        <form action="{{ route('roles.index') }}" method="GET" class="d-flex w-90">
-                            <div class="input-group search-box w-100">
+                        <!-- Remove w-90 from form and put clear button inside form -->
+                        <form action="{{ route('roles.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search roles..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
+                            
+                            @if(request('search'))
+                                <a href="{{ route('roles.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
                         </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('roles.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -90,7 +91,8 @@
                     @empty
                     <tr>
                         <td colspan="6" class="text-center py-4">
-                            No roles found
+                            <i class="bi bi-person-badge display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No roles found</p>
                         </td>
                     </tr>
                     @endforelse

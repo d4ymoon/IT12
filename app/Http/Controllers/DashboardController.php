@@ -53,6 +53,21 @@ class DashboardController extends Controller
         // Returns Data
         $returnsData = $this->getReturnsData($startDate, $endDate);
 
+        $daysDiff = $startDate->diffInDays($endDate);
+        $currentChartType = 'weekly'; // default
+        
+        if ($daysDiff > 730) { // More than 2 years
+            $currentChartType = 'yearly';
+        } elseif ($daysDiff > 60) { // More than 2 months
+            $currentChartType = 'monthly';
+        } elseif ($daysDiff > 14) { // More than 2 weeks
+            $currentChartType = 'weekly';
+        } elseif ($daysDiff > 1) { // More than 1 day
+            $currentChartType = 'daily';
+        } else {
+            $currentChartType = 'hourly';
+        }
+
         return view('dashboard', compact(
             'totalRevenue',
             'grossProfit',
@@ -67,7 +82,8 @@ class DashboardController extends Controller
             'returnsData',
             'paymentMethods',
             'startDate',
-            'endDate'
+            'endDate',
+                    'currentChartType' // Add this
         ));
     }
 
@@ -89,9 +105,27 @@ class DashboardController extends Controller
                     $startDate = Carbon::now()->startOfWeek();
                     $endDate = Carbon::now()->endOfWeek();
                     break;
+                case 'last_month': 
+                    $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
                 case 'this_year':
                     $startDate = Carbon::now()->startOfYear();
                     $endDate = Carbon::now()->endOfYear();
+                    break;
+                case 'all_time':
+                    // Get the earliest sale date or 1 year ago if no sales yet
+                    $earliestDate = DB::table('sales')
+                        ->min('sale_date');
+                    
+                    if ($earliestDate) {
+                        $startDate = Carbon::parse($earliestDate)->startOfDay();
+                    } else {
+                        // If no sales yet, default to 1 year ago
+                        $startDate = Carbon::now()->subYear()->startOfDay();
+                    }
+                    
+                    $endDate = Carbon::now()->endOfDay();
                     break;
                 case 'this_month':
                 default:
@@ -153,13 +187,55 @@ class DashboardController extends Controller
     {
         $daysDiff = $startDate->diffInDays($endDate);
         
-        if ($daysDiff > 60) {
+        if ($daysDiff > 730) { // More than 2 years
+            return $this->getYearlySalesData($startDate, $endDate);
+        } elseif ($daysDiff > 60) { // More than 2 months
             return $this->getMonthlySalesData($startDate, $endDate);
-        } elseif ($daysDiff > 14) {
+        } elseif ($daysDiff > 14) { // More than 2 weeks
             return $this->getWeeklySalesData($startDate, $endDate);
-        } else {
+        } elseif ($daysDiff > 1) { // More than 1 day
             return $this->getDailySalesData($startDate, $endDate);
+        } else {
+            // Single day - show hourly
+            return $this->getHourlySalesData($startDate, $endDate);
         }
+    }
+
+    private function getHourlySalesData($startDate, $endDate)
+    {
+        $labels = [];
+        $data = [];
+        
+        // For today, show hours from store opening (e.g., 8 AM) to closing (e.g., 8 PM)
+        // Or show all 24 hours if you want
+        $openingHour = 8; // 8 AM
+        $closingHour = 20; // 8 PM
+        
+        for ($hour = $openingHour; $hour <= $closingHour; $hour++) {
+            $hourStart = $startDate->copy()->setHour($hour)->setMinute(0)->setSecond(0);
+            $hourEnd = $hourStart->copy()->addHour();
+            
+            // Format label: 8 AM, 9 AM, etc.
+            $labels[] = $hourStart->format('g A');
+            
+            // Get sales for this hour
+            $hourlySales = DB::table('sale_items')
+                ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+                ->whereBetween('sales.sale_date', [$hourStart, $hourEnd])
+                ->sum(DB::raw('sale_items.unit_price * sale_items.quantity_sold'));
+            
+            // Get returns for this hour
+            $hourlyReturns = DB::table('product_returns')
+                ->whereBetween('created_at', [$hourStart, $hourEnd])
+                ->sum('total_refund_amount');
+            
+            $data[] = $hourlySales - $hourlyReturns;
+        }
+        
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
     }
 
     private function getDailySalesData($startDate, $endDate)
@@ -319,23 +395,47 @@ class DashboardController extends Controller
     }
 
     private function getLowStockAlerts()
-    {
-        return DB::table('products')
-            ->join('categories', 'products.category_id', '=', 'categories.id')
-            ->where('products.is_active', true)
-            ->where(function($query) {
-                $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
-                      ->orWhere('products.quantity_in_stock', 0);
-            })
-            ->select(
-                'products.name',
-                'products.quantity_in_stock as current_stock',
-                'products.reorder_level',
-                'categories.name as category_name'
-            )
-            ->orderBy('products.quantity_in_stock')
-            ->get();
-    }
+{
+    // First get the total count
+    $totalCount = DB::table('products')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->where('products.is_active', true)
+        ->where(function($query) {
+            $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
+                  ->orWhere('products.quantity_in_stock', 0);
+        })
+        ->count();
+
+    // Get out of stock count for the alert banner
+    $outOfStockCount = DB::table('products')
+        ->where('products.is_active', true)
+        ->where('products.quantity_in_stock', 0)
+        ->count();
+
+    // Get limited results for display (10 rows)
+    $alerts = DB::table('products')
+        ->join('categories', 'products.category_id', '=', 'categories.id')
+        ->where('products.is_active', true)
+        ->where(function($query) {
+            $query->where('products.quantity_in_stock', '<=', DB::raw('products.reorder_level'))
+                  ->orWhere('products.quantity_in_stock', 0);
+        })
+        ->select(
+            'products.name',
+            'products.quantity_in_stock as current_stock',
+            'products.reorder_level',
+            'categories.name as category_name'
+        )
+        ->orderBy('products.quantity_in_stock')
+        ->limit(10)
+        ->get();
+
+    return [
+        'total_count' => $totalCount,
+        'out_of_stock_count' => $outOfStockCount,
+        'alerts' => $alerts
+    ];
+}
 
     private function getRecentAdjustments()
     {
@@ -382,17 +482,37 @@ class DashboardController extends Controller
         ];
     }
     
-    public function getSalesChartData(Request $request)
+   public function getSalesChartData(Request $request)
     {
-        $chartType = $request->get('chart_type', 'daily');
+        $chartType = $request->get('chart_type', 'auto');
         
         // Get date range based on filter
         $dateRange = $this->getDateRangeFromFilter($request);
         $startDate = $dateRange['start_date'];
         $endDate = $dateRange['end_date'];
         
+        // If chart_type is 'auto', determine best granularity
+        if ($chartType === 'auto') {
+            $daysDiff = $startDate->diffInDays($endDate);
+            
+            if ($daysDiff > 730) { // More than 2 years
+                $chartType = 'yearly';
+            } elseif ($daysDiff > 60) { // More than 2 months
+                $chartType = 'monthly';
+            } elseif ($daysDiff > 14) { // More than 2 weeks
+                $chartType = 'weekly';
+            } elseif ($daysDiff > 1) { // More than 1 day
+                $chartType = 'daily';
+            } else {
+                $chartType = 'hourly';
+            }
+        }
+        
         // Get sales data based on chart type
         switch ($chartType) {
+            case 'hourly':
+                $salesData = $this->getHourlySalesData($startDate, $endDate);
+                break;
             case 'weekly':
                 $salesData = $this->getWeeklySalesData($startDate, $endDate);
                 break;

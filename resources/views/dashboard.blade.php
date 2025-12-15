@@ -21,7 +21,9 @@
                 <li><a class="dropdown-item filter-option" href="#" data-filter="today">Today</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_week">This Week</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_month">This Month</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="last_month">Last Month</a></li>
                 <li><a class="dropdown-item filter-option" href="#" data-filter="this_year">This Year</a></li>
+                <li><a class="dropdown-item filter-option" href="#" data-filter="all_time">All Time</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#customDateModal">Custom Range</a></li>
             </ul>
@@ -34,11 +36,11 @@
     </div>
 </div>
 
-@if($lowStockAlerts->where('current_stock', 0)->count() > 0)
+@if($lowStockAlerts['out_of_stock_count'] > 0)
 <div class="alert alert-danger d-flex align-items-center mb-4">
     <i class="bi bi-exclamation-triangle fs-4 me-3"></i>
     <div class="flex-grow-1">
-        <strong>Urgent: {{ $lowStockAlerts->where('current_stock', 0)->count() }} product(s) out of stock!</strong>
+        <strong>Urgent: {{ $lowStockAlerts['out_of_stock_count'] }} product(s) out of stock!</strong>
         <p class="mb-0">Restock immediately to prevent lost sales.</p>
     </div>
     <a href="{{ route('products.index') }}?stock_filter=out_of_stock" class="btn btn-outline-danger">
@@ -118,13 +120,13 @@
     <!-- Low Stock Alerts -->
     <div class="col-md-2 mb-3">
         <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none">
-            <div class="card dashboard-card {{ $lowStockAlerts->count() > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
+            <div class="card dashboard-card {{ $lowStockAlerts['total_count'] > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
                 <div class="card-body stat-card">
                     <i class="bi bi-exclamation-triangle stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts->count() }}</div>
+                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts['total_count'] }}</div>
                     <div class="stat-label">Low Stock</div>
-                    @if($lowStockAlerts->where('current_stock', 0)->count() > 0)
-                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts->where('current_stock', 0)->count() }} out of stock</small>
+                    @if($lowStockAlerts['out_of_stock_count'] > 0)
+                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts['out_of_stock_count'] }} out of stock</small>
                     @endif
                 </div>
             </div>
@@ -137,14 +139,38 @@
     <div class="col-md-8 mb-3">
         <div class="card dashboard-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Sales Overview</span>
-                <div class="btn-group btn-group-sm" id="salesChartType">
-                    <button type="button" class="btn btn-outline-primary" data-type="daily">Daily</button>
-                    <button type="button" class="btn btn-outline-primary active" data-type="weekly">Weekly</button>
-                    <button type="button" class="btn btn-outline-primary" data-type="monthly">Monthly</button>
-                    <button type="button" class="btn btn-outline-primary" data-type="yearly">Yearly</button>
-                </div>
+            <span>Sales Overview</span>
+            <div class="btn-group btn-group-sm" id="salesChartType">
+                @php
+                    $filter = request('filter', 'this_month');
+                @endphp
+                
+                @if($filter === 'today')
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'hourly' ? 'active' : '' }}" 
+                        data-type="hourly">By Hour</button>
+                @endif
+                
+                @if(!in_array($filter, ['today']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'daily' ? 'active' : '' }}" 
+                        data-type="daily">By Day</button>
+                @endif
+                
+                @if(!in_array($filter, ['today', 'this_week']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'weekly' ? 'active' : '' }}" 
+                        data-type="weekly">By Week</button>
+                @endif
+                
+                @if(!in_array($filter, ['today', 'this_week', 'this_month', 'last_month']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'monthly' ? 'active' : '' }}" 
+                        data-type="monthly">By Month</button>
+                @endif
+                
+                @if(in_array($filter, ['all_time']))
+                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'yearly' ? 'active' : '' }}" 
+                        data-type="yearly">By Year</button>
+                @endif
             </div>
+        </div>
             <div class="card-body">
                 <div class="chart-container">
                     <canvas id="salesChart"></canvas>
@@ -227,7 +253,7 @@
             <div class="card dashboard-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Low Stock Alerts</span>
-                    <span class="badge bg-danger">{{ $lowStockAlerts->count() }} Alerts</span>
+                    <span class="badge bg-danger">{{ $lowStockAlerts['total_count'] }} Alerts</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -242,7 +268,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($lowStockAlerts as $product)
+                                @forelse($lowStockAlerts['alerts'] as $product)
                                     <tr class="{{ $product->current_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
                                         <td>{{ $product->name }}</td>
                                         <td>{{ $product->category_name }}</td>
@@ -261,6 +287,17 @@
                                         <td colspan="5" class="text-center text-muted py-3">No low stock alerts</td>
                                     </tr>
                                 @endforelse
+                                
+                                @if($lowStockAlerts['total_count'] > 10)
+                                    <tr class="bg-light">
+                                        <td colspan="5" class="text-center py-2">
+                                            <small class="text-muted">
+                                                Showing 10 of {{ $lowStockAlerts['total_count'] }} alerts. 
+                                                <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-primary">View all</a>
+                                            </small>
+                                        </td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -269,7 +306,7 @@
         </a>
     </div>
     <div class="col-md-6 mb-3">
-        <a href="{{ route('reports.inventory.index') }}?stock_filter=low_stock" class="text-decoration-none chart-clickable">
+        <a href="{{ route('stock-adjustments.index') }}" class="text-decoration-none chart-clickable">
             <div class="card dashboard-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>Recent Adjustments</span>
@@ -492,6 +529,30 @@
         transform: translateY(-3px);
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+
+    .btn-group-sm .btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-group-sm .btn {
+        position: relative;
+    }
+
+    .btn-group-sm .btn[title]:hover::after {
+        content: attr(title);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
 </style>
 @endpush
 
@@ -547,6 +608,8 @@
         const salesChartTypeButtons = document.querySelectorAll('#salesChartType button');
         salesChartTypeButtons.forEach(button => {
             button.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+                
                 // Remove active class from all buttons
                 salesChartTypeButtons.forEach(btn => btn.classList.remove('active'));
                 // Add active class to clicked button
@@ -765,6 +828,7 @@
                 .catch(error => {
                     console.error('Error fetching chart data:', error);
                     salesChartCanvas.style.opacity = '1';
+                    alert('Error loading chart data. Please try again.');
                 });
         }
     });

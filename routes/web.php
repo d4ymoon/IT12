@@ -95,9 +95,11 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('stock-adjustments/{id}/show', [StockAdjustmentController::class, 'show'])->name('stock-adjustments.show');
         
         Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+        Route::get('/sales/export-csv', [SaleController::class, 'exportCsv'])->name('sales.export.csv');
         Route::get('/sales/{id}', [SaleController::class, 'show'])->name('sales.show');
         Route::get('/sales/{id}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
         Route::get('/sales/{id}/details', [SaleController::class, 'details'])->name('sales.details');
+        
 
         Route::get('/product-prices', [ProductPriceController::class, 'index'])->name('product-prices.index');
         Route::post('/product-prices/update', [ProductPriceController::class, 'update'])->name('product-prices.update');

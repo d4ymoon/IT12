@@ -38,10 +38,10 @@
                         </div>
                         
                         @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date') || (request('sort') && request('sort') != 'created_at') || (request('direction') && request('direction') != 'desc'))
-    <a href="{{ route('returns.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
-        <i class="bi bi-x-circle"></i> Clear
-    </a>
-@endif
+                            <a href="{{ route('returns.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </a>
+                        @endif
                     </div>
                 </div>
 
@@ -189,9 +189,6 @@
                         <td colspan="9" class="text-center py-4">
                             <i class="bi bi-inbox display-4 text-muted"></i>
                             <p class="mt-3 mb-0">No returns found</p>
-                            @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date'))
-                                <a href="{{ route('returns.index') }}" class="btn btn-primary mt-2">Clear Filters</a>
-                            @endif
                         </td>
                     </tr>
                     @endforelse

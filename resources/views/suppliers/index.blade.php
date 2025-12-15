@@ -29,27 +29,27 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex w-90 me-2">
+                        <form action="{{ route('suppliers.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
                             @if($showArchived)
                                 <input type="hidden" name="archived" value="true">
                             @endif
-                            <div class="input-group search-box w-100">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search suppliers..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
-                        </form>
-                        
-                        @if(request('search'))
-                            @if($showArchived)
-                                <a href="{{ route('suppliers.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                            @else
-                                <a href="{{ route('suppliers.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                            
+                            @if(request('search'))
+                                @if($showArchived)
+                                    <a href="{{ route('suppliers.index', ['archived' => true]) }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                @else
+                                    <a href="{{ route('suppliers.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                @endif
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
                             @endif
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
+                        </form>
                     </div>
                 </div>
                 
@@ -137,7 +137,8 @@
                     @empty
                     <tr>
                         <td colspan="6" class="text-center py-4">
-                            No {{ $showArchived ? 'archived' : 'active' }} suppliers found
+                            <i class="bi bi-truck display-4 text-muted"></i>
+                            <p class="mt-3 mb-0"> No {{ $showArchived ? 'archived' : 'active' }} suppliers found</p>
                         </td>
                     </tr>
                     @endforelse

@@ -228,7 +228,8 @@
                     @empty
                     <tr>
                         <td colspan="9" class="text-center py-4">
-                            No stock adjustment records found
+                            <i class="bi bi-clipboard-minus display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No stock adjustment records found</p>
                         </td>
                     </tr>
                     @endforelse

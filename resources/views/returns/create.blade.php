@@ -114,12 +114,14 @@
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Select Items & Condition</h5>
+                    <p class="text-muted mb-0 small">Enter 0 for items you don't want to return</p>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
+                                    <!-- REMOVED CHECKBOX COLUMN HEADER -->
                                     <th>Product</th>
                                     <th>SKU</th>
                                     <th>Original Price</th>
@@ -141,7 +143,7 @@
             <!-- Step 3: Finalize Financials -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Step 3: Finalize Financials</h5>
+                    <h5 class="card-title mb-0">Finalize Financials</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -161,11 +163,11 @@
                             <div class="mb-3">
                                 <label class="form-label">Return Date</label>
                                 <input type="text" class="form-control" 
-                                       value="{{ now()->format('M d, Y h:i A') }}" 
-                                       readonly 
-                                       style="background-color: #f8f9fa;">
+                                    value="{{ now()->format('M d, Y h:i A') }}" 
+                                    readonly 
+                                    style="background-color: #f8f9fa;">
                                 <input type="hidden" id="return_date" name="return_date" 
-                                       value="{{ now()->format('Y-m-d H:i:s') }}">
+                                    value="{{ now()->format('Y-m-d H:i:s') }}">
                                 <div class="form-text">Automatically recorded</div>
                             </div>
                         </div>
@@ -179,6 +181,7 @@
                     </div>
                     
                     <div class="row">
+                        <!-- KEEP ONLY ONE REFUND METHOD FIELD -->
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="refund_method" class="form-label">Refund Method <span class="text-danger">*</span></label>
@@ -190,16 +193,14 @@
                                 </select>
                             </div>
                         </div>
-        
+                        
+                        <!-- ADD A NEW FIELD HERE INSTEAD OF THE DUPLICATE -->
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="refund_method" class="form-label">Refund Method <span class="text-danger">*</span></label>
-                                <select class="form-select" id="refund_method" name="refund_method" required>
-                                    <option value="">Select Method</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="GCash">GCash</option>
-                                    <option value="Card">Card</option>
-                                </select>
+                                <label class="form-label">Total Refund Amount</label>
+                                <input type="text" class="form-control" id="total-refund-display" 
+                                    value="$0.00" readonly style="background-color: #f8f9fa; font-weight: bold;">
+                                <div class="form-text">Calculated based on selected items</div>
                             </div>
                         </div>
                     </div>
@@ -219,7 +220,7 @@
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes (Optional)</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" 
-                                  placeholder="Additional notes about this return..." maxlength="250"></textarea>
+                                placeholder="Additional notes about this return..." maxlength="250"></textarea>
                         <div class="form-text text-start">Maximum 250 characters</div>
                     </div>
                     
@@ -235,15 +236,42 @@
                     <!-- Submit Button -->
                     <div class="d-flex justify-content-end gap-2">
                         <a href="{{ route('returns.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success" id="process-return-btn">
+                        <button type="button" class="btn btn-success" id="process-return-btn">
                             Process Return & Issue Refund
                         </button>
                     </div>
                 </div>
-            </div>
-
-            
+            </div>  
         </form>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Return Processing</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-arrow-return-left text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Are you sure you want to process this return?</h5>
+                    <p class="text-muted">This action will issue a refund and update inventory records.</p>
+                    <div class="alert alert-warning mt-3">
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                    <div id="confirmationSummary" class="mt-3">
+                        <p><strong>Refund Amount:</strong> $<span id="modal-refund-amount">0.00</span></p>
+                        <p><strong>Refund Method:</strong> <span id="modal-refund-method">-</span></p>
+                        <p><strong>Items to Return:</strong> <span id="modal-items-count">0</span> item(s)</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmReturn">Confirm and Process Return</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Error Alert -->
@@ -282,16 +310,18 @@ $(document).ready(function() {
             return;
         }
 
-        $('#lookup-sale').prop('disabled', true).html('<i class="ri-loader-4-line spin"></i> Searching...');
+        $('#lookup-sale').prop('disabled', true).html('<i class="bi bi-search me-1"></i> Searching...');
 
-        // FIX: Build the URL manually to avoid route parameter issues
+        // Build the URL
         const url = `/returns/get-sale/${saleId}`;
+        console.log('Looking up sale:', saleId, 'URL:', url); // Debug
         
         $.ajax({
             url: url,
             type: 'GET',
             success: function(response) {
-                $('#lookup-sale').prop('disabled', false).html('<i class="ri-search-line"></i> Lookup Sale');
+                console.log('Response received:', response); // Debug
+                $('#lookup-sale').prop('disabled', false).html('<i class="bi bi-search me-1"></i> Lookup Sale');
                 
                 if (response.success) {
                     currentSale = response.sale;
@@ -302,15 +332,22 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr, status, error) {
-                $('#lookup-sale').prop('disabled', false).html('<i class="ri-search-line"></i> Lookup Sale');
+                console.log('AJAX Error:', error, 'Status:', status, 'Response:', xhr.responseText); // Debug
+                $('#lookup-sale').prop('disabled', false).html('<i class="bi bi-search me-1"></i> Lookup Sale');
                 
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     showError(xhr.responseJSON.message);
                 } else {
-                    showError('Error looking up sale. Please try again.');
+                    showError('Error looking up sale. Please try again. Check console for details.');
                 }
             }
         });
+    });
+
+    // Add this after your existing event handlers
+    $('#process-return-btn').on('click', function() {
+        // Trigger form submit which will show the modal
+        $('#return-form').submit();
     });
 
     function displaySaleDetails() {
@@ -327,13 +364,14 @@ $(document).ready(function() {
         const tbody = $('#return-items-tbody');
         tbody.empty();
 
-        currentSale.items.forEach(item => {
+        // Use sequential array keys starting from 0
+        currentSale.items.forEach((item, index) => {
             if (item.max_returnable > 0) {
                 const row = `
-                    <tr>
+                    <tr class="return-item-row" data-item-id="${item.id}">
                         <td>
                             ${item.product_name}
-                            <input type="hidden" name="items[${item.id}][sale_item_id]" value="${item.id}">
+                            <input type="hidden" name="items[${index}][sale_item_id]" value="${item.id}">
                         </td>
                         <td>${item.product_sku}</td>
                         <td>$${parseFloat(item.unit_price).toFixed(2)}</td>
@@ -341,23 +379,24 @@ $(document).ready(function() {
                         <td>${item.already_returned}</td>
                         <td>
                             <input type="number" 
-                                   name="items[${item.id}][quantity]" 
+                                   name="items[${index}][quantity]" 
                                    class="form-control return-quantity" 
-                                   min="1" 
+                                   min="0" 
                                    max="${item.max_returnable}"
                                    value="0"
                                    data-unit-price="${item.unit_price}"
-                                   data-max="${item.max_returnable}">
+                                   data-max="${item.max_returnable}"
+                                   placeholder="0">
                         </td>
                         <td>
-                            <select name="items[${item.id}][condition]" class="form-select item-condition">
+                            <select name="items[${index}][condition]" class="form-select item-condition">
                                 <option value="resaleable">Resaleable</option>
                                 <option value="damaged">Damaged</option>
                             </select>
                         </td>
                         <td>
                             $<span class="line-refund-amount">0.00</span>
-                            <input type="hidden" name="items[${item.id}][refund_amount]" class="line-refund-input" value="0">
+                            <input type="hidden" name="items[${index}][refund_amount]" class="line-refund-input" value="0">
                         </td>
                     </tr>
                 `;
@@ -365,6 +404,9 @@ $(document).ready(function() {
             }
         });
 
+        // Initialize calculation
+        calculateRefundAmounts();
+        
         // Show the form section
         $('#sale-details-section').removeClass('d-none');
 
@@ -388,35 +430,28 @@ $(document).ready(function() {
             const maxQuantity = parseInt($(this).data('max'));
             const condition = $(this).closest('tr').find('.item-condition').val();
             
-            // Validate quantity
-            if (quantity < 0) {
-                $(this).val(0);
-                return;
+            // Calculate refund amount only if quantity > 0
+            if (quantity > 0) {
+                let refundAmount = quantity * unitPrice;
+                
+                const lineRefundElement = $(this).closest('tr').find('.line-refund-amount');
+                const lineRefundInput = $(this).closest('tr').find('.line-refund-input');
+                
+                lineRefundElement.text(refundAmount.toFixed(2));
+                lineRefundInput.val(refundAmount.toFixed(2));
+                
+                totalRefund += refundAmount;
+            } else {
+                // Reset to 0 if quantity is 0
+                const lineRefundElement = $(this).closest('tr').find('.line-refund-amount');
+                const lineRefundInput = $(this).closest('tr').find('.line-refund-input');
+                lineRefundElement.text('0.00');
+                lineRefundInput.val('0');
             }
-            if (quantity > maxQuantity) {
-                $(this).val(maxQuantity);
-                return;
-            }
-
-            // Calculate refund amount (full refund for resaleable, potentially adjust for damaged)
-            let refundAmount = quantity * unitPrice;
-            
-            // For damaged items, you might want to implement partial refund logic
-            // For now, we'll do full refund for both conditions
-            // if (condition === 'damaged') {
-            //     refundAmount = refundAmount * 0.5; // 50% refund for damaged
-            // }
-
-            const lineRefundElement = $(this).closest('tr').find('.line-refund-amount');
-            const lineRefundInput = $(this).closest('tr').find('.line-refund-input');
-            
-            lineRefundElement.text(refundAmount.toFixed(2));
-            lineRefundInput.val(refundAmount.toFixed(2));
-            
-            totalRefund += refundAmount;
         });
 
         $('#total-refund-amount').text(totalRefund.toFixed(2));
+        $('#total-refund-display').val('$' + totalRefund.toFixed(2));
     }
 
     function showError(message) {
@@ -428,31 +463,83 @@ $(document).ready(function() {
         }, 500);
     }
 
-    // Form validation before submission
+    // Form validation before submission - shows modal instead of immediate submit
     $('#return-form').on('submit', function(e) {
-        let hasItems = false;
-        let totalQuantity = 0;
-
-        $('.return-quantity').each(function() {
+        e.preventDefault(); // Prevent immediate form submission
+        
+        // Validation logic
+        let hasReturnItems = false;
+        let returnItems = [];
+        
+        // Check if any item has quantity > 0
+        $('.return-quantity').each(function(index) {
             const quantity = parseInt($(this).val()) || 0;
             if (quantity > 0) {
-                hasItems = true;
-                totalQuantity += quantity;
+                hasReturnItems = true;
+                returnItems.push({
+                    index: index,
+                    quantity: quantity
+                });
             }
         });
 
-        if (!hasItems || totalQuantity === 0) {
-            e.preventDefault();
-            showError('Please select at least one item to return with quantity greater than 0.');
+        if (!hasReturnItems) {
+            showError('Please enter a return quantity greater than 0 for at least one item.');
+            return false;
+        }
+        
+        // Check that refund method and return reason are selected
+        if (!$('#refund_method').val()) {
+            showError('Please select a refund method.');
+            return false;
+        }
+        
+        if (!$('#return_reason').val()) {
+            showError('Please select a return reason.');
+            return false;
+        }
+        
+        // Check reference number for GCash/Card
+        const refundMethod = $('#refund_method').val();
+        if ((refundMethod === 'GCash' || refundMethod === 'Card') && !$('#reference_no').val()) {
+            showError('Reference number is required for GCash and Card refunds.');
+            return false;
+        }
+        
+        // Validate each item's quantity doesn't exceed max
+        let validationPassed = true;
+        $('.return-quantity').each(function() {
+            const quantity = parseInt($(this).val()) || 0;
+            const max = parseInt($(this).data('max'));
+            
+            if (quantity > max) {
+                showError(`Return quantity cannot exceed ${max} for one or more items.`);
+                validationPassed = false;
+                return false; // break the loop
+            }
+        });
+        
+        if (!validationPassed) {
             return false;
         }
 
-        // Confirm before processing
+        // Populate modal with return details
         const totalRefund = $('#total-refund-amount').text();
-        if (!confirm(`Are you sure you want to process this return and issue a refund of $${totalRefund}?`)) {
-            e.preventDefault();
-            return false;
-        }
+        const refundMethodText = $('#refund_method option:selected').text();
+        const itemsCount = returnItems.length;
+        
+        $('#modal-refund-amount').text(totalRefund);
+        $('#modal-refund-method').text(refundMethodText);
+        $('#modal-items-count').text(itemsCount);
+        
+        // Show the modal
+        new bootstrap.Modal(document.getElementById('confirmationModal')).show();
+    });
+
+    // Handle the confirmation button click
+    $('#confirmReturn').on('click', function() {
+        // Submit the form programmatically
+        document.getElementById('return-form').submit();
     });
 });
 </script>

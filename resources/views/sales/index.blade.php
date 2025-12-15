@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Sales History - ATIN Admin')
+@section('title', 'Transaction History - ATIN Admin')
 @push('styles')
 <link href="{{ asset('css/page-style.css') }}" rel="stylesheet">
 @endpush
@@ -7,48 +7,135 @@
     @include('components.alerts')
 
     <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="mb-0">
-                <b>Sales History</b>
-            </h2>
-        </div>
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+            <b>Transaction History</b>
+        </h2>
+        <button type="button" class="btn btn-outline-success" onclick="exportSalesCSV()">
+            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+        </button>
     </div>
+</div>
 
-    <!-- Search Card -->
+    <!-- Search & Filter Card -->
     <div class="card mb-4">
         <div class="card-body">
-            <div class="row align-items-center">
-                <!-- Search & Clear -->
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center">
-                        <form action="{{ route('sales.index') }}" method="GET" class="d-flex w-90 me-2">
-                            <div class="input-group search-box w-90">
-                                <input type="text" class="form-control" name="search" placeholder="Search by sale ID, customer name..." value="{{ request('search') }}">
-                                <button class="btn btn-outline-secondary" type="submit">
+            <form method="GET" action="{{ route('sales.index') }}">
+                <div class="row g-3 align-items-center">
+                    <!-- Search & Clear -->
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="input-group search-box w-100 me-2">
+                                <input type="text" class="form-control" name="search" placeholder="Search by sale ID..." value="{{ request('search') }}">                                <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
-                        </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('sales.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
+                            
+                            @if(request('search') || request('date_filter') || request('start_date') || request('end_date') || request('payment_method'))
+                                <a href="{{ route('sales.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear filters">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <!-- Sort -->
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" style="min-width: 140px;">
+                                    <i class="bi bi-sort-down me-1"></i>Sort
+                                    @if($sort)
+                                        <small class="ms-1">({{ $direction == 'asc' ? '↑' : '↓' }})</small>
+                                    @endif
+                                </button>
+                                <ul class="dropdown-menu" style="min-width: 220px;">
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'id' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'id', 'direction' => $sort == 'id' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                            <span>Sale ID</span>
+                                            @if($sort == 'id')
+                                                <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'sale_date' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'sale_date', 'direction' => $sort == 'sale_date' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                            <span>Date</span>
+                                            @if($sort == 'sale_date')
+                                                <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'total_amount' ? 'active' : '' }}" 
+                                        href="{{ request()->fullUrlWithQuery(['sort' => 'total_amount', 'direction' => $sort == 'total_amount' && $direction == 'asc' ? 'desc' : 'asc']) }}">
+                                            <span>Total Amount</span>
+                                            @if($sort == 'total_amount')
+                                                <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
+                                            @endif
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Date Filter -->
-                <div class="col-md-6">
-                    <form action="{{ route('sales.index') }}" method="GET" class="d-flex gap-2">
-                        <input type="date" class="form-control" name="date" value="{{ request('date') }}" placeholder="Filter by date">
-                        <button type="submit" class="btn btn-outline-primary">Filter</button>
-                        @if(request('date'))
-                            <a href="{{ route('sales.index') }}" class="btn btn-outline-secondary">Clear Date</a>
-                        @endif
-                    </form>
+
+                <!-- Additional Filters -->
+                <div class="row mt-3">
+                    <!-- Payment Method Filter -->
+                    <div class="col-md-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method" onchange="this.form.submit()">
+                            <option value="">All Methods</option>
+                            @foreach(['Cash', 'GCash', 'Card'] as $method)
+                                <option value="{{ $method }}" {{ request('payment_method') == $method ? 'selected' : '' }}>
+                                    {{ $method }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <!-- Quick Date Filters -->
+                    <div class="col-md-3">
+                        <label class="form-label">Date Range</label>
+                        <select class="form-select" name="date_filter" id="dateFilter" onchange="handleDateFilterChange(this)">
+                            <option value="">Custom Date Range</option>
+                            <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                            <option value="this_week" {{ request('date_filter') == 'this_week' ? 'selected' : '' }}>This Week</option>
+                            <option value="this_month" {{ request('date_filter') == 'this_month' ? 'selected' : '' }}>This Month</option>
+                            <option value="this_year" {{ request('date_filter') == 'this_year' ? 'selected' : '' }}>This Year</option>
+                            <option value="last_week" {{ request('date_filter') == 'last_week' ? 'selected' : '' }}>Last Week</option>
+                            <option value="last_month" {{ request('date_filter') == 'last_month' ? 'selected' : '' }}>Last Month</option>
+                            <option value="last_year" {{ request('date_filter') == 'last_year' ? 'selected' : '' }}>Last Year</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Custom Date Range Filters -->
+                    <div id="customDateRange" class="col-md-4" style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" name="start_date" id="startDate" value="{{ request('start_date') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" name="end_date" id="endDate" value="{{ request('end_date') }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Apply Filters Button -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" id="applyFiltersBtn" class="btn btn-primary w-100" 
+                                style="{{ !request('date_filter') ? '' : 'display: none;' }}">
+                            Apply Filters
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -58,10 +145,10 @@
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
-                    @if(request('search') || request('date'))
-                        Displaying {{ $sales->count() }} of {{ $sales->total() }} results
+                    @if(request('search') || request('date_filter') || request('start_date') || request('end_date') || request('payment_method'))
+                        Displaying {{ $sales->count() }} of {{ $sales->total() }} filtered results
                         @if(request('search')) for "{{ request('search') }}"@endif
-                        @if(request('date')) on {{ request('date') }}@endif
+                        @if(request('payment_method')) with {{ request('payment_method') }}@endif
                     @else
                         Displaying {{ $sales->count() }} of {{ $sales->total() }} sales
                     @endif
@@ -84,16 +171,10 @@
                     <tr>
                         <td><strong>#{{ $sale->id }}</strong></td>
                         <td>{{ $sale->sale_date->format('M d, Y h:i A') }}</td>
-                        <td>{{ $sale->user->name ?? 'N/A' }}</td>
+                        <td>{{ $sale->user->f_name ?? '' }} {{ $sale->user->l_name ?? 'N/A' }}</td>
                         <td>{{ $sale->items->count() }} items</td>
                         <td class="fw-bold text-success">₱{{ number_format($sale->items->sum(function($item) { return $item->quantity_sold * $item->unit_price; }), 2) }}</td>
-                        <td>
-                            @if($sale->payment)
-                                <span class="badge bg-primary">{{ $sale->payment->payment_method }}</span>
-                            @else
-                                <span class="badge bg-secondary">N/A</span>
-                            @endif
-                        </td>
+                        <td>{{ $sale->payment->payment_method }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-sale" data-id="{{ $sale->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
@@ -105,8 +186,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-4">
-                            No sales found
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-receipt display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No transactions found</p>
                         </td>
                     </tr>
                     @endforelse
@@ -232,6 +314,40 @@
 
     @push('scripts')
     <script>
+        function handleDateFilterChange(selectElement) {
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            if (selectElement.value === '') {
+                customDateRange.style.display = 'block';
+                applyFiltersBtn.style.display = 'block';
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+            } else {
+                customDateRange.style.display = 'none';
+                applyFiltersBtn.style.display = 'none';
+                document.getElementById('startDate').value = '';
+                document.getElementById('endDate').value = '';
+                selectElement.form.submit();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('dateFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+            
+            if (dateFilter && customDateRange && applyFiltersBtn) {
+                if (dateFilter.value === '') {
+                    customDateRange.style.display = 'block';
+                    applyFiltersBtn.style.display = 'block';
+                } else {
+                    customDateRange.style.display = 'none';
+                    applyFiltersBtn.style.display = 'none';
+                }
+            }
+        });
         // View Sale Details
         document.querySelectorAll('.view-sale').forEach(button => {
             button.addEventListener('click', function() {
@@ -244,8 +360,8 @@
                         document.getElementById('viewSaleId').textContent = sale.id;
                         document.getElementById('viewSaleNumber').textContent = '#' + sale.id;
                         document.getElementById('viewSaleDate').textContent = new Date(sale.sale_date).toLocaleString();
-                        document.getElementById('viewSaleCashier').textContent = sale.user ? sale.user.name : 'N/A';
-                        document.getElementById('viewSaleCustomer').textContent = sale.customer_name || 'Walk-in Customer';
+                        document.getElementById('viewSaleCashier').textContent = sale.user ? (sale.user.f_name + ' ' + sale.user.l_name) : 'N/A';
+                        document.getElementById('viewSaleCustomer').textContent = sale.customer_name || 'N/A';
                         document.getElementById('viewSaleContact').textContent = sale.customer_contact || 'N/A';
                         
                         // Update items table
@@ -271,39 +387,38 @@
                         document.getElementById('viewSaleTotal').textContent = `₱${total.toFixed(2)}`;
                         
                         // Update payment information
-                        // Update payment information
-const paymentContainer = document.getElementById('viewSalePayment');
-paymentContainer.innerHTML = '';
+                        const paymentContainer = document.getElementById('viewSalePayment');
+                        paymentContainer.innerHTML = '';
 
-if (sale.payment) {
-    const payment = sale.payment;
-    paymentContainer.innerHTML = `
-        <div class="list-group-item px-0">
-            <small class="text-muted d-block">Payment Method</small>
-            <span class="fw-semibold">${payment.payment_method}</span>
-        </div>
-        <div class="list-group-item px-0">
-            <small class="text-muted d-block">Amount Tendered</small>
-            <span class="fw-semibold">₱${parseFloat(payment.amount_tendered).toFixed(2)}</span>
-        </div>
-        <div class="list-group-item px-0">
-            <small class="text-muted d-block">Change Given</small>
-            <span class="fw-semibold">₱${parseFloat(payment.change_given).toFixed(2)}</span>
-        </div>
-        ${payment.reference_no ? `
-        <div class="list-group-item px-0">
-            <small class="text-muted d-block">Reference Number</small>
-            <span class="fw-semibold">${payment.reference_no}</span>
-        </div>
-        ` : ''}
-    `;
-} else {
-    paymentContainer.innerHTML = `
-        <div class="list-group-item px-0">
-            <span class="text-muted">No payment information available</span>
-        </div>
-    `;
-}
+                        if (sale.payment) {
+                            const payment = sale.payment;
+                            paymentContainer.innerHTML = `
+                                <div class="list-group-item px-0">
+                                    <small class="text-muted d-block">Payment Method</small>
+                                    <span class="fw-semibold">${payment.payment_method}</span>
+                                </div>
+                                <div class="list-group-item px-0">
+                                    <small class="text-muted d-block">Amount Tendered</small>
+                                    <span class="fw-semibold">₱${parseFloat(payment.amount_tendered).toFixed(2)}</span>
+                                </div>
+                                <div class="list-group-item px-0">
+                                    <small class="text-muted d-block">Change Given</small>
+                                    <span class="fw-semibold">₱${parseFloat(payment.change_given).toFixed(2)}</span>
+                                </div>
+                                ${payment.reference_no ? `
+                                <div class="list-group-item px-0">
+                                    <small class="text-muted d-block">Reference Number</small>
+                                    <span class="fw-semibold">${payment.reference_no}</span>
+                                </div>
+                                ` : ''}
+                            `;
+                        } else {
+                            paymentContainer.innerHTML = `
+                                <div class="list-group-item px-0">
+                                    <span class="text-muted">No payment information available</span>
+                                </div>
+                            `;
+                        }
                         
                         // Update print receipt button
                         document.getElementById('printReceiptBtn').href = `/sales/${sale.id}/receipt`;
@@ -318,6 +433,22 @@ if (sale.payment) {
                     });
             });
         });
+
+        function exportSalesCSV() {
+            const params = new URLSearchParams(window.location.search);
+            
+            const btn = event.target;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Generating...';
+            btn.disabled = true;
+            
+            window.location.href = '{{ route("sales.export.csv") }}?' + params.toString();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        }
     </script>
     @endpush
 @endsection

@@ -13,36 +13,53 @@ class ProductPriceController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with(['latestProductPrice', 'latestProductPrice.updatedBy', 'latestProductPrice.stockIn'])
-        ->active();
+        $showArchived = $request->has('archived');
+        
+        $query = Product::with(['latestProductPrice', 'latestProductPrice.updatedBy', 'latestProductPrice.stockIn', 'latestStockInItem']);
+
+        if ($showArchived) {
+            $query->archived();
+        } else {
+            $query->active();
+        }
 
         // Search
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('sku', 'like', '%' . $request->search . '%')
-                  ->orWhere('manufacturer_barcode', 'like', '%' . $request->search . '%');
+                ->orWhere('sku', 'like', '%' . $request->search . '%')
+                ->orWhere('manufacturer_barcode', 'like', '%' . $request->search . '%');
             });
-        }
-
-        // Price status filter
-        if ($request->filled('price_status')) {
-            if ($request->price_status == 'with_price') {
-                $query->whereHas('productPrice');
-            } elseif ($request->price_status == 'no_price') {
-                $query->whereDoesntHave('productPrice');
-            }
         }
 
         // Sorting
         $sort = $request->get('sort', 'name');
         $direction = $request->get('direction', 'asc');
         
-        $allowedSorts = ['name', 'sku', 'quantity_in_stock', 'retail_price'];
+        $allowedSorts = ['name', 'retail_price', 'cost_price'];
         if (in_array($sort, $allowedSorts)) {
             if ($sort == 'retail_price') {
-                $query->leftJoin('product_prices', 'products.id', '=', 'product_prices.product_id')
-                      ->orderBy('product_prices.retail_price', $direction);
+                $query->leftJoin('product_prices', function($join) {
+                    $join->on('products.id', '=', 'product_prices.product_id')
+                        ->whereRaw('product_prices.id = (
+                            SELECT id FROM product_prices 
+                            WHERE product_id = products.id 
+                            ORDER BY created_at DESC 
+                            LIMIT 1
+                        )');
+                })
+                ->orderBy('product_prices.retail_price', $direction);
+            } elseif ($sort == 'cost_price') {
+                $query->leftJoin('stock_in_items', function($join) {
+                    $join->on('products.id', '=', 'stock_in_items.product_id')
+                        ->whereRaw('stock_in_items.id = (
+                            SELECT id FROM stock_in_items 
+                            WHERE product_id = products.id 
+                            ORDER BY created_at DESC 
+                            LIMIT 1
+                        )');
+                })
+                ->orderBy('stock_in_items.actual_unit_cost', $direction);
             } else {
                 $query->orderBy($sort, $direction);
             }
@@ -52,7 +69,7 @@ class ProductPriceController extends Controller
 
         $products = $query->paginate(15);
 
-        return view('product-prices.index', compact('products', 'sort', 'direction'));
+        return view('product-prices.index', compact('products', 'sort', 'direction', 'showArchived'));
     }
 
     /**
@@ -94,7 +111,7 @@ class ProductPriceController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'retail_price' => 'required|numeric|min:0'
+            'retail_price' => 'required|numeric|min:0|max:1000000'
         ]);
     
         try {

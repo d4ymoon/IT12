@@ -11,6 +11,7 @@ use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ReturnController extends Controller
 {
@@ -274,8 +275,20 @@ class ReturnController extends Controller
         }
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
+        // Debug: Log what's coming in
+        Log::info('Return Store Request Data:', $request->all());
+        
+        // First, filter out items with quantity 0
+        $items = $request->input('items', []);
+        $filteredItems = array_filter($items, function($item) {
+            return ($item['quantity'] ?? 0) > 0;
+        });
+        
+        // Replace the items in the request
+        $request->merge(['items' => $filteredItems]);
+        
         $validated = $request->validate([
             'sale_id' => 'required|exists:sales,id',
             'return_reason' => 'required|in:Defective,Wrong Item,Customer Change Mind,Other',
@@ -288,7 +301,9 @@ class ReturnController extends Controller
             'items.*.condition' => 'required|in:resaleable,damaged',
             'items.*.refund_amount' => 'required|numeric|min:0'
         ]);
-
+        
+        Log::info('Validated Data:', $validated);
+        
         try {
             DB::beginTransaction();
 
@@ -353,6 +368,8 @@ class ReturnController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Return processing failed: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             return back()->withErrors(['error' => 'Failed to process return: ' . $e->getMessage()]);
         }
     }

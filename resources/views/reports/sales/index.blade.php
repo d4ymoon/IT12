@@ -113,14 +113,25 @@
 
 <!-- Sales Reports Content -->
 <div class="row">
+    <!-- Sales by Date Range -->
     <div class="col-12 mb-3">
         <div class="card report-card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Sales by Date Range</h5>
-                <small>{{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</small>
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Sales by Date Range</h5>
+                    <small>{{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</small>
+                </div>
+                <div>
+                    @if($salesData['salesByDate']->total() > 10)
+                    <a href="{{ route('sales.index') }}?start_date={{ $startDate->format('Y-m-d') }}&end_date={{ $endDate->format('Y-m-d') }}" 
+                    class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-list me-1"></i> View All Sales
+                    </a>
+                    @endif
+                </div>
             </div>
             <div class="card-body">
-                @if(count($salesData['salesByDate']) > 0)
+                @if($salesData['salesByDate']->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -142,6 +153,19 @@
                             @endforeach
                         </tbody>
                     </table>
+                    
+                    <!-- Pagination for Sales by Date -->
+                    @if($salesData['salesByDate']->hasPages())
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">
+                            Showing {{ $salesData['salesByDate']->firstItem() }} to {{ $salesData['salesByDate']->lastItem() }} 
+                            of {{ $salesData['salesByDate']->total() }} days
+                        </small>
+                        <div>
+                            {{ $salesData['salesByDate']->appends(request()->query())->links('pagination::bootstrap-4') }}
+                        </div>
+                    </div>
+                    @endif
                 </div>
                 @else
                 <div class="text-center py-4 text-muted">
@@ -329,7 +353,7 @@
         </div>
     </div>
 
-    <!-- Detailed Sales Table -->
+   <!-- Detailed Sales Table -->
     <div class="col-12 mb-4">
         <div class="card report-card">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -337,9 +361,14 @@
                     <h5 class="mb-0">Detailed Sales Transactions</h5>
                     <small>Individual sales records for the selected period</small>
                 </div>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDetailedCSV()">
-                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV  
-                </button>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('sales.index') }}" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-list me-1"></i> See All Sales
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-sm" onclick="exportDetailedCSV()">
+                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV  
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

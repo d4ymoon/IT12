@@ -25,20 +25,20 @@
                 <!-- Search & Clear -->
                 <div class="col-md-6">
                     <div class="d-flex align-items-center">
-                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex w-90 me-2">
-                            <div class="input-group search-box w-90">
+                        <form action="{{ route('categories.index') }}" method="GET" class="d-flex flex-grow-1 gap-2 align-items-center">
+                            <div class="input-group search-box flex-grow-1">
                                 <input type="text" class="form-control" name="search" placeholder="Search categories..." value="{{ request('search') }}">
                                 <button class="btn btn-outline-secondary" type="submit">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
+                            
+                            @if(request('search'))
+                                <a href="{{ route('categories.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </a>
+                            @endif
                         </form>
-                        
-                        @if(request('search'))
-                            <a href="{{ route('categories.index') }}" class="btn btn-outline-danger flex-shrink-0" title="Clear search">
-                                <i class="bi bi-x-circle"></i> Clear
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -89,8 +89,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-4">
-                            No categories found
+                        <td colspan="5" class="text-center py-4">
+                            <i class="bi bi-grid display-4 text-muted"></i>
+                            <p class="mt-3 mb-0">No categories found</p>
                         </td>
                     </tr>
                     @endforelse
