@@ -12,7 +12,6 @@
     <!-- Select 2 CSS -->
     <link href="{{ asset('css/vendor/select2.min.css') }}" rel="stylesheet">
     
-<<<<<<< HEAD
 <style>
     /* Company Color Variables */
     :root {
@@ -379,7 +378,6 @@
     }
     
     @media (max-width: 992px) {
-=======
     <style>
         
         /* Company Color Variables */
@@ -390,7 +388,6 @@
             --monza: #e20615;
         }
         
->>>>>>> main
         .sidebar {
             width: var(--sidebar-width-collapsed);
         }
