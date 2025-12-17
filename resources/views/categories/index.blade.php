@@ -82,7 +82,10 @@
                             <button class="btn btn-sm btn-outline-warning btn-action edit-category" data-id="{{ $category->id }}" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger btn-action delete-category" data-id="{{ $category->id }}" data-name="{{ $category->name }}" title="Delete">
+                            <button class="btn btn-sm btn-outline-danger btn-action delete-category" 
+                                data-id="{{ $category->id }}" 
+                                data-products-count="{{ $category->products_count ?? 0 }}"
+                                data-name="{{ $category->name }}" title="Delete">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
@@ -255,15 +258,23 @@
                             <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
                             <h5 class="mt-3">Are you sure you want to delete this category?</h5>
                             <p class="text-muted">Category: <strong id="deleteCategoryName"></strong></p>
-                            <div class="alert alert-warning mt-3">
+                            
+                            <!-- Warning for categories with products -->
+                            <div class="alert alert-danger mt-3" id="productsWarning" style="display: none;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Cannot Delete!</strong> This category is used in <span id="productsCount" class="fw-bold">0</span> product(s).
+                            </div>
+                            
+                            <!-- Info for empty categories -->
+                            <div class="alert alert-warning mt-3" id="deleteWarning">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                <strong>Warning:</strong> This action cannot be undone. Products associated with this category may be affected.
+                                <strong>Warning:</strong> This action cannot be undone.
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Delete Category</button>
+                        <button type="submit" class="btn btn-danger" id="deleteSubmitBtn">Delete Category</button>
                     </div>
                 </form>
             </div>
@@ -329,9 +340,38 @@
             button.addEventListener('click', function() {
                 const categoryId = this.getAttribute('data-id');
                 const categoryName = this.getAttribute('data-name');
+                const productsCount = parseInt(this.getAttribute('data-products-count'));
                 
                 document.getElementById('deleteCategoryName').textContent = categoryName;
                 document.getElementById('deleteCategoryForm').action = `/categories/${categoryId}`;
+                
+                // Show/hide warning based on product count
+                const productsWarning = document.getElementById('productsWarning');
+                const deleteWarning = document.getElementById('deleteWarning');
+                const deleteSubmitBtn = document.getElementById('deleteSubmitBtn');
+                
+                if (productsCount > 0) {
+                    // Category has products - show cannot delete warning
+                    productsWarning.style.display = 'block';
+                    deleteWarning.style.display = 'none';
+                    document.getElementById('productsCount').textContent = productsCount;
+                    
+                    // Disable the delete button
+                    deleteSubmitBtn.disabled = true;
+                    deleteSubmitBtn.textContent = 'Cannot Delete';
+                    deleteSubmitBtn.classList.remove('btn-danger');
+                    deleteSubmitBtn.classList.add('btn-secondary');
+                } else {
+                    // Category has no products - show regular delete warning
+                    productsWarning.style.display = 'none';
+                    deleteWarning.style.display = 'block';
+                    
+                    // Enable the delete button
+                    deleteSubmitBtn.disabled = false;
+                    deleteSubmitBtn.textContent = 'Delete Category';
+                    deleteSubmitBtn.classList.remove('btn-secondary');
+                    deleteSubmitBtn.classList.add('btn-danger');
+                }
                 
                 const modal = new bootstrap.Modal(document.getElementById('deleteCategoryModal'));
                 modal.show();

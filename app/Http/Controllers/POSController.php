@@ -41,7 +41,8 @@ class POSController extends Controller
                 ->where(function($query) use ($searchTerm) {
                     $query->where('name', 'like', '%' . $searchTerm . '%')
                         ->orWhere('sku', 'like', '%' . $searchTerm . '%')
-                        ->orWhere('manufacturer_barcode', 'like', '%' . $searchTerm . '%');
+                        ->orWhere('manufacturer_barcode', 'like', '%' . $searchTerm . '%')
+                        ->orWhere('model', 'like', '%' . $searchTerm . '%'); 
                 })
                 ->orderBy('name')
                 ->limit(50)
@@ -175,7 +176,21 @@ class POSController extends Controller
             abort(404, "Payment not found.");
         }
 
-        return Pdf::loadView('pos.receipt', compact('sale'))
-                  ->download("receipt-{$sale->id}.pdf");
+        $pdf = Pdf::loadView('pos.receipt', compact('sale'))
+                ->setPaper([0, 0, 226.77, 1000]); // 80mm wide, variable height
+
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+            'margin_left' => 0,
+            'margin_right' => 0,
+            'margin_top' => 0,
+            'margin_bottom' => 0,
+        ]);
+
+        // Stream to browser (inline)
+        return $pdf->download("receipt-{$sale->id}.pdf");
     }
+
 }

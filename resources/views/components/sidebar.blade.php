@@ -106,11 +106,11 @@
 
             <!-- Reports -->
             <li class="nav-item">
-                <a href="#collapseReports" class="nav-link {{ request()->is('reports*') ? '' : 'collapsed' }}" 
-                    data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*') ? 'true' : 'false' }}" aria-controls="collapseReports">
+                <a href="#collapseReports" class="nav-link {{ request()->is('reports*', 'sales*') ? '' : 'collapsed' }}" 
+                    data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*', 'sales*') ? 'true' : 'false' }}" aria-controls="collapseReports">
                     <i class="bi bi-file-text me-3"></i> <span class="pe-2">Reports</span> <i class="bi bi-chevron-down ms-auto chevron"></i> 
                 </a>
-                <div class="collapse {{ request()->is('reports*') ? 'show' : '' }}" id="collapseReports">
+                <div class="collapse {{ request()->is('reports*', 'sales*') ? 'show' : '' }}" id="collapseReports">
                     <ul class="nav flex-column ps-3">
                         <li class="nav-item">
                             <a href="{{ route('reports.sales.index') }}" class="nav-link {{ request()->is('reports/sales*') ? 'active' : '' }}">
@@ -122,6 +122,12 @@
                             <a href="{{ route('reports.inventory.index') }}" class="nav-link {{ request()->is('reports/inventory*') ? 'active' : '' }}">
                                 <i class="bi bi-box-seam me-3"></i>
                                 <span>Inventory Reports</span>
+                            </a>                            
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}">
+                                <i class="bi bi-receipt me-3"></i>
+                                <span>Transaction History</span>
                             </a>                            
                         </li>
                     </ul>

@@ -91,6 +91,7 @@ class ProductController extends Controller
             $request->validate([
                 'sku_suffix' => 'required|integer|min:1|max:99999|digits_between:1,5', 
                 'name' => 'required|string|max:150',
+                'model' => 'nullable|string|max:100',
                 'description' => 'nullable|string|max:500',
                 'category_id' => 'required|exists:categories,id',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -129,6 +130,7 @@ class ProductController extends Controller
             $product = Product::create([
                 'sku' => $sku,
                 'name' => ucfirst($request->name),
+                'model' => $request->model, 
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'image_path' => $imagePath,
@@ -176,6 +178,7 @@ class ProductController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:150',
+                'model' => 'nullable|string|max:100', 
                 'description' => 'nullable|string|max:500',
                 'category_id' => 'required|exists:categories,id',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
@@ -217,6 +220,7 @@ class ProductController extends Controller
 
             $product->update([
                 'name' => ucfirst($request->name),
+                'model' => $request->model, 
                 'description' => $request->description,
                 'category_id' => $request->category_id,
                 'image_path' => $imagePath,
@@ -234,15 +238,20 @@ class ProductController extends Controller
         }
     }
 
-    public function archive(Product $product)
+    public function archive(Request $request, Product $product)
     {
         try {
             $currentUserId = session('user_id');
+
+            $request->validate([
+                'archive_reason' => 'nullable|string|max:500',
+            ]);
 
             $product->update([
                 'is_active' => false,
                 'date_disabled' => now(),
                 'disabled_by_user_id' => $currentUserId,
+                'archive_reason' => $request->archive_reason, 
             ]);
 
             return redirect()->route('products.index')->with('success', 'Product archived successfully.');

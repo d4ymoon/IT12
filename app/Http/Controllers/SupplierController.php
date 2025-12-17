@@ -128,12 +128,16 @@ class SupplierController extends Controller
         }
     }
 
-    public function archive(Supplier $supplier)
+    public function archive(Request $request, Supplier $supplier)
     {
         // Check if supplier is a default supplier
         if ($supplier->isDefaultSupplier()) {
             return redirect()->back()->with('error', 'Cannot archive supplier that is set as default supplier for products.');
         }
+
+        $request->validate([
+            'archive_reason' => 'nullable|string|max:255',
+        ]);
     
         $currentUserId = session('user_id');
       
@@ -141,6 +145,7 @@ class SupplierController extends Controller
             'is_active' => false,
             'date_disabled' => now(),
             'disabled_by_user_id' => $currentUserId,
+            'archive_reason' => $request->archive_reason, 
         ]);
     
         return redirect()->back()->with('success', 'Supplier archived successfully.');

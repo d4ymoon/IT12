@@ -141,7 +141,7 @@
                 <input type="text" 
                     class="form-control search-input" 
                     id="productSearch" 
-                    placeholder="Scan barcode or enter SKU..."
+                    placeholder="Scan barcode, enter SKU, or type Model..."
                     autofocus>
                 <div id="searchError" class="text-danger mt-2" style="display: none;"></div>
             </div>
@@ -399,6 +399,7 @@
             <div class="item-row" style="display:flex; align-items:center; padding:5px 0; border-bottom:1px solid #eee;">
                 <div style="flex:2">
                     <strong>${item.product.name}</strong><br>
+                    <small class="text-muted">Model: ${item.product.model || 'N/A'}</small><br>
                     <small class="text-muted">Stock: ${item.product.quantity_in_stock}</small>
                 </div>
                 <div style="flex:1; text-align:center">

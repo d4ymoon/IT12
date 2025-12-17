@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
 
             $table->string('sku', 50)->unique();
-
             $table->string('name', 150);
             $table->string('description', 500)->nullable();
+            $table->string('model', 100)->nullable();
 
             $table->unsignedBigInteger('category_id');
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('restrict');
@@ -41,6 +41,7 @@ return new class extends Migration
             // Soft Delete / Audit Fields
             $table->boolean('is_active')->default(true);
             $table->dateTime('date_disabled')->nullable();
+            $table->string('archive_reason', 255)->nullable();
             
             // FK to users table for audit trail
             $table->unsignedBigInteger('disabled_by_user_id')->nullable();

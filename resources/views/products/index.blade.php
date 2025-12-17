@@ -26,7 +26,7 @@
             <h2 class="mb-0">
                 <b>Products</b>
                 @if($showArchived)
-                    <span class="text-secondary small ms-2">(Archive View)</span>
+                    <span class="text-secondary small ms-2">(Phased-Out View)</span>
                 @endif
             </h2>
             <a href="{{ route('products.create') }}" class="btn btn-primary">
@@ -113,7 +113,7 @@
                         @else
                             <a href="{{ route('products.index', ['archived' => true]) }}" class="btn btn-outline-warning">
                                 <i class="bi bi-archive me-1"></i>
-                                View Archive
+                                View Phased-Out
                             </a>
                         @endif
                         <!-- Sort Dropdown -->
@@ -164,6 +164,7 @@
                         <th>SKU</th>
                         <th>Image</th>
                         <th>Product Name</th>
+                        <th>Model</th>
                         <th>Category</th>
                         <th>Stock</th>
                         <th>Supplier</th>
@@ -183,6 +184,9 @@
                                 <br><small class="text-muted">{{ $product->manufacturer_barcode }}</small>
                             @endif
                         </td>
+                        <td class="text-truncate" style="max-width: 100px;" title="{{ $product->model }}">
+                            {{ $product->model ?? 'N/A' }}
+                        </td>                        
                         <td>{{ $product->category->name }}</td>
                         <td>
                             <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
@@ -224,7 +228,7 @@
                                         data-id="{{ $product->id }}" 
                                         data-name="{{ $product->name }}"
                                         data-has-sales="{{ $product->hasSales() ? 'true' : 'false' }}"
-                                        title="Archive">
+                                        title="Phase Out">
                                     <i class="bi bi-archive"></i>
                                 </button>
                             @else
@@ -277,6 +281,13 @@
                                 <div class="col-7">
                                     <span class="fw-semibold text-break" id="viewProductName"></span>
                                 </div>
+
+                                <div class="col-5">
+                                    <small class="text-muted">Model:</small>
+                                </div>
+                                <div class="col-7">
+                                    <span class="fw-semibold text-break" id="viewProductModel">N/A</span>
+                                </div>                                
 
                                 <div class="col-5">
                                     <small class="text-muted">SKU:</small>
@@ -346,24 +357,32 @@
                     </div>
 
                     <!-- Archive Info -->
-                    <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
-                        <small class="text-muted d-block">Archive Information</small>
+                    <div class="mt-3 mb-1 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
+                        <small class="text-muted d-block">Phase-Out Information</small>
                         <div class="row g-2">
-                            <div class="col-3">
-                                <small>Date:</small>
+                            <div class="col-2">
+                                <small>Phase-Out Date:</small>
                             </div>
-                            <div class="col-9">
+                            <div class="col-10">
                                 <small class="fw-semibold" id="viewDateDisabled"></small>
                             </div>
                         </div>
                         <div class="row g-2">
-                            <div class="col-3">
-                                <small>By:</small>
+                            <div class="col-2">
+                                <small>Phase-Out By:</small>
                             </div>
-                            <div class="col-9">
+                            <div class="col-10">
                                 <small class="fw-semibold" id="viewDisabledBy"></small>
                             </div>
                         </div>
+                        <div class="row g-2">
+                            <div class="col-2">
+                                <small>Reason:</small>
+                            </div>
+                            <div class="col-10">
+                                <small class="fw-semibold text-break" id="viewArchiveReason">N/A</small>
+                            </div>
+                        </div>                                      
                     </div>               
                 </div>
                 <div class="modal-footer">
@@ -382,25 +401,31 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="archiveProductModalLabel">
                             <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
-                            Confirm Archive
+                            Confirm Phase Out
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="text-center">
                             <i class="bi bi-archive text-warning" style="font-size: 3rem;"></i>
-                            <h5 class="mt-3">Are you sure you want to archive this product?</h5>
+                            <h5 class="mt-3">Are you sure you want to phase out this product?</h5>
                             <p class="text-muted">Product: <strong id="archiveProductName"></strong></p>
                             
                             <div class="alert alert-warning mt-3">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                <strong>Note:</strong> Archived products will be hidden from active lists but their data is preserved.
+                                <strong>Note:</strong> Phased-out products will be hidden from active lists but their data is preserved.
                             </div>
+
+                            <div class="mb-3 mt-3 text-start">
+                                <label for="archive_reason" class="form-label">Reason / Notes:</label>
+                                <textarea class="form-control" id="archive_reason" name="archive_reason" maxlength="255" rows="3" placeholder="Optional: Enter reason for phasing out..."></textarea>
+                            </div>
+                            
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning" id="archiveSubmitBtn">Archive Product</button>
+                        <button type="submit" class="btn btn-warning" id="archiveSubmitBtn">Phase Out Product</button>
                     </div>
                 </form>
             </div>
@@ -451,6 +476,7 @@
                     .then(response => response.json())
                     .then(product => {                           
                         document.getElementById('viewProductName').textContent = product.name;
+                        document.getElementById('viewProductModel').textContent = product.model || 'N/A';
                         document.getElementById('viewProductSku').textContent = product.sku;
                         document.getElementById('viewProductDescription').textContent = product.description || 'N/A';
                         document.getElementById('viewProductCategory').textContent = product.category.name;
@@ -526,6 +552,9 @@
                             } else {
                                 document.getElementById('viewDisabledBy').textContent = 'System';
                             }
+
+                            // Archive reason
+                            document.getElementById('viewArchiveReason').textContent = product.archive_reason || 'N/A';
                         }
                         
                         const modal = new bootstrap.Modal(document.getElementById('viewProductModal'));

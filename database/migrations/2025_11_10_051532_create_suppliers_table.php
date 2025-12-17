@@ -21,6 +21,7 @@ return new class extends Migration
             // Soft Delete / Audit Fields
             $table->boolean('is_active')->default(true);
             $table->dateTime('date_disabled')->nullable();
+            $table->string('archive_reason', 255)->nullable(); 
             
             // FK to users table for audit trail
             $table->unsignedBigInteger('disabled_by_user_id')->nullable();

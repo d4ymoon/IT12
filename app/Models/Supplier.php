@@ -16,6 +16,7 @@ class Supplier extends Model
         'is_active',
         'date_disabled',
         'disabled_by_user_id',
+        'archive_reason', 
     ];
 
     protected $casts = [
