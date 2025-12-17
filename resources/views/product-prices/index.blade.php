@@ -140,7 +140,7 @@
                 <tbody>
                     @forelse($products as $product)
                     <tr class="{{ $showArchived ? 'archived-row' : '' }}">
-                        <td><code>{{ $product->sku }}</code></td>
+                        <td>{{ $product->sku }}</td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="product-image me-2">
@@ -248,7 +248,7 @@
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title" id="editPriceModalLabel">
-                            <i class="bi bi-currency-dollar me-2"></i>
+                            <span class="me-2 fs-3">₱</span>
                             Update Product Price
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

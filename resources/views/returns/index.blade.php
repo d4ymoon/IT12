@@ -142,7 +142,7 @@
                     @endif
                 </div>
                 <div class="text-muted">
-                    Total Refunded: ${{ number_format($totalRefunded, 2) }}
+                    Total Refunded: ₱{{ number_format($totalRefunded, 2) }}
                 </div>
             </div>
             <table class="table table-hover">
@@ -174,7 +174,7 @@
                         <td>{{ $return->id }}</td>
                         <td>{{ $return->sale_id }}</td>
                         <td>{{ $return->return_reason }}</td>
-                        <td class="text-danger">-${{ number_format($return->total_refund_amount, 2) }}</td>
+                        <td class="text-danger">-₱{{ number_format($return->total_refund_amount, 2) }}</td>
                         <td>{{ $return->returnItems->count() }} item(s)</td>
                         <td>{{ $return->user->f_name ?? 'N/A' }}</td>
                         <td>{{ $return->created_at->format('M d, Y h:i A') }}</td>
@@ -357,7 +357,7 @@
                         document.getElementById('viewSaleId').textContent = returnData.sale_id;
                         document.getElementById('viewCustomerName').textContent = returnData.sale.customer_name || 'N/A';
                         document.getElementById('viewCustomerContact').textContent = returnData.sale.customer_contact || 'N/A';
-                        document.getElementById('viewTotalRefund').textContent = '-$' + parseFloat(returnData.total_refund_amount).toFixed(2);
+                        document.getElementById('viewTotalRefund').textContent = '-₱' + parseFloat(returnData.total_refund_amount).toFixed(2);
                         document.getElementById('viewRefundMethod').textContent = returnData.refund_payment.payment_method;
                         document.getElementById('viewReturnReason').textContent = returnData.return_reason;
                         document.getElementById('viewReferenceNo').textContent = returnData.refund_payment.reference_no || 'Not applicable (Cash refund)';
@@ -379,8 +379,8 @@
                                 <td>${item.product.name}</td>
                                 <td>${item.product.sku}</td>
                                 <td>${item.quantity_returned}</td>
-                                <td>$${parseFloat(item.refunded_price_per_unit).toFixed(2)}</td>
-                                <td>$${parseFloat(item.total_line_refund).toFixed(2)}</td>
+                                <td>₱${parseFloat(item.refunded_price_per_unit).toFixed(2)}</td>
+                                <td>₱${parseFloat(item.total_line_refund).toFixed(2)}</td>
                                 <td>${item.inventory_adjusted ? 'Resaleable' : 'Damaged'}</td>
                                 <td>${item.inventory_adjusted ? 'Restocked' : 'Scrapped/Loss'}</td>
                             `;

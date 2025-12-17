@@ -35,7 +35,7 @@
         <div class="card report-card border-info h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-currency-dollar text-info me-2"></i>Inventory Value
+                    <span class="text-info me-2 fs-5">₱</span>Inventory Value
                 </h6>
                 <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
             </div>

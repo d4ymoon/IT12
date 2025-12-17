@@ -73,7 +73,7 @@
                     <tr>
                         <td>{{ $category->id }}</td>
                         <td>{{ $category->name }}</td>
-                        <td><code>{{ $category->sku_prefix }}</code></td> 
+                        <td>{{ $category->sku_prefix }}</td> 
                         <td class="description-cell" title="{{ $category->description }}">{{ $category->description ?? 'No description' }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-category" data-id="{{ $category->id }}" title="View Details">
@@ -171,7 +171,7 @@
                         </div>
                         <div class="list-group-item">
                             <small class="text-muted d-block">SKU Prefix</small>
-                            <span class="fw-semibold"><code id="viewCategorySkuPrefix"></code></span>
+                            <span class="fw-semibold" id="viewCategorySkuPrefix"></span>
                         </div>
                         <div class="list-group-item">
                             <small class="text-muted d-block">Description</small>

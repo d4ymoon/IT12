@@ -173,7 +173,7 @@
                 <tbody>
                     @forelse($products as $product)
                     <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : ($product->quantity_in_stock <= $product->reorder_level ? 'low-stock' : '') }}">
-                        <td><code>{{ $product->sku }}</code></td>
+                        <td>{{ $product->sku }}</td>
                         <td>
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="product-image">
                         </td>
@@ -191,9 +191,6 @@
                         
                             @if($product->quantity_in_stock <= 0)
                                 <br>
-                                <small class="text-danger fw-bold">
-                                    OUT OF STOCK
-                                </small>
                             @elseif($product->quantity_in_stock <= $product->reorder_level)
                                 <br>
                                 <small class="text-warning fw-bold">
