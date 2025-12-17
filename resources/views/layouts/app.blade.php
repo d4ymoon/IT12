@@ -434,12 +434,12 @@
             
             // Sidebar state management - no toggle, role-based only
             const sidebar = document.querySelector('.sidebar');
-            const isEmployee = {{ session('role_id') != 1 ? 'true' : 'false' }};
+            const isCashier = {{ session('user_role') == 'Cashier' ? 'true' : 'false' }};
             
             if (sidebar) {
                 // Force correct state based on role (no user preference)
-                if (isEmployee) {
-                    // Employee: Always collapsed
+                if (isCashier) {
+                    // Cashier: Always collapsed
                     sidebar.classList.add('collapsed');
                 } else {
                     // Admin: Always expanded
@@ -448,7 +448,7 @@
             }
             
             // Fix dropdown menu positioning when sidebar is collapsed
-            if (isEmployee) {
+            if (isCashier) {
                 const dropdownToggle = document.querySelector('.sidebar.collapsed .sidebar-user-link');
                 const dropdownMenu = document.querySelector('.sidebar.collapsed .dropdown-menu');
                 

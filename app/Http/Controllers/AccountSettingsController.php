@@ -19,7 +19,7 @@ class AccountSettingsController extends Controller
         }
         
         // Get user with role relationship
-        $user = User::with('role')->find($userId);
+        $user = User::find($userId);
         
         if (!$user) {
             session()->flush();

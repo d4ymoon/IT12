@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('l_name', 100);
             $table->string('contactNo', 50)->nullable();
 
-            $table->unsignedBigInteger('role_id');
-            $table->foreign('role_id')->references('id')->on('roles')->onDelete('restrict');
+            $table->enum('role', ['Administrator', 'Cashier'])
+            ->default('Cashier');
 
             $table->boolean('is_active')->default(true);
             $table->dateTime('date_disabled')->nullable();

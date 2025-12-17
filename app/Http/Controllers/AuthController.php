@@ -11,13 +11,13 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (session('user_id')) {
-            // Redirect based on role
-            if (session('role_id') == 1) { // Administrator
+            if (session('user_role') === 'Administrator') {
                 return redirect('/dashboard');
-            } else { // Employee
-                return redirect('/employee/dashboard');
+            } else {
+                return redirect('/pos');
             }
         }
+
         return view('auth.login');
     }
 
@@ -29,31 +29,33 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('username', $credentials['username'])
-                   ->where('is_active', true)
-                   ->with('role')
-                   ->first();
+            ->where('is_active', true)
+            ->first();
 
         if ($user && Hash::check($credentials['password'], $user->password)) {
+
             session([
-                'user_id' => $user->id,
-                'user_name' => $user->f_name . ' ' . $user->l_name,
-                'user_role' => $user->role->name,
-                'role_id' => $user->role_id,
-                'username' => $user->username,
+                'user_id'    => $user->id,
+                'user_name'  => $user->f_name . ' ' . $user->l_name,
+                'user_role'  => $user->role, 
+                'username'   => $user->username,
             ]);
-            
-            if ($user->password_changed == 0) {
+
+            if ($user->password_changed == false) {
                 session(['show_default_password_modal' => true]);
             }
-            
-            if ($user->role_id == 1) { // Administrator
-                return redirect('/dashboard')->with('success', 'Welcome back, ' . $user->f_name . '!');
-            } else { // Employee
-                return redirect('/pos')->with('success', 'Welcome, ' . $user->f_name . '!');
+
+            if ($user->role === 'Administrator') {
+                return redirect('/dashboard')
+                    ->with('success', 'Welcome back, ' . $user->f_name . '!');
             }
+
+            // Cashier
+            return redirect('/pos')
+                ->with('success', 'Welcome, ' . $user->f_name . '!');
         }
 
-        return back()->with('error', 'Invalid credentials .');
+        return back()->with('error', 'Invalid credentials.');
     }
 
     public function logout()

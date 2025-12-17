@@ -23,7 +23,7 @@ class User extends Authenticatable
         'm_name',
         'l_name',
         'contactNo',
-        'role_id',
+        'role',
         'is_active',
         'date_disabled',
         'disabled_by_user_id',
@@ -62,19 +62,25 @@ class User extends Authenticatable
         ];
     }
 
-    public function role()
+    public function disabledBy()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(User::class, 'disabled_by_user_id')->withDefault([
+            'full_name' => 'System'
+        ]);
     }
 
-    public function disabledBy()
-{
-    return $this->belongsTo(User::class, 'disabled_by_user_id')->withDefault([
-        'full_name' => 'System'
-    ]);
-}
-
     // Helper methods
+
+    public function isAdministrator(): bool
+    {
+        return $this->role === 'Administrator';
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->role === 'Cashier';
+    }
+    
     public function getFullNameAttribute()
     {
         $middle = $this->m_name ? " {$this->m_name} " : ' ';

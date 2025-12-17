@@ -104,8 +104,8 @@
                         <span class="fw-bold">admin</span> / Password: <span class="fw-bold">admin1234</span>
                     </li>
                     <li>
-                        <span class="">Employee:</span> 
-                        <span class="fw-bold">employee</span> / Password: <span class="fw-bold">employee1234</span>
+                        <span class="">Cashier:</span> 
+                        <span class="fw-bold">cashier</span> / Password: <span class="fw-bold">cash1234</span>
                     </li>
                 </ul>
             </div>

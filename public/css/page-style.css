@@ -49,6 +49,13 @@ html, body {
 .underline {
     text-decoration: none;
 }
+
 .underline:hover {
     text-decoration: underline;
+}
+
+.disabled-archive {
+    pointer-events: none; 
+    opacity: 0.5;         
+    cursor: not-allowed;  
 }

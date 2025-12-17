@@ -355,6 +355,8 @@
                             <div class="col-9">
                                 <small class="fw-semibold" id="viewDateDisabled"></small>
                             </div>
+                        </div>
+                        <div class="row g-2">
                             <div class="col-3">
                                 <small>By:</small>
                             </div>

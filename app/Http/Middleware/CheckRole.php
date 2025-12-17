@@ -13,18 +13,22 @@ class CheckRole
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
+    
     public function handle(Request $request, Closure $next, string $role): Response
     {
         $userRole = session('user_role');
-        
+
         if ($userRole !== $role) {
-            // Redirect employees to POS instead of dashboard to avoid loops
-            if (session('role_id') == 2) { // Employee
-                return redirect('/pos')->with('error', 'Access denied. This section is for administrators only.');
+
+            // Cashier trying to access admin-only pages
+            if ($userRole === 'Cashier') {
+                return redirect('/pos')
+                    ->with('error', 'Access denied. This section is for administrators only.');
             }
-            
-            // For admin trying to access employee-only areas (if any), redirect to dashboard
-            return redirect('/dashboard')->with('error', 'You do not have permission to access that page.');
+
+            // Admin accessing cashier-only pages (if any)
+            return redirect('/dashboard')
+                ->with('error', 'You do not have permission to access that page.');
         }
 
         return $next($request);

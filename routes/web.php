@@ -38,7 +38,6 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('/dashboard/sales-data', [DashboardController::class, 'getSalesData'])->name('dashboard.sales-data');
         Route::get('/dashboard/sales-chart-data', [DashboardController::class, 'getSalesChartData']);
         
-        Route::resource('roles', RoleController::class);
         Route::resource('users', UserController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
