@@ -1,5 +1,25 @@
 <!-- Sidebar Only -->
-<nav class="sidebar {{ session('user_role') == 'Cashier' ? 'collapsed' : '' }}">
+@php
+    // Read sidebar state from cookie
+    $isEmployee = session('user_role') == 'Cashier';
+    
+    // Default: employees collapsed, admins expanded
+    $defaultCollapsed = $isEmployee;
+    
+    // Check cookie for saved preference
+    $cookieCollapsed = isset($_COOKIE['sidebarCollapsed']) ? $_COOKIE['sidebarCollapsed'] == 'true' : $defaultCollapsed;
+    
+    // Final decision - use cookie if it exists, otherwise default
+    $shouldBeCollapsed = $cookieCollapsed;
+@endphp
+
+<!-- Toggle button OUTSIDE the sidebar -->
+<button id="sidebarToggle" class="sidebar-toggle-btn" title="Toggle Sidebar" 
+        style="left: {{ $shouldBeCollapsed ? '65px' : '265px' }};">
+    <i class="bi {{ $shouldBeCollapsed ? 'bi-chevron-right' : 'bi-chevron-left' }}"></i>
+</button>
+
+<nav class="sidebar {{ $shouldBeCollapsed ? 'collapsed' : '' }}">
     <div class="sidebar-content">
         <div class="logo-container">
             <div class="d-flex align-items-center justify-content-between">
@@ -12,6 +32,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Remove toggle button from inside sidebar -->
             </div>
         </div>
         
