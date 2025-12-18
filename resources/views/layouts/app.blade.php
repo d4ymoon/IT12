@@ -29,7 +29,7 @@
             position: fixed;
             left: 0;
             top: 0;
-            width: 280px;
+            width: 281px;
             padding-top: 20px;
             box-shadow: 3px 0 10px rgba(0,0,0,0.1);
             z-index: 1000;
