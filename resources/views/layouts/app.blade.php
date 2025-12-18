@@ -386,10 +386,35 @@
             --amber: #fac307;
             --white: #f8f9fa;
             --monza: #e20615;
+            --sidebar-width: 280px;
+            --sidebar-width-collapsed: 80px;
         }
         
         .sidebar {
+<<<<<<< Updated upstream
             width: var(--sidebar-width-collapsed);
+=======
+            background: #f8f9fa;
+            color: #333;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            padding-top: 20px;
+            box-shadow: 3px 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-right: 1px solid #e9ecef;
+            transition: none !important;
+        }
+        
+        /* After page loads, re-enable transitions */
+        .sidebar.transitions-enabled {
+            transition: width 0.3s ease !important;
+>>>>>>> Stashed changes
         }
         
         .sidebar .nav-link span {
@@ -409,7 +434,64 @@
             font-size: 1.2rem;
         }
         
+        /* Toggle Button Styles - OUTSIDE SIDEBAR */
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            z-index: 1040;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: 1rem;
+            color: var(--congress-blue);
+            transition: none !important;
+            /* Initial position - will be updated by JavaScript */
+            left: 265px; /* 280px - 15px */
+        }
+        
+        /* When transitions are enabled */
+        .sidebar-toggle-btn.transitions-enabled {
+            transition: left 0.3s ease !important;
+        }
+        
+        .sidebar-toggle-btn:hover {
+            background: var(--congress-blue);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sidebar.collapsed ~ .sidebar-toggle-btn i {
+            transform: rotate(180deg);
+        }
+        
+        /* MAIN CONTENT */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            width: calc(100vw - var(--sidebar-width));
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            transition: none !important;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .main-content.transitions-enabled {
+            transition: margin-left 0.3s ease, width 0.3s ease !important;
+        }
+        
         .sidebar .nav-link {
+<<<<<<< Updated upstream
             padding: 15px;
             margin: 8px 10px;
             text-align: center;
@@ -427,6 +509,310 @@
         }
     }
 </style>
+=======
+            color: #495057;
+            padding: 12px 25px;
+            margin: 4px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            border: none;
+            position: relative;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: #f8f9fa;
+            color: var(--congress-blue);
+            transform: translateX(5px);
+        }
+        
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--amber) 0%, #ffd43b 100%);
+            color: var(--congress-blue);
+            box-shadow: 0 4px 15px rgba(250, 195, 7, 0.3);
+        }
+        
+        .sidebar .nav-link.collapsed {
+            background: transparent;
+        }
+        
+        .sidebar .nav-link .chevron {
+            display: inline-block;
+            transform-origin: center center;
+            transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+            pointer-events: none;
+            margin-left: auto;
+        }
+
+        .sidebar .nav-link[aria-expanded="true"] .chevron,
+        .sidebar .nav-link.expanded .chevron {
+            transform: rotate(180deg);
+        }
+                    
+        .sub-link {
+            padding: 8px 15px 8px 35px !important;
+            font-size: 0.9rem;
+            margin: 2px 15px !important;
+        }
+        
+        .sub-icon {
+            font-size: 0.5rem;
+        }
+        
+        .main-iframe {
+            margin-left: var(--sidebar-width);
+            width: calc(100vw - var(--sidebar-width));
+            height: 100vh;
+            border: none;
+            transition: margin-left 0.3s ease, width 0.3s ease;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--amber);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: bold;
+            font-size: 16px;
+            border: 3px solid #e9ecef;
+        }
+        
+        .logo-container {
+            padding: 0 25px 25px 25px;
+            border-bottom: 1px solid #e9ecef;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        /* Collapsed Sidebar Styles */
+        
+        .sidebar.collapsed {
+            width: var(--sidebar-width-collapsed);
+        }
+        
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+        }
+        
+        .sidebar.collapsed .sidebar-logo {
+            margin-right: 0 !important;
+            max-width: 40px;
+        }
+        
+        .sidebar.collapsed .nav-link {
+            padding: 15px !important;
+            margin: 8px 10px !important;
+            text-align: center !important;
+            justify-content: center !important;
+        }
+        
+        .sidebar.collapsed .nav-link span {
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+        }
+        
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0 !important;
+            font-size: 1.2rem;
+        }
+        
+        /* Show chevron for dropdown parents in collapsed mode */
+        .sidebar.collapsed .nav-link[data-bs-toggle="collapse"] .chevron {
+            display: block !important;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.6rem;
+            color: #000000ff;
+            margin-left: 0;
+        }
+        
+        /* Visual feedback for active dropdown parent in collapsed mode */
+        .sidebar.collapsed .nav-link[data-bs-toggle="collapse"][aria-expanded="true"] {
+            background: rgba(250, 195, 7, 0.2) !important;
+            border: 1px solid rgba(250, 195, 7, 0.3);
+            position: relative;
+        }
+        
+        /* Show collapse content in collapsed sidebar */
+        .sidebar.collapsed .collapse {
+            display: none;
+        }
+        
+        /* Show when collapsed AND has .show class */
+        .sidebar.collapsed .collapse.show {
+            display: block !important;
+            position: static !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            width: auto !important;
+            height: auto !important;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+        
+        /* Style for collapsed submenu items */
+        .sidebar.collapsed .collapse.show .nav {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-item {
+            margin-bottom: 3px;
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-link {
+            padding: 8px 10px !important;
+            margin: 2px 5px !important;
+            text-align: center !important;
+            border-radius: 6px;
+            justify-content: center !important;
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-link i {
+            margin-right: 0 !important;
+            font-size: 1rem !important;
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-link span {
+            display: none;
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-link:hover {
+            background: rgba(250, 195, 7, 0.2);
+        }
+        
+        .sidebar.collapsed .collapse.show .nav-link.active {
+            background: rgba(250, 195, 7, 0.3);
+        }
+        
+        .sidebar.collapsed .sidebar-user-info {
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+        }
+        
+        .sidebar.collapsed .sidebar-user-link {
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .sidebar.collapsed .user-avatar {
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            width: 40px !important;
+            height: 40px !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed .sidebar-footer {
+            padding: 15px 10px !important;
+        }
+        
+        .sidebar.collapsed .dropdown {
+            position: static;
+        }
+        
+        /* Only apply fixed positioning when sidebar is collapsed */
+        .sidebar.collapsed .dropdown-menu.show {
+            position: fixed !important;
+            left: var(--sidebar-width-collapsed) !important;
+            transform: none !important;
+            margin-top: 0 !important;
+            z-index: 1051 !important;
+            min-width: 200px;
+        }
+        
+        /* Reset dropdown positioning for expanded sidebar (admin view) */
+        .sidebar:not(.collapsed) .dropdown-menu {
+            position: absolute !important;
+            left: auto !important;
+            transform: translateX(0) !important;
+        }
+        
+        .sidebar.collapsed ~ .main-content,
+        .sidebar.collapsed ~ .main-iframe {
+            margin-left: var(--sidebar-width-collapsed);
+            width: calc(100vw - var(--sidebar-width-collapsed));
+        }
+
+        /* Make sure these are very specific */
+        nav.sidebar.collapsed {
+            width: 80px !important;
+        }
+
+        nav.sidebar:not(.collapsed) {
+            width: 280px !important;
+        }
+        
+        .notification-badge {
+            background: var(--monza);
+            color: var(--white);
+        }
+        
+        @media (max-width: 992px) {
+        <style>
+            
+            /* Company Color Variables */
+            :root {
+                --congress-blue: #06448a;
+                --amber: #fac307;
+                --white: #f8f9fa;
+                --monza: #e20615;
+            }
+            
+            .sidebar {
+                width: var(--sidebar-width-collapsed);
+            }
+            
+            .sidebar .nav-link span {
+                opacity: 0;
+                visibility: hidden;
+                position: absolute;
+            }
+            
+            .sidebar .logo-text {
+                opacity: 0;
+                visibility: hidden;
+                position: absolute;
+            }
+            
+            .sidebar .nav-link i {
+                margin-right: 0 !important;
+                font-size: 1.2rem;
+            }
+            
+            .sidebar .nav-link {
+                padding: 15px;
+                margin: 8px 10px;
+                text-align: center;
+            }
+            
+            .main-iframe,
+            .main-content {
+                margin-left: var(--sidebar-width-collapsed);
+                width: calc(100vw - var(--sidebar-width-collapsed));
+            }
+            
+            /* Hide toggle button on mobile since sidebar is always collapsed */
+            .sidebar-toggle-btn {
+                display: none;
+            }
+        }
+    </style>
+    
+>>>>>>> Stashed changes
     @stack('styles')
 </head>
 <body>
@@ -473,9 +859,14 @@
     
     <script>
         // Set sidebar state IMMEDIATELY when script loads (BEFORE DOMContentLoaded)
+<<<<<<< Updated upstream
     // Set sidebar state IMMEDIATELY when script loads (BEFORE DOMContentLoaded)
         (function() {
             const isEmployee = {{ session('role_id') != 1 ? 'true' : 'false' }};
+=======
+        (function() {
+            const isCashier = {{ session('user_role') == 'Cashier' ? 'true' : 'false' }};
+>>>>>>> Stashed changes
             
             // Function to set cookie (defined at top level)
             function setCookie(name, value, days) {
@@ -506,9 +897,15 @@
             // Get state from cookie (PHP-readable)
             const cookieState = getCookie('sidebarCollapsed');
             
+<<<<<<< Updated upstream
             // Only force collapsed state for employees if NO preference exists at all
             if (isEmployee && savedState === null && cookieState === null) {
                 // First time visit for employee - default to collapsed
+=======
+            // Only force collapsed state for cashiers if NO preference exists at all
+            if (isCashier && savedState === null && cookieState === null) {
+                // First time visit for cashier - default to collapsed
+>>>>>>> Stashed changes
                 localStorage.setItem('sidebarCollapsed', 'true');
                 setCookie('sidebarCollapsed', 'true', 7);
             } else {
@@ -594,7 +991,11 @@
             // ========== SIDEBAR TOGGLE ==========
             const sidebar = document.querySelector('.sidebar');
             const sidebarToggleBtn = document.getElementById('sidebarToggle');
+<<<<<<< Updated upstream
             const isEmployee = {{ session('role_id') != 1 ? 'true' : 'false' }};
+=======
+            const isCashier = {{ session('user_role') == 'Cashier' ? 'true' : 'false' }};
+>>>>>>> Stashed changes
             
             // Function to set cookie (available in this scope too)
             function setCookie(name, value, days) {

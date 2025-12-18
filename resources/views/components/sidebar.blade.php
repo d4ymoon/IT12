@@ -1,10 +1,17 @@
 <!-- Sidebar Only -->
 @php
     // Read sidebar state from cookie
+<<<<<<< Updated upstream
     $isEmployee = session('role_id') != 1;
     
     // Default: employees collapsed, admins expanded
     $defaultCollapsed = $isEmployee;
+=======
+    $isCashier = session('user_role') == 'Cashier';
+    
+    // Default: cashiers collapsed, admins expanded
+    $defaultCollapsed = $isCashier;
+>>>>>>> Stashed changes
     
     // Check cookie for saved preference
     $cookieCollapsed = isset($_COOKIE['sidebarCollapsed']) ? $_COOKIE['sidebarCollapsed'] == 'true' : $defaultCollapsed;
@@ -96,10 +103,13 @@
 
             <!-- Inventory Management - Admin Only -->
             <li class="nav-item">
-                <a href="#collapseInventoryOps" class="nav-link collapsed pe-1" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps">
-                    <i class="bi bi-box-seam me-3"></i>
-                    <span class="pe-2">Inventory Management</span>
-                    <i class="bi bi-chevron-down ms-auto chevron"></i>
+                <a href="#collapseInventoryOps" 
+                    class="nav-link collapsed pe-1 d-flex align-items-center" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps">
+                    <i class="bi bi-box-seam me-3 mt-1 flex-shrink-0"></i>
+                    <div class="flex-grow-1">
+                        <span>Inventory Management</span>
+                        <i class="bi bi-chevron-down chevron"></i>
+                    </div>
                 </a>
                 <div class="collapse {{ request()->is('stock-ins*') || request()->is('stock-adjustments*') || request()->is('returns*') ? 'show' : '' }}" id="collapseInventoryOps">
                     <ul class="nav flex-column ps-3">
