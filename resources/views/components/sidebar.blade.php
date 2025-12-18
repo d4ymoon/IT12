@@ -1,17 +1,10 @@
 <!-- Sidebar Only -->
 @php
     // Read sidebar state from cookie
-<<<<<<< Updated upstream
-    $isEmployee = session('role_id') != 1;
-    
-    // Default: employees collapsed, admins expanded
-    $defaultCollapsed = $isEmployee;
-=======
     $isCashier = session('user_role') == 'Cashier';
     
     // Default: cashiers collapsed, admins expanded
     $defaultCollapsed = $isCashier;
->>>>>>> Stashed changes
     
     // Check cookie for saved preference
     $cookieCollapsed = isset($_COOKIE['sidebarCollapsed']) ? $_COOKIE['sidebarCollapsed'] == 'true' : $defaultCollapsed;

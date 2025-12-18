@@ -391,9 +391,6 @@
         }
         
         .sidebar {
-<<<<<<< Updated upstream
-            width: var(--sidebar-width-collapsed);
-=======
             background: #f8f9fa;
             color: #333;
             height: 100vh;
@@ -414,7 +411,6 @@
         /* After page loads, re-enable transitions */
         .sidebar.transitions-enabled {
             transition: width 0.3s ease !important;
->>>>>>> Stashed changes
         }
         
         .sidebar .nav-link span {
@@ -491,25 +487,6 @@
         }
         
         .sidebar .nav-link {
-<<<<<<< Updated upstream
-            padding: 15px;
-            margin: 8px 10px;
-            text-align: center;
-        }
-        
-        .main-iframe,
-        .main-content {
-            margin-left: var(--sidebar-width-collapsed);
-            width: calc(100vw - var(--sidebar-width-collapsed));
-        }
-        
-        /* Hide toggle button on mobile since sidebar is always collapsed */
-        .sidebar-toggle-btn {
-            display: none;
-        }
-    }
-</style>
-=======
             color: #495057;
             padding: 12px 25px;
             margin: 4px 15px;
@@ -812,7 +789,6 @@
         }
     </style>
     
->>>>>>> Stashed changes
     @stack('styles')
 </head>
 <body>
@@ -859,14 +835,8 @@
     
     <script>
         // Set sidebar state IMMEDIATELY when script loads (BEFORE DOMContentLoaded)
-<<<<<<< Updated upstream
-    // Set sidebar state IMMEDIATELY when script loads (BEFORE DOMContentLoaded)
-        (function() {
-            const isEmployee = {{ session('role_id') != 1 ? 'true' : 'false' }};
-=======
         (function() {
             const isCashier = {{ session('user_role') == 'Cashier' ? 'true' : 'false' }};
->>>>>>> Stashed changes
             
             // Function to set cookie (defined at top level)
             function setCookie(name, value, days) {
@@ -897,15 +867,9 @@
             // Get state from cookie (PHP-readable)
             const cookieState = getCookie('sidebarCollapsed');
             
-<<<<<<< Updated upstream
-            // Only force collapsed state for employees if NO preference exists at all
-            if (isEmployee && savedState === null && cookieState === null) {
-                // First time visit for employee - default to collapsed
-=======
             // Only force collapsed state for cashiers if NO preference exists at all
             if (isCashier && savedState === null && cookieState === null) {
                 // First time visit for cashier - default to collapsed
->>>>>>> Stashed changes
                 localStorage.setItem('sidebarCollapsed', 'true');
                 setCookie('sidebarCollapsed', 'true', 7);
             } else {
@@ -991,11 +955,7 @@
             // ========== SIDEBAR TOGGLE ==========
             const sidebar = document.querySelector('.sidebar');
             const sidebarToggleBtn = document.getElementById('sidebarToggle');
-<<<<<<< Updated upstream
-            const isEmployee = {{ session('role_id') != 1 ? 'true' : 'false' }};
-=======
             const isCashier = {{ session('user_role') == 'Cashier' ? 'true' : 'false' }};
->>>>>>> Stashed changes
             
             // Function to set cookie (available in this scope too)
             function setCookie(name, value, days) {
