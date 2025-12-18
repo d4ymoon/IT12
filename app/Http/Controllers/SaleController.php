@@ -69,12 +69,23 @@ class SaleController extends Controller
 
     public function receipt($id)
     {
-        $sale = Sale::with(['user', 'items.product', 'payment'])
-            ->findOrFail($id);
+        $sale = Sale::with(['user', 'items.product', 'payment'])->findOrFail($id);
 
         $pdf = PDF::loadView('pos.receipt', compact('sale'));
         
-        return $pdf->download("receipt-{$sale->id}.pdf");
+        $pdf->setPaper([0, 0, 226.77, 1000]);
+
+        $pdf->setOptions([
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true,
+            'defaultFont' => 'DejaVu Sans',
+            'margin-top'    => 0,
+            'margin-right' => 2, 
+            'margin-left' => 2,
+            'margin-bottom' => 0,
+        ]);
+
+        return $pdf->stream("receipt-{$sale->id}.pdf");
     }
 
     public function details($id)

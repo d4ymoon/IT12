@@ -141,7 +141,7 @@
                 <input type="text" 
                     class="form-control search-input" 
                     id="productSearch" 
-                    placeholder="Scan barcode or enter SKU..."
+                    placeholder="Scan barcode, enter SKU, or type Model..."
                     autofocus>
                 <div id="searchError" class="text-danger mt-2" style="display: none;"></div>
             </div>
@@ -399,6 +399,7 @@
             <div class="item-row" style="display:flex; align-items:center; padding:5px 0; border-bottom:1px solid #eee;">
                 <div style="flex:2">
                     <strong>${item.product.name}</strong><br>
+                    <small class="text-muted">Model: ${item.product.model || 'N/A'}</small><br>
                     <small class="text-muted">Stock: ${item.product.quantity_in_stock}</small>
                 </div>
                 <div style="flex:1; text-align:center">
@@ -480,9 +481,15 @@
         const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
         const change = tendered - this.total;
         const display = document.getElementById('changeDisplay');
-        if (change > 0) {
+        
+        if (tendered >= this.total && change > 0) {
             display.textContent = `Change: ₱${change.toFixed(2)}`;
             display.style.display = 'block';
+            display.style.color = '#28a745'; // Green for change
+        } else if (tendered < this.total && tendered > 0) {
+            display.textContent = `Amount Insufficient (Short: ₱${Math.abs(change).toFixed(2)})`;
+            display.style.display = 'block';
+            display.style.color = '#dc3545'; // Red for insufficient
         } else {
             display.style.display = 'none';
         }
@@ -496,8 +503,11 @@
 
         let valid = this.items.length > 0;
 
-        if (method === 'Cash') valid = valid && tendered >= this.total;
-        else valid = valid && refNo.trim() !== '';
+        if (method === 'Cash') {
+            valid = valid && tendered >= this.total;
+        } else {
+            valid = valid && refNo.trim() !== '';
+        }
 
         btn.disabled = !valid;
     }

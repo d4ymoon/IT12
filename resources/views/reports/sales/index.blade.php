@@ -72,7 +72,7 @@
         <div class="card report-card border-info h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-currency-dollar text-info me-2"></i>Gross Revenue
+                    <span class="text-info me-2 fs-5">₱</span>Gross Revenue
                 </h6>
                 <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</h3>
             </div>
@@ -249,7 +249,7 @@
                 </div>
                 @else
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-currency-dollar" style="font-size: 3rem;"></i>
+                    <span style="font-size: 3rem;">₱</span>
                     <h5 class="mt-3">No Revenue Data</h5>
                     <p>No product revenue found for the selected period.</p>
                 </div>

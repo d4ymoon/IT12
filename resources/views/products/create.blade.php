@@ -65,6 +65,14 @@
                                       rows="4" maxlength="500">{{ old('description') }}</textarea>
                             <div class="form-text">Max 500 characters</div>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Model</label>
+                            <input type="text" class="form-control" id="model" name="model" 
+                                   placeholder="Enter product model..." value="{{ old('model') }}" maxlength="100">
+                            <div class="form-text">Max 100 characters</div>
+                        </div>
+                        
                     </div>
                 
                     <!-- Right Column -->
@@ -98,6 +106,7 @@
                             </div>
                             <div class="form-text">
                                 Format: <strong><span id="sku_format_display">CAT-00123</span></strong>.
+                                <span class="text-danger fw-semibold">This SKU is permanent and cannot be changed after creation.</span>
                             </div>
                         </div>
                 
@@ -105,8 +114,8 @@
                             <label for="manufacturer_barcode" class="form-label">Manufacturer Barcode</label>
                             <input type="text" class="form-control" id="manufacturer_barcode" 
                                    name="manufacturer_barcode" value="{{ old('manufacturer_barcode') }}"
-                                   maxlength="20" inputmode="numeric" pattern="[0-9]{12,20}"
-                                   placeholder="Scan or type barcode..." oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                   maxlength="20" inputmode="numeric" 
+                                   placeholder="Scan or type barcode...">
                         </div>
                 
                         <div class="mb-3">
@@ -219,6 +228,7 @@
         const formData = {
             name: document.getElementById('name').value,
             description: document.getElementById('description').value,
+            model: document.getElementById('model') ? document.getElementById('model').value : '',
             category_id: document.getElementById('category_id').value,
             manufacturer_barcode: document.getElementById('manufacturer_barcode').value,
             reorder_level: document.getElementById('reorder_level').value,
@@ -320,6 +330,9 @@
         const data = JSON.parse(saved);
         document.getElementById('name').value = data.name || '';
         document.getElementById('description').value = data.description || '';
+            if (document.getElementById('model')) {
+            document.getElementById('model').value = data.model || '';
+        }
         document.getElementById('category_id').value = data.category_id || '';
         document.getElementById('manufacturer_barcode').value = data.manufacturer_barcode || '';
         document.getElementById('reorder_level').value = data.reorder_level || '';

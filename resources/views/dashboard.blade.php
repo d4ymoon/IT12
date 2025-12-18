@@ -52,59 +52,71 @@
 
 <!-- KEY METRICS -->
 <div class="row mb-4">
-    <!-- Total Revenue -->
-    <div class="col-md-2 mb-3">
+    <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-primary text-white h-100 clickable-card">
-                <div class="card-body stat-card">
-                    <i class="bi bi-currency-dollar stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($totalRevenue, 0) }}</div>
-                    <div class="stat-label">Total Revenue</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Total Revenue</span>
+                        <i class="bi bi-cash-stack" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-end" style="font-size: 1.6rem; font-weight: bold;">
+                        ₱{{ number_format($totalRevenue, 0) }}
+                    </div>
                 </div>
             </div>
         </a>
     </div>
     
-    <!-- Gross Profit -->
-    <div class="col-md-2 mb-3">
+    <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-success text-white h-100">
-                <div class="card-body stat-card">
-                    <i class="bi bi-graph-up stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($grossProfit, 0) }}</div>
-                    <div class="stat-label">Gross Profit</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Gross Profit</span>
+                        <i class="bi bi-graph-up" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-end" style="font-size: 1.6rem; font-weight: bold;">
+                        ₱{{ number_format($grossProfit, 0) }}
+                    </div>
                 </div>
             </div>
         </a>
     </div>
 
-    <!-- Total Transactions -->
-    <div class="col-md-2 mb-3">
+    <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-secondary text-white h-100">
-                <div class="card-body stat-card">
-                    <i class="bi bi-receipt stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">{{ $totalTransactions }}</div>
-                    <div class="stat-label">Transactions</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Total Transactions</span>
+                        <i class="bi bi-receipt" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-start" style="font-size: 1.6rem; font-weight: bold;">
+                        {{ number_format($totalTransactions, 0) }}
+                    </div>
                 </div>
             </div>
         </a>
     </div>
     
-    <!-- Avg Order Value -->
-    <div class="col-md-2 mb-3">
+    <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-info text-white h-100">
-                <div class="card-body stat-card">
-                    <i class="bi bi-cart-check stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($averageOrderValue, 0) }}</div>
-                    <div class="stat-label">Avg Order</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Average Order</span>
+                        <i class="bi bi-cart-check" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-end" style="font-size: 1.6rem; font-weight: bold;">
+                        ₱{{ number_format($averageOrderValue, 0) }}
+                    </div>
                 </div>
             </div>
         </a>
     </div>
-    
-    <!-- Inventory Value -->
+</div>
+    <!-- Inventory Value
     <div class="col-md-2 mb-3">
         <a href="{{ route('reports.inventory.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-secondary text-white h-100">
@@ -117,7 +129,7 @@
         </a>
     </div>
     
-    <!-- Low Stock Alerts -->
+    // Low Stock Alerts
     <div class="col-md-2 mb-3">
         <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none">
             <div class="card dashboard-card {{ $lowStockAlerts['total_count'] > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
@@ -132,7 +144,8 @@
             </div>
         </a>
     </div>
-</div>
+    -->
+
 
 <!-- CHARTS SECTION -->
 <div class="row mb-4">
@@ -477,10 +490,6 @@
         opacity: 0.9;
     }
 
-    .stat-card {
-        text-align: center;
-        padding: 15px 10px !important;
-    }
     
     .low-stock {
         background-color: rgba(255, 193, 7, 0.1);

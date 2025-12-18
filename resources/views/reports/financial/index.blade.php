@@ -52,7 +52,7 @@
         <div class="card report-card border-success h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-currency-dollar text-success me-2"></i>Net Revenue
+                    <span class="text-success me-2 fs-5">₱</span>Net Revenue
                 </h6>
                 <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($financialData['profitLoss']['net_revenue'], 2) }}</h3>
             </div>

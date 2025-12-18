@@ -108,7 +108,7 @@
                         <td>{{ $user->full_name }}</td>
                         <td>{{ $user->email }}</td>
                         <td>{{ $user->contactNo ?? 'N/A' }}</td>
-                        <td class="primary">{{ $user->role->name }}</td>
+                        <td class="primary">{{ $user->role }}</td>
                         <td>
                              @if($user->is_active)
                                 <button class="btn btn-sm btn-outline-secondary btn-action reset-password" 
@@ -125,7 +125,9 @@
                                 <button class="btn btn-sm btn-outline-warning btn-action edit-user" data-id="{{ $user->id }}" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger btn-action archive-user" data-id="{{ $user->id }}" data-name="{{ $user->full_name }}" title="Archive">
+                                <button class="btn btn-sm btn-outline-danger btn-action archive-user"
+                                    @if(session('user_id') == $user->id) disabled disabled-archive @endif
+                                    data-id="{{ $user->id }}" data-name="{{ $user->full_name }}" title="Archive">
                                     <i class="bi bi-archive"></i>
                                 </button>
                             @else
@@ -200,11 +202,11 @@
                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="role_id" class="form-label">Role <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="role_id" name="role_id" required>
+                                    <label for="role" class="form-label">Role</label>
+                                    <select class="form-select" id="role" name="role" required>
                                         <option value="">Select Role</option>
                                         @foreach($roles as $role)
-                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                            <option value="{{ $role }}">{{ $role }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -270,14 +272,21 @@
                                            oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="editRoleId" class="form-label">Role <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="editRoleId" name="role_id" required>
+                                    <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="editRole" name="role" required
+                                        @if(session('user_id') == $user->id) disabled @endif>
                                         <option value="">Select Role</option>
                                         @foreach($roles as $role)
-                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                            <option value="{{ $role }}" 
+                                                @if(old('role', $user->role) == $role) selected @endif>
+                                                {{ $role }}
+                                            </option>
                                         @endforeach
                                     </select>
-                                </div>
+                                    @if(session('user_id') == $user->id)
+                                        <small class="text-muted">You cannot change your own role.</small>
+                                    @endif
+                                </div>                                
                             </div>
                         </div>
                     </div>
@@ -540,10 +549,16 @@
                         document.getElementById('editLName').value = user.l_name;
                         document.getElementById('editEmail').value = user.email;
                         document.getElementById('editContactNo').value = user.contactNo || '';
-                        document.getElementById('editRoleId').value = user.role_id;
-                        
+                        document.getElementById('editRole').value = user.role;
+
+                        // Disable role select if editing self
+                        if(user.id === {{ session('user_id') }}) {
+                            document.getElementById('editRole').disabled = true;
+                        } else {
+                            document.getElementById('editRole').disabled = false;
+                        }
+
                         document.getElementById('editUserForm').action = `/users/${userId}`;
-                        
                         const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
                         modal.show();
                     });
@@ -563,7 +578,7 @@
                         document.getElementById('viewFullName').textContent = user.full_name;
                         document.getElementById('viewEmail').textContent = user.email;
                         document.getElementById('viewContactNo').textContent = user.contactNo || 'N/A';
-                        document.getElementById('viewRole').textContent = user.role.name;
+                        document.getElementById('viewRole').textContent = user.role;
                         document.getElementById('viewCreatedAt').textContent = new Date(user.created_at).toLocaleDateString('en-US', { 
                             month: 'short', 
                             day: 'numeric', 

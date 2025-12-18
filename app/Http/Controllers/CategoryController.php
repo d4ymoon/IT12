@@ -14,7 +14,7 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Category::query();
+        $query = Category::withCount('products'); 
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -57,8 +57,6 @@ class CategoryController extends Controller
                 'sku_prefix' => strtoupper($request->sku_prefix),
             ]);
     
-
-
             return redirect()->route('categories.index')->with('success', 'Category added successfully.');
             
         } catch (Exception $e) {

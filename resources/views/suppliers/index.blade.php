@@ -93,7 +93,7 @@
                         <th>Supplier Name</th>
                         <th>Contact No.</th>
                         <th>Address</th>
-                        <th>Products</th> <!-- NEW COLUMN -->
+                        <th>Products</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -272,17 +272,37 @@
                     </div>
 
                     <!-- Archive Info -->
-                    <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
-                        <small class="text-muted d-block">Archive Information</small>
-                        <div class="d-flex justify-content-between">
-                            <small>Date:</small>
-                            <small class="fw-semibold" id="viewDateDisabled"></small>
+                    <div class="mt-3 mb-1 p-2 bg-warning bg-opacity-10 rounded" id="archiveInfo" style="display: none;">
+                        <small class="text-muted d-block mb-2">Archive Information</small>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <small>Archived Date:</small>
+                            </div>
+                            <div class="col-9">
+                                <small class="fw-semibold" id="viewDateDisabled"></small>
+                            </div>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <small>By:</small>
-                            <small class="fw-semibold" id="viewDisabledBy"></small>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <small>Archived By:</small>
+                            </div>
+                            <div class="col-9">
+                                <small class="fw-semibold" id="viewDisabledBy"></small>
+                            </div>
                         </div>
-                    </div>               
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <small style="white-space: nowrap;">Reason:</small>
+                            </div>
+                            <div class="col-9">
+                                <small class="fw-semibold text-break" 
+                                    id="viewArchiveReason" 
+                                    style="word-wrap: break-word; white-space: pre-wrap;">
+                                    N/A
+                                </small>
+                            </div>
+                        </div>                        
+                    </div>       
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
@@ -320,14 +340,19 @@
                             <!-- Info about products -->
                             <div class="alert alert-info mt-3" id="productsInfo" style="display: none;">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <strong>Note:</strong> This supplier is associated with products. 
-                                Archiving will not affect product availability as products can have multiple suppliers.
+                                <strong>Note:</strong> Products currently using this supplier will remain associated with it in historical records.
                             </div>
-                            
-                            <div class="alert alert-warning mt-3">
+                                                        
+                            <div id="archiveNoteWarning" class="alert alert-warning mt-3">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 <strong>Note:</strong> Archived suppliers will be hidden from active lists but their data is preserved.
                             </div>
+
+                            <div id="archiveReasonField" class="mb-3 text-start">
+                                <label for="archiveReason" class="form-label">Archive Reason:</label>
+                                <textarea class="form-control" id="archiveReason" name="archive_reason" rows="2" placeholder="Enter reason for archiving" maxlength="255"></textarea>
+                            </div>
+                            
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -447,6 +472,8 @@
                             } else {
                                 document.getElementById('viewDisabledBy').textContent = 'System';
                             }
+
+                            document.getElementById('viewArchiveReason').textContent = supplier.archive_reason || 'N/A';
                         }
                         
                         const modal = new bootstrap.Modal(document.getElementById('viewSupplierModal'));
@@ -458,7 +485,7 @@
             });
         });
         
-         // Archive Supplier
+        // Archive Supplier
         document.querySelectorAll('.archive-supplier').forEach(button => {
             button.addEventListener('click', function() {
                 const supplierId = this.getAttribute('data-id');
@@ -470,22 +497,43 @@
                 
                 const defaultSupplierWarning = document.getElementById('defaultSupplierWarning');
                 const submitBtn = document.getElementById('archiveSubmitBtn');
-                
+                const productsInfo = document.getElementById('productsInfo');
+                const archiveReasonField = document.getElementById('archiveReasonField'); 
+                const noteWarning = document.getElementById('archiveNoteWarning');
+                const archiveReasonInput = document.getElementById('archiveReason');
+
+                // Clear previous reason value
+                if (archiveReasonInput) {
+                    archiveReasonInput.value = '';
+                }
+
                 if (isDefaultSupplier) {
+                    // Show only warning
                     submitBtn.disabled = true;
                     submitBtn.textContent = 'Cannot Archive';
                     defaultSupplierWarning.style.display = 'block';
+                    
+                    // Hide note & reason
+                    productsInfo.style.display = 'none';
+                    archiveReasonField.style.display = 'none';
+                    noteWarning.style.display = 'none';
                 } else {
+                    // Normal archive view
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Archive Supplier';
                     defaultSupplierWarning.style.display = 'none';
+                    
+                    // Show note & reason
+                    productsInfo.style.display = 'block';
+                    archiveReasonField.style.display = 'block';
+                    noteWarning.style.display = 'block';
                 }
                 
                 const modal = new bootstrap.Modal(document.getElementById('archiveSupplierModal'));
                 modal.show();
             });
         });
-        
+
         // Restore Supplier
         document.querySelectorAll('.restore-supplier').forEach(button => {
             button.addEventListener('click', function() {

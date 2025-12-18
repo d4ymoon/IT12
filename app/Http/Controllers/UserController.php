@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;
 use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -19,7 +18,7 @@ class UserController extends Controller
     {
         $showArchived = $request->has('archived');
         
-        $query = User::with(['role', 'disabledBy']);
+        $query = User::with('disabledBy');
 
         if ($showArchived) {
             $query->archived();
@@ -29,21 +28,20 @@ class UserController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('username', 'like', '%' . $search . '%')
-                  ->orWhere('f_name', 'like', '%' . $search . '%')
-                  ->orWhere('m_name', 'like', '%' . $search . '%')
-                  ->orWhere('l_name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%')
-                  ->orWhere('contactNo', 'like', '%' . $search . '%')
-                  ->orWhereHas('role', function($roleQuery) use ($search) {
-                      $roleQuery->where('name', 'like', '%' . $search . '%');
-                  });
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                  ->orWhere('f_name', 'like', "%{$search}%")
+                  ->orWhere('m_name', 'like', "%{$search}%")
+                  ->orWhere('l_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('contactNo', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%");
             });
         }
 
         $users = $query->orderBy('id', 'asc')->paginate(10);        
-        $roles = Role::all();
+
+        $roles = ['Administrator', 'Cashier'];
 
         return view('users.index', compact('users', 'roles', 'showArchived'));
     }
@@ -68,7 +66,7 @@ class UserController extends Controller
                 'm_name' => 'nullable|string|max:100',
                 'l_name' => 'required|string|max:100',
                 'contactNo' => 'nullable|string|max:50',
-                'role_id' => 'required|exists:roles,id',
+                'role' => 'required|in:Administrator,Cashier',
                 'email' => 'required|string|email|max:255|unique:users',
             ]);
 
@@ -81,7 +79,7 @@ class UserController extends Controller
                 'm_name' => $request->m_name ? ucwords(strtolower($request->m_name)) : null,
                 'l_name' => ucwords(strtolower($request->l_name)),
                 'contactNo' => $request->contactNo,
-                'role_id' => $request->role_id,
+                'role' => $request->role,
                 'email' => $request->email,
                 'password' => Hash::make($tempPassword),
                 'password_changed' => false,
@@ -101,7 +99,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user->load(['role', 'disabledBy']);
+        $user->load('disabledBy');
         return response()->json($user);
     }
 
@@ -110,7 +108,6 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $user->load(['role']);
         return response()->json($user);
     }
 
@@ -126,10 +123,14 @@ class UserController extends Controller
                 'm_name' => 'nullable|string|max:100',
                 'l_name' => 'required|string|max:100',
                 'contactNo' => 'nullable|string|max:50',
-                'role_id' => 'required|exists:roles,id',
+                'role' => 'required|in:Administrator,Cashier',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
                 'password' => 'nullable|confirmed|min:8',
             ]);
+
+            if ($user->id == session('user_id') && $request->role !== $user->role) {
+                return redirect()->route('users.index')->with('error', 'You cannot change your own role.');
+            }
 
             $updateData = [
                 'username' => $request->username,
@@ -137,7 +138,7 @@ class UserController extends Controller
                 'm_name' => $request->m_name ? ucwords(strtolower($request->m_name)) : null,
                 'l_name' => ucwords(strtolower($request->l_name)),
                 'contactNo' => $request->contactNo,
-                'role_id' => $request->role_id,
+                'role' => $request->role,
                 'email' => $request->email,
             ];
 
@@ -199,6 +200,7 @@ class UserController extends Controller
     {
         //
     }
+
     public function resetPassword(Request $request, User $user)
     {
         try {

@@ -199,7 +199,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Total Refund Amount</label>
                                 <input type="text" class="form-control" id="total-refund-display" 
-                                    value="$0.00" readonly style="background-color: #f8f9fa; font-weight: bold;">
+                                    value="₱0.00" readonly style="background-color: #f8f9fa; font-weight: bold;">
                                 <div class="form-text">Calculated based on selected items</div>
                             </div>
                         </div>
@@ -228,7 +228,7 @@
                         <div class="col-md-6">
                             <div class="alert alert-info mb-0">
                                 <h6 class="alert-heading">Refund Summary</h6>
-                                <p class="mb-1"><strong>Total Refund Amount:</strong> $<span id="total-refund-amount">0.00</span></p>
+                                <p class="mb-1"><strong>Total Refund Amount:</strong> ₱<span id="total-refund-amount">0.00</span></p>
                                 <small class="d-block mt-1">Items marked as "Damaged" will not be restocked.</small>
                             </div>
                         </div>
@@ -374,7 +374,7 @@ $(document).ready(function() {
                             <input type="hidden" name="items[${index}][sale_item_id]" value="${item.id}">
                         </td>
                         <td>${item.product_sku}</td>
-                        <td>$${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td>₱${parseFloat(item.unit_price).toFixed(2)}</td>
                         <td>${item.quantity_sold}</td>
                         <td>${item.already_returned}</td>
                         <td>
@@ -451,7 +451,7 @@ $(document).ready(function() {
         });
 
         $('#total-refund-amount').text(totalRefund.toFixed(2));
-        $('#total-refund-display').val('$' + totalRefund.toFixed(2));
+        $('#total-refund-display').val('₱' + totalRefund.toFixed(2));
     }
 
     function showError(message) {

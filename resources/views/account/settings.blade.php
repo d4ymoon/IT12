@@ -207,7 +207,7 @@
                         </div>
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <small class="text-muted">Role:</small>
-                            <span class="fw-semibold">{{ $user->role->name }}</span>
+                            <span class="fw-semibold">{{ $user->role }}</span>
                         </div>
                         <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                             <small class="text-muted">Account Status:</small>
