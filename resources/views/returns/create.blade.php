@@ -261,7 +261,7 @@
                         <strong>Warning:</strong> This action cannot be undone.
                     </div>
                     <div id="confirmationSummary" class="mt-3">
-                        <p><strong>Refund Amount:</strong> $<span id="modal-refund-amount">0.00</span></p>
+                        <p><strong>Refund Amount:</strong> ₱<span id="modal-refund-amount">0.00</span></p>
                         <p><strong>Refund Method:</strong> <span id="modal-refund-method">-</span></p>
                         <p><strong>Items to Return:</strong> <span id="modal-items-count">0</span> item(s)</p>
                     </div>

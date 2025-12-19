@@ -119,11 +119,15 @@
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="text-muted mb-3">
-                @if(request('search') || request('date_filter') || request('start_date') || request('end_date'))
-                    Displaying {{ $stockIns->count() }} of {{ $stockIns->total() }} filtered results
-                @else
-                    Displaying {{ $stockIns->count() }} of {{ $stockIns->total() }} stock in records
-                @endif
+                @if(request('search'))
+    Showing {{ $stockIns->firstItem() }}–{{ $stockIns->lastItem() }}
+    of {{ $stockIns->total() }} results for
+    "<strong>{{ request('search') }}</strong>"
+@else
+    Showing {{ $stockIns->firstItem() }}–{{ $stockIns->lastItem() }}
+    of {{ $stockIns->total() }} stock-in records
+@endif
+
             </div>
             <table class="table table-hover">
                 <thead class="table-light">

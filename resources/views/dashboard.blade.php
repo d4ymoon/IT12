@@ -54,7 +54,7 @@
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
-            <div class="card dashboard-card bg-primary text-white h-100 clickable-card">
+            <div class="card dashboard-card bg-success text-white h-100 clickable-card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="stat-label">Total Revenue</span>
@@ -102,7 +102,7 @@
     
     <div class="col-md-3 mb-3">
         <a href="{{ route('reports.sales.index') }}" class="text-decoration-none">
-            <div class="card dashboard-card bg-info text-white h-100">
+            <div class="card dashboard-card bg-secondary text-white h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="stat-label">Average Order</span>
@@ -116,36 +116,47 @@
         </a>
     </div>
 </div>
-    <!-- Inventory Value
-    <div class="col-md-2 mb-3">
+
+<!--
+<div class="row mb-3">
+    <div class="col-md-4 mb-3">
         <a href="{{ route('reports.inventory.index') }}" class="text-decoration-none">
             <div class="card dashboard-card bg-secondary text-white h-100">
-                <div class="card-body stat-card">
-                    <i class="bi bi-box-seam stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">₱{{ number_format($inventoryValue, 0) }}</div>
-                    <div class="stat-label">Inventory Value</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Inventory Value</span>
+                        <i class="bi bi-box-seam" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-end" style="font-size: 1.6rem; font-weight: bold;">
+                        ₱{{ number_format($inventoryValue, 0) }}
+                    </div>
                 </div>
             </div>
         </a>
     </div>
-    
-    // Low Stock Alerts
-    <div class="col-md-2 mb-3">
+
+    <div class="col-md-4 mb-3">
         <a href="{{ route('products.index') }}?stock_filter=low_stock" class="text-decoration-none">
-            <div class="card dashboard-card {{ $lowStockAlerts['total_count'] > 0 ? 'bg-warning' : 'bg-success' }} text-white h-100">
-                <div class="card-body stat-card">
-                    <i class="bi bi-exclamation-triangle stat-icon" style="font-size: 1.5rem;"></i>
-                    <div class="stat-value" style="font-size: 1.4rem;">{{ $lowStockAlerts['total_count'] }}</div>
-                    <div class="stat-label">Low Stock</div>
+            <div class="card dashboard-card {{ $lowStockAlerts['total_count'] > 0 ? 'bg-warning text-white' : 'bg-success text-white' }} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="stat-label">Low Stock Alerts</span>
+                        <i class="bi bi-exclamation-triangle" style="font-size: 1.2rem; opacity: 0.8;"></i>
+                    </div>
+                    <div class="stat-value text-start" style="font-size: 1.6rem; font-weight: bold;">
+                        {{ $lowStockAlerts['total_count'] }}
+                    </div>
                     @if($lowStockAlerts['out_of_stock_count'] > 0)
-                    <small class="opacity-75 d-block mt-1">{{ $lowStockAlerts['out_of_stock_count'] }} out of stock</small>
+                        <small class="opacity-75 d-block mt-1" style="font-size: 0.8rem;">
+                            {{ $lowStockAlerts['out_of_stock_count'] }} out of stock
+                        </small>
                     @endif
                 </div>
             </div>
         </a>
     </div>
-    -->
-
+</div>
+-->
 
 <!-- CHARTS SECTION -->
 <div class="row mb-4">

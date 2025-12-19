@@ -12,8 +12,7 @@ class SaleController extends Controller
 {
       public function index(Request $request)
     {
-        $query = Sale::with(['user', 'items.product', 'payment'])
-            ->latest();
+        $query = Sale::with(['user', 'items.product', 'payment']);
 
         // Search functionality
         if ($request->filled('search')) {

@@ -113,65 +113,156 @@
 
 <!-- Sales Reports Content -->
 <div class="row">
-    <!-- Sales by Date Range -->
-    <div class="col-12 mb-3">
-        <div class="card report-card">
+    <!-- Adaptive Sales Summary -->
+    <div class="col-6 mb-3">
+        <div class="card report-card h-100">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-0">Sales by Date Range</h5>
+                    <h5 class="mb-0">
+                        @if($daysDiff <= 1)
+                            <i class="bi bi-clock me-2"></i>Hourly Sales
+                        @elseif($daysDiff <= 31)
+                            <i class="bi bi-calendar-day me-2"></i>Daily Sales
+                        @elseif($daysDiff <= 365)
+                            <i class="bi bi-calendar-month me-2"></i>Monthly Sales
+                        @else
+                            <i class="bi bi-calendar me-2"></i>Yearly Sales
+                        @endif
+                    </h5>
                     <small>{{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}</small>
                 </div>
                 <div>
-                    @if($salesData['salesByDate']->total() > 10)
-                    <a href="{{ route('sales.index') }}?start_date={{ $startDate->format('Y-m-d') }}&end_date={{ $endDate->format('Y-m-d') }}" 
-                    class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-list me-1"></i> View All Sales
-                    </a>
-                    @endif
+                    <span class="text-light">
+                        @if($daysDiff <= 1)
+                            24 Hours
+                        @elseif($daysDiff <= 7)
+                            {{ ceil($daysDiff) }} Days
+                        @elseif($daysDiff <= 31)
+                            {{ ceil($daysDiff / 7) }} Weeks
+                        @elseif($daysDiff <= 365)
+                            {{ ceil($daysDiff / 30.44) }} Months
+                        @else
+                            {{ ceil($daysDiff / 365.25) }} Years
+                        @endif
+                    </span>
                 </div>
             </div>
             <div class="card-body">
-                @if($salesData['salesByDate']->count() > 0)
+                @if($salesData['salesSummary']->count() > 0)
                 <div class="table-responsive">
-                    <table class="table table-striped">
+                    <table class="table table-sm table-striped">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Transactions</th>
-                                <th>Total Revenue</th>
-                                <th>Average per Transaction</th>
+                                <th>
+                                    @if($startDate->isSameDay($endDate))
+                                        Hour
+                                    @elseif($daysDiff <= 31)
+                                        Date
+                                    @elseif($daysDiff <= 366)
+                                        Month
+                                    @else
+                                        Year
+                                    @endif
+                                </th>
+                                <th style="width: 120px;" class="text-center">Transactions</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Avg</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($salesData['salesByDate'] as $sale)
+                            @foreach($salesData['salesSummary'] as $sale)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($sale->date)->format('M d, Y') }}</td>
-                                <td>{{ $sale->transaction_count }}</td>
-                                <td>₱{{ number_format($sale->total_revenue, 2) }}</td>
-                                <td>₱{{ number_format($sale->total_revenue / $sale->transaction_count, 2) }}</td>
+                                <td>
+                                    @if($startDate->isSameDay($endDate))
+                                        {{ $sale->period }} <!-- e.g., "08 AM" -->
+                                    @elseif($daysDiff <= 31)
+                                        {{ \Carbon\Carbon::parse($sale->period)->format('M d') }}
+                                    @elseif($daysDiff <= 366) <!-- Changed from 365 to 366 -->
+                                        {{ $sale->period }} <!-- e.g., "January 2024" -->
+                                    @else
+                                        {{ $sale->period }} <!-- e.g., "2024" -->
+                                    @endif
+                                </td>
+                                <td class="text-center">{{ $sale->transaction_count }}</td>
+                                <td class="text-end">₱{{ number_format($sale->total_revenue, 0) }}</td>
+                                <td class="text-end">₱{{ $sale->transaction_count > 0 ? number_format($sale->total_revenue / $sale->transaction_count, 0) : 0 }}</td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
                     
-                    <!-- Pagination for Sales by Date -->
-                    @if($salesData['salesByDate']->hasPages())
+                    <!-- Pagination -->
+                    @if($salesData['salesSummary']->hasPages())
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <small class="text-muted">
-                            Showing {{ $salesData['salesByDate']->firstItem() }} to {{ $salesData['salesByDate']->lastItem() }} 
-                            of {{ $salesData['salesByDate']->total() }} days
+                            Showing {{ $salesData['salesSummary']->firstItem() }} to {{ $salesData['salesSummary']->lastItem() }} 
+                            of {{ $salesData['salesSummary']->total() }} periods
                         </small>
                         <div>
-                            {{ $salesData['salesByDate']->appends(request()->query())->links('pagination::bootstrap-4') }}
+                            {{ $salesData['salesSummary']->appends(request()->query())->links('pagination::bootstrap-4') }}
                         </div>
                     </div>
                     @endif
                 </div>
                 @else
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-calendar-x" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3">No Sales Data</h5>
-                    <p>No sales transactions found for the selected period.</p>
+                    <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                    <h6 class="mt-3">No Sales Data</h6>
+                    <p class="small">No sales transactions found for this period.</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 mb-3">
+        <div class="card report-card">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Payment Methods Analysis</h5>
+            </div>
+            <div class="card-body">
+                @if(isset($salesData['paymentMethods']) && $salesData['paymentMethods']->count() > 0)
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Payment Method</th>
+                                <th class="text-center">Transactions</th>
+                                <th class="text-end">Total Amount</th>
+                                <th class="text-end">Average per Transaction</th>
+                                <th class="text-center">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
+                            @endphp
+                            @foreach($salesData['paymentMethods'] as $payment)
+                            <tr>
+                                <td>{{ $payment->payment_method }}</td>
+                                <td class="text-center">{{ $payment->transaction_count }}</td>
+                                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
+                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
+                            </tr>
+                            @endforeach
+                            @if($totalAmount > 0)
+                            <tr class="table-light">
+                                <td class="fw-bold">Total</td>
+                                <td class="text-center fw-bold">{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
+                                <td class="text-end fw-bold">₱{{ number_format($totalAmount, 2) }}</td>
+                                <td class="text-end fw-bold">₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
+                                <td class="text-center fw-bold">100%</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-credit-card " style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Payment Data</h5>
+                    <p>No payment transactions available for the selected period.</p>
                 </div>
                 @endif
             </div>
@@ -292,61 +383,6 @@
                     <i class="bi bi-tags" style="font-size: 3rem;"></i>
                     <h5 class="mt-3">No Category Sales Data</h5>
                     <p>No sales found for the selected period.</p>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Payment Methods Analysis -->
-    <div class="col-12 mb-3">
-        <div class="card report-card">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Payment Methods Analysis</h5>
-            </div>
-            <div class="card-body">
-                @if(isset($salesData['paymentMethods']) && $salesData['paymentMethods']->count() > 0)
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Payment Method</th>
-                                <th class="text-center">Transactions</th>
-                                <th class="text-end">Total Amount</th>
-                                <th class="text-end">Average per Transaction</th>
-                                <th class="text-center">Percentage</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
-                            @endphp
-                            @foreach($salesData['paymentMethods'] as $payment)
-                            <tr>
-                                <td>{{ $payment->payment_method }}</td>
-                                <td class="text-center">{{ $payment->transaction_count }}</td>
-                                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
-                                <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
-                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
-                            </tr>
-                            @endforeach
-                            @if($totalAmount > 0)
-                            <tr class="table-light">
-                                <td class="fw-bold">Total</td>
-                                <td class="text-center fw-bold">{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
-                                <td class="text-end fw-bold">₱{{ number_format($totalAmount, 2) }}</td>
-                                <td class="text-end fw-bold">₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
-                                <td class="text-center fw-bold">100%</td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-                @else
-                <div class="text-center py-4 text-muted">
-                    <i class="bi bi-credit-card " style="font-size: 3rem;"></i>
-                    <h5 class="mt-3">No Payment Data</h5>
-                    <p>No payment transactions available for the selected period.</p>
                 </div>
                 @endif
             </div>
@@ -495,10 +531,10 @@
                             <table class="table table-sm mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Product</th>
+                                        <th style="padding-left: 16px;">Product</th>
                                         <th class="text-center">Qty</th>
                                         <th class="text-end">Unit Price</th>
-                                        <th class="text-end">Total</th>
+                                        <th style="padding-right: 16px;" class="text-end">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody id="viewSaleItems">
@@ -507,7 +543,7 @@
                                 <tfoot class="table-light">
                                     <tr>
                                         <td colspan="3" class="text-end fw-bold">Grand Total:</td>
-                                        <td class="text-end fw-bold text-success" id="viewSaleTotal"></td>
+                                        <td style="padding-right: 16px;" class="text-end fw-bold text-success" id="viewSaleTotal"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -646,10 +682,10 @@ function exportDetailedCSV() {
                             
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td>${item.product ? item.product.name : 'N/A'}</td>
+                                <td style="padding-left: 16px;">${item.product ? item.product.name : 'N/A'}</td>
                                 <td class="text-center">${item.quantity_sold}</td>
                                 <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
-                                <td class="text-end">₱${itemTotal.toFixed(2)}</td>
+                                <td style="padding-right: 16px;" class="text-end">₱${itemTotal.toFixed(2)}</td>
                             `;
                             itemsContainer.appendChild(row);
                         });

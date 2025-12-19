@@ -31,7 +31,7 @@
                 <div class="col-md-8">
                     <div class="d-flex align-items-center">
                         <div class="input-group search-box w-100 me-2">
-                            <input type="text" class="form-control" name="search" placeholder="Search by Sale ID, or Return Reason..." value="{{ request('search') }}">
+                            <input type="text" class="form-control" name="search" placeholder="Search by Sale ID..." value="{{ request('search') }}">
                             <button class="btn btn-outline-secondary" type="submit">
                                 <i class="bi bi-search"></i>
                             </button>
@@ -132,13 +132,13 @@
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
-                    @if(request('search') || request('return_reason') || request('date_filter') || request('start_date') || request('end_date'))
-                        Displaying {{ $returns->count() }} of {{ $returns->total() }} filtered results
-                        @if(request('search'))
-                            for "{{ request('search') }}"
-                        @endif
+                    @if(request('search'))
+                        Showing {{ $returns->firstItem() }}–{{ $returns->lastItem() }}
+                        of {{ $returns->total() }} results for
+                        "<strong>{{ request('search') }}</strong>"
                     @else
-                        Displaying {{ $returns->count() }} of {{ $returns->total() }} returns
+                        Showing {{ $returns->firstItem() }}–{{ $returns->lastItem() }}
+                        of {{ $returns->total() }} returns
                     @endif
                 </div>
                 <div class="text-muted">

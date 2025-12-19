@@ -27,19 +27,11 @@ class StockAdjustmentController extends Controller
             'items.product'
         ]);
     
-        // Search
+       // Search
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('adjustment_type', 'like', '%' . $request->search . '%')
-                  ->orWhere('reason_notes', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('items.product', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%')
-                        ->orWhere('sku', 'like', '%' . $request->search . '%');
-                  })
-                  ->orWhereHas('processedBy', function($q) use ($request) {
-                      $q->where('f_name', 'like', '%' . $request->search . '%')
-                        ->orWhere('l_name', 'like', '%' . $request->search . '%');
-                  });
+            $query->whereHas('items.product', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('sku', 'like', '%' . $request->search . '%');
             });
         }
     

@@ -80,9 +80,12 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
                     @if(request('search'))
-                        Displaying {{ $users->count() }} of {{ $users->total() }} results for "{{ request('search') }}"
+                        Showing {{ $users->firstItem() }}–{{ $users->lastItem() }}
+                        of {{ $users->total() }} results for
+                        "<strong>{{ request('search') }}</strong>"
                     @else
-                        Displaying {{ $users->count() }} of {{ $users->total() }} {{ $showArchived ? 'archived' : 'active' }} users
+                        Showing {{ $users->firstItem() }}–{{ $users->lastItem() }}
+                        of {{ $users->total() }} {{ $showArchived ? 'archived' : 'active' }} users
                     @endif
                 </div>
             </div>

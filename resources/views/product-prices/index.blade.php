@@ -24,7 +24,7 @@
             <h2 class="mb-0">
                 <b>Product Prices</b>
                 @if($showArchived)
-                    <span class="text-secondary small ms-2">(Archive View)</span>
+                    <span class="text-secondary small ms-2">(Phased-Out View)</span>
                 @endif
             </h2>
             <div>
@@ -75,7 +75,7 @@
                         @else
                             <a href="{{ route('product-prices.index', ['archived' => true]) }}" class="btn btn-outline-warning">
                                 <i class="bi bi-archive me-1"></i>
-                                View Archive
+                                View Phased-Out
                             </a>
                         @endif
                         
@@ -114,15 +114,12 @@
             <!-- Results Count -->
             <div class="text-muted mb-3">
                 @if(request('search'))
-                    Displaying {{ $products->count() }} of {{ $products->total() }} results for "{{ request('search') }}"
-                    @if(request('price_status'))
-                        ({{ request('price_status') == 'with_price' ? 'With Price' : 'No Price Set' }})
-                    @endif
+                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }}
+                    of {{ $products->total() }} results for
+                    "<strong>{{ request('search') }}</strong>"
                 @else
-                    Displaying {{ $products->count() }} of {{ $products->total() }} products
-                    @if(request('price_status'))
-                        ({{ request('price_status') == 'with_price' ? 'With Price' : 'No Price Set' }})
-                    @endif
+                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }}
+                    of {{ $products->total() }} products
                 @endif
             </div>
             <table class="table table-hover">

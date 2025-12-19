@@ -52,9 +52,12 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
                     @if(request('search'))
-                        Displaying {{ $categories->count() }} of {{ $categories->total() }} results for "{{ request('search') }}"
+                        Showing {{ $categories->firstItem() }}–{{ $categories->lastItem() }}
+                        of {{ $categories->total() }} results for
+                        "<strong>{{ request('search') }}</strong>"
                     @else
-                        Displaying {{ $categories->count() }} of {{ $categories->total() }} categories
+                        Showing {{ $categories->firstItem() }}–{{ $categories->lastItem() }}
+                        of {{ $categories->total() }} categories
                     @endif
                 </div>
             </div>

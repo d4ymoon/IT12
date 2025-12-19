@@ -125,8 +125,15 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('/sale-items/{saleId}', [POSController::class, 'getSaleItems']);
         Route::post('/process-payment', [POSController::class, 'processPayment']);
         Route::get('/receipt/{sale}/pdf', [POSController::class, 'downloadReceiptPDF']);
+        Route::get('/receipt/{sale}/pdf', [POSController::class, 'downloadReceiptPDF'])->name('pos.receipt.pdf');
         Route::post('/complete-sale', [POSController::class, 'completeSale'])->name('pos.completeSale');
     });
+
+    Route::get('/pos/my-transactions', [POSController::class, 'myTransactions'])->name('pos.my-transactions');
+    Route::get('/pos/sale/{id}/details', [POSController::class, 'saleDetails'])->name('pos.sale.details');
+    Route::get('/receipt/print/{id}', [POSController::class, 'printReceipt'])
+    ->name('receipt.print');
+
 
     // Account settings - both can access
     Route::get('/account/settings', [AccountSettingsController::class, 'edit'])->name('account.settings');

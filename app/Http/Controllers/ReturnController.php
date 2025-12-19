@@ -19,15 +19,23 @@ class ReturnController extends Controller
 {
     $query = ProductReturn::with(['sale', 'user', 'returnItems.product']);
 
-    // Search functionality
+   // Search
     if ($request->has('search') && $request->search != '') {
         $search = $request->search;
-        $query->where(function($q) use ($search) {
-            $q->where('return_reason', 'like', "%{$search}%")
-            ->orWhereHas('sale', function($q2) use ($search) {
-                $q2->where('id', 'like', "%{$search}%");
+        
+        // Extract numbers from search (handles "123", "#123", "Sale 123", etc.)
+        preg_match_all('/\d+/', $search, $matches);
+        $saleId = $matches[0][0] ?? null;
+        
+        if ($saleId) {
+            // Search ONLY by Sale ID (exact match)
+            $query->whereHas('sale', function($q2) use ($saleId) {
+                $q2->where('id', $saleId);
             });
-        });
+        } else {
+            // Return no results if search doesn't contain a number
+            $query->whereRaw('1 = 0');
+        }
     }
 
     // Return Reason filter
@@ -100,16 +108,20 @@ class ReturnController extends Controller
     // Calculate total refunded amount for display (with same filters)
     $totalQuery = ProductReturn::query();
     
-    // Apply search filter to total
-    if ($request->has('search') && $request->search != '') {
-        $search = $request->search;
-        $totalQuery->where(function($q) use ($search) {
-            $q->where('return_reason', 'like', "%{$search}%")
-            ->orWhereHas('sale', function($q2) use ($search) {
-                $q2->where('id', 'like', "%{$search}%");
-            });
-        });
-    }
+        // Apply search filter to total 
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            preg_match_all('/\d+/', $search, $matches);
+            $saleId = $matches[0][0] ?? null;
+            
+            if ($saleId) {
+                $totalQuery->whereHas('sale', function($q) use ($saleId) {
+                    $q->where('id', $saleId);
+                });
+            } else {
+                $totalQuery->whereRaw('1 = 0');
+            }
+        }
     
     // Apply return reason filter to total
     if ($request->has('return_reason') && $request->return_reason != '') {

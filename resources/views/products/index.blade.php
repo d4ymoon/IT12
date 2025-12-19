@@ -147,15 +147,13 @@
             <!-- Results Count and Current Sort -->
             <div class="text-muted">
                 @if(request('search'))
-                    Displaying {{ $products->count() }} of {{ $products->total() }} results for "{{ request('search') }}"
-                    @if(request('category_id'))
-                        in {{ $categories->where('id', request('category_id'))->first()->name ?? 'Unknown' }} category
-                    @endif
+                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }}
+                    of {{ $products->total() }} results for
+                    "<strong>{{ request('search') }}</strong>"
                 @else
-                    Displaying {{ $products->count() }} of {{ $products->total() }} {{ $showArchived ? 'archived' : 'active' }} products
-                    @if(request('category_id'))
-                        in {{ $categories->where('id', request('category_id'))->first()->name ?? 'Unknown' }} category
-                    @endif
+                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }}
+                    of {{ $products->total() }}
+                    {{ $showArchived ? 'phased-out' : 'active' }} products
                 @endif
             </div>
             <table class="table table-hover">
@@ -178,7 +176,7 @@
                         <td>
                             <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="product-image">
                         </td>
-                        <td>
+                        <td class="text-truncate" style="max-width: 150px;">
                             <strong>{{ $product->name }}</strong>
                             @if($product->manufacturer_barcode)
                                 <br><small class="text-muted">{{ $product->manufacturer_barcode }}</small>
@@ -418,7 +416,7 @@
 
                             <div class="mb-3 mt-3 text-start">
                                 <label for="archive_reason" class="form-label">Reason / Notes:</label>
-                                <textarea class="form-control" id="archive_reason" name="archive_reason" maxlength="255" rows="3" placeholder="Optional: Enter reason for phasing out..."></textarea>
+                                <textarea class="form-control" id="archive_reason" name="archive_reason" maxlength="255" rows="3" placeholder="Enter reason for phasing out..."></textarea>
                             </div>
                             
                         </div>

@@ -6,9 +6,11 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\Payment;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 use Exception;
 
 class POSController extends Controller
@@ -192,5 +194,143 @@ class POSController extends Controller
         // Stream to browser (inline)
         return $pdf->download("receipt-{$sale->id}.pdf");
     }
+
+    public function myTransactions(Request $request)
+    {
+        // Get user_id from session
+        $userId = session('user_id');
+        
+        if (!$userId) {
+            return redirect('/login')->with('error', 'Please login first.');
+        }
+
+        // Get user details for display
+        $user = User::find($userId);
+        if (!$user) {
+            return redirect('/login')->with('error', 'User not found.');
+        }
+
+        // Base query - TODAY'S SALES ONLY
+        $query = Sale::with(['items.product', 'payment'])
+            ->where('user_id', $userId)
+            ->whereDate('sale_date', Carbon::today())
+            ->latest('sale_date');
+
+        // Clone query for summary BEFORE pagination
+        $summaryQuery = clone $query;
+
+        // Search by Sale ID only (no other filters needed)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('id', 'LIKE', "%{$search}%");
+            $summaryQuery->where('id', 'LIKE', "%{$search}%");
+        }
+
+        // Pagination for table (10 per page)
+        $sales = $query->paginate(10)->withQueryString();
+
+        // Summary for today (all matching sales, not just current page)
+        $allSalesToday = $summaryQuery->get();
+
+        $todaySummary = $allSalesToday->sum(function($sale) {
+            return $sale->items->sum(function($item) {
+                return $item->quantity_sold * $item->unit_price;
+            });
+        });
+
+        $totalSalesToday = $allSalesToday->count();
+
+        $totalItemsToday = $allSalesToday->sum(function($sale) {
+            return $sale->items->sum('quantity_sold');
+        });
+
+        return view('pos.my-transactions', compact(
+            'sales', 
+            'todaySummary', 
+            'user',
+            'totalSalesToday',
+            'totalItemsToday'
+        ));
+    }
+
+    /**
+     * Get TODAY'S sale details for cashier
+     */
+    public function saleDetails($id)
+    {
+        $userId = session('user_id');
+        
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+        
+        $sale = Sale::with(['items.product', 'payment'])
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->whereDate('sale_date', Carbon::today()) // TODAY ONLY
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['error' => 'Sale not found or unauthorized'], 404);
+        }
+
+        return response()->json($sale);
+    }
+
+    /**
+     * Generate receipt PDF for cashier's TODAY'S sales only
+     */
+    public function receiptPdf($id)
+    {
+        $userId = session('user_id');
+        
+        if (!$userId) {
+            abort(401, 'Unauthorized');
+        }
+        
+        $sale = Sale::with(['user', 'items.product', 'payment'])
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->whereDate('sale_date', Carbon::today()) // TODAY ONLY
+            ->first();
+
+        if (!$sale) {
+            abort(404, 'Receipt not found or unauthorized');
+        }
+
+        $pdf = PDF::loadView('pos.receipt', compact('sale'));
+
+    // Use a fixed width but a very generous height. 
+    // 'cm' or 'mm' are more stable in dompdf than raw points.
+    $pdf->setPaper('80mm', 'portrait'); 
+
+    $pdf->setOptions([
+        'isHtml5ParserEnabled' => true,
+        'isRemoteEnabled' => true,
+        'defaultFont' => 'DejaVu Sans',
+        'dpi' => 96, 
+        'defaultPaperSize' => 'a4', // Fallback
+    ]);
+
+    return $pdf->stream("receipt-{$sale->id}.pdf");
+    }
+
+    public function printReceipt($id)
+{
+    $userId = session('user_id');
+
+    if (!$userId) {
+        abort(401, 'Unauthorized');
+    }
+
+    $sale = Sale::with(['user', 'items.product', 'payment'])
+        ->where('id', $id)
+        ->where('user_id', $userId)
+        ->whereDate('sale_date', Carbon::today())
+        ->firstOrFail();
+
+    return view('pos.receipt-print', compact('sale'));
+}
+
 
 }

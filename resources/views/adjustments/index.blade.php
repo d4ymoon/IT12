@@ -41,7 +41,7 @@
                         <div class="col-md-8">
                             <div class="d-flex align-items-center">
                                 <div class="input-group search-box w-100 me-2">
-                                    <input type="text" class="form-control" name="search" placeholder="Search by product, SKU, reason..." value="{{ request('search') }}">
+                                    <input type="text" class="form-control" name="search" placeholder="Search by product or SKU..." value="{{ request('search') }}">
                                     <button class="btn btn-outline-secondary" type="submit">
                                         <i class="bi bi-search"></i>
                                     </button>
@@ -87,7 +87,7 @@
                                         <li>
                                             <a class="dropdown-item d-flex justify-content-between align-items-center {{ $sort == 'net_qty_change' ? 'active' : '' }}" 
                                             href="{{ request()->fullUrlWithQuery(['sort' => 'net_qty_change', 'direction' => $sort == 'net_qty_change' && $direction == 'asc' ? 'desc' : 'asc']) }}">
-                                                <span>Net Qty Change</span>
+                                                <span>Quantity Change</span>
                                                 @if($sort == 'net_qty_change')
                                                     <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }}"></i>
                                                 @endif
@@ -164,11 +164,14 @@
         <div class="table-responsive">
             <!-- Results Count -->
             <div class="text-muted mb-3">
-                @if(request('search') || request('adjustment_type') || request('date_filter') || request('start_date') || request('end_date'))
-                    Displaying {{ $stockAdjustments->count() }} of {{ $stockAdjustments->total() }} filtered results
+                @if(request('search'))
+                    Showing {{ $stockAdjustments->firstItem() }}–{{ $stockAdjustments->lastItem() }}
+                    of {{ $stockAdjustments->total() }} results for
+                    "<strong>{{ request('search') }}</strong>"
                 @else
-                    Displaying {{ $stockAdjustments->count() }} of {{ $stockAdjustments->total() }} adjustment records
-                @endif
+                    Showing {{ $stockAdjustments->firstItem() }}–{{ $stockAdjustments->lastItem() }}
+                    of {{ $stockAdjustments->total() }} adjustment records
+                @endif            
             </div>
             <table class="table table-hover">
                 <thead class="table-light">
@@ -178,7 +181,7 @@
                         <th>Reason</th>
                         <th>Items</th>
                         <th>Processed By</th>
-                        <th>Net Qty Change</th>
+                        <th>Quantity Change</th>
                         <th>Financial Impact</th>
                         <th>Adjustment Date</th>
                         <th>Actions</th>
@@ -283,7 +286,7 @@
                                     <span class="fw-semibold" id="viewTotalItems"></span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between px-0">
-                                    <small class="text-muted">Net Qty Change:</small>
+                                    <small class="text-muted">Quantity Change:</small>
                                     <span class="fw-semibold" id="viewNetQtyChange"></span>
                                 </div>
                                 <div class="list-group-item d-flex justify-content-between px-0">

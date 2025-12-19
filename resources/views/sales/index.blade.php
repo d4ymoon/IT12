@@ -145,12 +145,13 @@
             <!-- Results Count -->
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="text-muted">
-                    @if(request('search') || request('date_filter') || request('start_date') || request('end_date') || request('payment_method'))
-                        Displaying {{ $sales->count() }} of {{ $sales->total() }} filtered results
-                        @if(request('search')) for "{{ request('search') }}"@endif
-                        @if(request('payment_method')) with {{ request('payment_method') }}@endif
+                    @if(request('search'))
+                        Showing {{ $sales->firstItem() }}–{{ $sales->lastItem() }}
+                        of {{ $sales->total() }} results for
+                        "<strong>{{ request('search') }}</strong>"
                     @else
-                        Displaying {{ $sales->count() }} of {{ $sales->total() }} sales
+                        Showing {{ $sales->firstItem() }}–{{ $sales->lastItem() }}
+                        of {{ $sales->total() }} sales
                     @endif
                 </div>
             </div>
@@ -270,10 +271,10 @@
                                 <table class="table table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Product</th>
+                                            <th style="padding-left: 16px;">Product</th>
                                             <th class="text-center">Qty</th>
                                             <th class="text-end">Unit Price</th>
-                                            <th class="text-end">Total</th>
+                                            <th style="padding-right: 16px;" class="text-end">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody id="viewSaleItems">
@@ -282,7 +283,7 @@
                                     <tfoot class="table-light">
                                         <tr>
                                             <td colspan="3" class="text-end fw-bold">Grand Total:</td>
-                                            <td class="text-end fw-bold text-success" id="viewSaleTotal"></td>
+                                            <td style="padding-right: 16px;" class="text-end fw-bold text-success" id="viewSaleTotal"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -375,10 +376,10 @@
                             
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td>${item.product ? item.product.name : 'N/A'}</td>
+                                <td style="padding-left: 16px;">${item.product ? item.product.name : 'N/A'}</td>
                                 <td class="text-center">${item.quantity_sold}</td>
                                 <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
-                                <td class="text-end">₱${itemTotal.toFixed(2)}</td>
+                                <td style="padding-right: 16px;" class="text-end">₱${itemTotal.toFixed(2)}</td>
                             `;
                             itemsContainer.appendChild(row);
                         });

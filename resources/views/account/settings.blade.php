@@ -144,10 +144,15 @@
                             <!-- Current Password -->
                             <div class="col-12 mb-3">
                                 <label for="current_password" class="form-label">Current Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
                                 <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
                                        id="current_password" name="current_password" 
                                        placeholder="Enter current password" 
                                        required>
+                                       <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 @error('current_password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -156,12 +161,15 @@
                             <!-- New Password -->
                             <div class="col-md-6 mb-3">
                                 <label for="password" class="form-label">New Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                       id="password" name="password" 
-                                       placeholder="Enter new password" 
-                                       required>
+                                <div class="input-group">
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                           id="password" name="password" placeholder="Enter new password" required>
+                                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                                 <div class="form-text">Minimum 8 characters</div>
                             </div>
@@ -170,10 +178,15 @@
                             <!-- Confirm New Password -->
                             <div class="col-md-6 mb-3">
                                 <label for="password_confirmation" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
                                 <input type="password" class="form-control" 
                                        id="password_confirmation" name="password_confirmation" 
                                        placeholder="Confirm new password" 
                                        required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end">
@@ -260,6 +273,24 @@
                 this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
             });
         }
+
+        // Toggle Password Visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Find the input field relative to this button
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === "password") {
+                    input.type = "text";
+                    icon.classList.replace('bi-eye', 'bi-eye-slash');
+                } else {
+                    input.type = "password";
+                    icon.classList.replace('bi-eye-slash', 'bi-eye');
+                }
+            });
+        });
 
         // Password confirmation validation
         const password = document.getElementById('password');

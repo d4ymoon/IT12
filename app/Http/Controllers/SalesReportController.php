@@ -21,13 +21,16 @@ class SalesReportController extends Controller
         list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
 
         // Get sales data
-        $salesData = $this->getSalesReportsData($startDate, $endDate);
+        $salesData = $this->getSalesReportsData($startDate, $endDate, true);
+        $daysDiff = $startDate->diffInDays($endDate, false); // Get days difference
+        $cleanDaysDiff = ceil(abs($daysDiff));
 
         return view('reports.sales.index', compact(
             'salesData',
             'dateRange',
             'startDate',
-            'endDate'
+            'endDate',
+            'daysDiff' 
         ));
     }
 
@@ -75,28 +78,12 @@ class SalesReportController extends Controller
             ->get();
     }
 
-    private function getSalesReportsData($startDate, $endDate)
+    private function getSalesReportsData($startDate, $endDate, $paginate = true)
     {
-        // Net Sales by Date Range (Sales minus Returns)
-        $salesByDate = DB::table('sales')
-            ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
-            ->leftJoin('product_returns', function ($join) {
-                $join->on(DB::raw('DATE(product_returns.created_at)'), '=', DB::raw('DATE(sales.sale_date)'));
-            })
-            ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->select(
-                DB::raw('DATE(sales.sale_date) as date'),
-                DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
-                DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
-                DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
-                DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
-                        COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue')
-            )
-            ->groupBy(DB::raw('DATE(sales.sale_date)'))
-            ->orderBy('date', 'asc')
-            ->paginate(10);
+        // Adaptive Sales Summary based on date range
+        $salesSummary = $this->getAdaptiveSalesSummary($startDate, $endDate, $paginate);
 
-        // Detailed Sales with pagination
+        // Detailed Sales with pagination (only for web view)
         $detailedSales = DB::table('sales')
             ->join('users', 'sales.user_id', '=', 'users.id')
             ->leftJoin('payments', 'sales.id', '=', 'payments.sale_id')
@@ -112,8 +99,14 @@ class SalesReportController extends Controller
                 'payments.payment_method'
             )
             ->whereBetween('sales.sale_date', [$startDate, $endDate])
-            ->orderBy('sales.sale_date', 'desc')
-            ->paginate(10);
+            ->orderBy('sales.sale_date', 'desc');
+        
+        // Only paginate for web view, not for PDF
+        if ($paginate) {
+            $detailedSales = $detailedSales->paginate(10);
+        } else {
+            $detailedSales = $detailedSales->get();
+        }
 
         // Product Performance (Net of Returns) - Ordered by Quantity Sold
         // Top Products by Quantity Sold
@@ -190,7 +183,7 @@ class SalesReportController extends Controller
         $paymentMethods = $this->getPaymentMethodsData($startDate, $endDate);
 
         return [
-            'salesByDate' => $salesByDate,
+            'salesSummary' => $salesSummary, 
             'detailedSales' => $detailedSales,
             'topProductsByQuantity' => $topProductsByQuantity,
             'topProductsByRevenue' => $topProductsByRevenue,
@@ -199,6 +192,127 @@ class SalesReportController extends Controller
             'summaryStats' => $summaryStats,
             'dateRange' => ['start' => $startDate, 'end' => $endDate]
         ];
+    }
+
+    private function getAdaptiveSalesSummary($startDate, $endDate, $paginate = true)
+    {
+        // IMPORTANT: Calculate the DIFFERENCE between dates, not just check if daysDiff is 0
+        $daysDiff = $startDate->diffInDays($endDate);
+        
+        // Debug: Check what's happening
+        // \Log::info("Start Date: {$startDate}, End Date: {$endDate}, Days Diff: {$daysDiff}");
+        
+        // TODAY (single day) - Show hourly breakdown
+        // Check if start and end are on the same day
+        if ($startDate->isSameDay($endDate)) {
+            // Today/Yesterday - Show hourly
+            $query = DB::table('sales')
+                ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
+                ->leftJoin('product_returns', function ($join) use ($startDate) {
+                    $join->on('product_returns.sale_id', '=', 'sales.id')
+                        ->whereDate('product_returns.created_at', $startDate);
+                })
+                ->whereDate('sales.sale_date', $startDate)
+                ->select(
+                    DB::raw("DATE_FORMAT(sales.sale_date, '%h %p') as period"),
+                    DB::raw('HOUR(sales.sale_date) as hour'),
+                    DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+                    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+                    DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
+                    DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
+                            COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue')
+                )
+                ->groupBy(DB::raw('HOUR(sales.sale_date)'), DB::raw("DATE_FORMAT(sales.sale_date, '%h %p')"))
+                ->orderBy('hour', 'asc');
+            
+            if ($paginate) {
+                return $query->paginate(24); // Show all 24 hours
+            } else {
+                return $query->get();
+            }
+        } 
+        // 2-31 days - Show daily
+        elseif ($daysDiff <= 31) {
+            // 2-30 days (Week/Month) - Show daily
+            $query = DB::table('sales')
+                ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
+                ->leftJoin('product_returns', function ($join) {
+                    $join->on(DB::raw('DATE(product_returns.created_at)'), '=', DB::raw('DATE(sales.sale_date)'));
+                })
+                ->whereBetween('sales.sale_date', [$startDate, $endDate])
+                ->select(
+                    DB::raw('DATE(sales.sale_date) as period'),
+                    DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+                    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+                    DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
+                    DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
+                            COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue')
+                )
+                ->groupBy(DB::raw('DATE(sales.sale_date)'))
+                ->orderBy('period', 'asc');
+            
+            if ($paginate) {
+                return $query->paginate($daysDiff <= 7 ? 7 : 15);
+            } else {
+                return $query->get();
+            }
+        }
+        // 32-365 days - Show monthly
+        elseif ($daysDiff <= 366) {
+            // 31-365 days (Year) - Show monthly
+            $query = DB::table('sales')
+                ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
+                ->leftJoin('product_returns', function ($join) {
+                    $join->on(DB::raw('YEAR(product_returns.created_at)'), '=', DB::raw('YEAR(sales.sale_date)'))
+                        ->on(DB::raw('MONTH(product_returns.created_at)'), '=', DB::raw('MONTH(sales.sale_date)'));
+                })
+                ->whereBetween('sales.sale_date', [$startDate, $endDate])
+                ->select(
+                    DB::raw("DATE_FORMAT(sales.sale_date, '%M %Y') as period"),
+                    DB::raw('YEAR(sales.sale_date) as year'),
+                    DB::raw('MONTH(sales.sale_date) as month'),
+                    DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+                    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+                    DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
+                    DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
+                            COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue')
+                )
+                ->groupBy(DB::raw('YEAR(sales.sale_date)'), DB::raw('MONTH(sales.sale_date)'), DB::raw("DATE_FORMAT(sales.sale_date, '%M %Y')"))
+                ->orderBy('year', 'asc')
+                ->orderBy('month', 'asc');
+            
+            if ($paginate) {
+                return $query->paginate(12);
+            } else {
+                return $query->get();
+            }
+        }
+        // > 365 days - Show yearly
+        else {
+            // > 365 days (All Time) - Show yearly
+            $query = DB::table('sales')
+                ->leftJoin('sale_items', 'sale_items.sale_id', '=', 'sales.id')
+                ->leftJoin('product_returns', function ($join) {
+                    $join->on(DB::raw('YEAR(product_returns.created_at)'), '=', DB::raw('YEAR(sales.sale_date)'));
+                })
+                ->whereBetween('sales.sale_date', [$startDate, $endDate])
+                ->select(
+                    DB::raw('YEAR(sales.sale_date) as period'),
+                    DB::raw('COUNT(DISTINCT sales.id) as transaction_count'),
+                    DB::raw('SUM(sale_items.unit_price * sale_items.quantity_sold) as gross_revenue'),
+                    DB::raw('COALESCE(SUM(product_returns.total_refund_amount), 0) as returns_amount'),
+                    DB::raw('(SUM(sale_items.unit_price * sale_items.quantity_sold) - 
+                            COALESCE(SUM(product_returns.total_refund_amount), 0)) as total_revenue')
+                )
+                ->groupBy(DB::raw('YEAR(sales.sale_date)'))
+                ->orderBy('period', 'asc');
+            
+            if ($paginate) {
+                return $query->paginate(10);
+            } else {
+                return $query->get();
+            }
+        }
     }
     
 
@@ -213,13 +327,16 @@ class SalesReportController extends Controller
         list($startDate, $endDate) = $this->calculateDateRange($dateRange, $startDate, $endDate);
 
         // Get sales data (same as index but without detailed sales)
-        $salesData = $this->getSalesReportsData($startDate, $endDate);
+        $salesData = $this->getSalesReportsData($startDate, $endDate, false);
+
+        $daysDiff = $startDate->diffInDays($endDate);
 
         $data = [
             'salesData' => $salesData,
             'dateRange' => $dateRange,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'daysDiff' => $daysDiff, 
             'exportDate' => now()->format('M d, Y h:i A'),
         ];
 

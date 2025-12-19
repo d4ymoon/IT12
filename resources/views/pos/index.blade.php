@@ -244,6 +244,50 @@
         </div>
         
     </div>
+
+    <!-- Sale Success Modal -->
+    <div class="modal fade" id="saleSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Sale Completed
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <p class="mb-2">The sale was completed successfully.</p>
+                    <p class="fw-bold mb-3">
+                        Sale ID: <span id="successSaleId"></span>
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <a href="#" 
+                        id="downloadReceiptLink"
+                        target="_blank"
+                        class="btn btn-success btn-lg">
+                            <i class="bi bi-receipt me-1"></i>
+                            Download Receipt
+                        </a>
+
+                        <a href="{{ route('pos.my-transactions') }}"
+                        class="btn btn-outline-secondary">
+                            View Recent Transactions
+                        </a>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">
+                        Continue Selling
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @endsection
 
     @push('scripts')
@@ -549,10 +593,19 @@
         }
         if (!data.success) throw new Error(data.message);
 
-        // Download receipt - FIXED VERSION
-        this.downloadReceipt(data.sale.id);
+        // Show success modal
+        document.getElementById('successSaleId').textContent = data.sale.id;
 
-        alert("Sale completed successfully!");
+        const receiptUrl = `/pos/receipt/${data.sale.id}/pdf`;
+        document.getElementById('downloadReceiptLink').href = receiptUrl;
+
+        // Show modal
+        const modal = new bootstrap.Modal(
+            document.getElementById('saleSuccessModal')
+        );
+        modal.show();
+
+        // Reset cart AFTER showing success
         this.resetCart();
 
     } catch (err) {

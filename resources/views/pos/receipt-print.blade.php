@@ -210,7 +210,17 @@
     </div>
     <div class="footer text-center" style="font-style: italic; margin-top: 2px;">
         Keep this invoice for return/refund.<br>
-        Return/refund within 7 days from purchase date.
+        Return/refund within 7 days from purchase date. test
     </div>
+
+    <script>
+        window.onload = function () {
+            window.print();
+            window.onafterprint = function () {
+                window.close();
+            };
+        };
+    </script>
+    
 </body>
 </html>

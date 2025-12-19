@@ -438,9 +438,6 @@
     itemsList.innerHTML = html;
 }
 
-
-
-
     updateTotal() {
         this.total = this.items.reduce((sum, item) => sum + item.unit_price * item.quantity_sold, 0);
         document.getElementById('totalDisplay').textContent = `₱${this.total.toFixed(2)}`;

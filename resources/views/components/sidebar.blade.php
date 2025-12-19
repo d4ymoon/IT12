@@ -34,6 +34,13 @@
                 </a>
             </li>
 
+            <li class="nav-item">
+                <a href="{{ route('pos.my-transactions') }}" class="nav-link {{ request()->is('pos/my-transactions') || request()->routeIs('pos.my-transactions') ? 'active' : '' }}" title="Today's Transactions">
+                    <i class="bi bi-clock-history me-2"></i>
+                    <span>Today’s Sales</span>
+                </a>
+            </li>
+
             <!-- Admin-only sections -->
             @if(session('user_role') == 'Administrator')
             <!-- Products Menu -->

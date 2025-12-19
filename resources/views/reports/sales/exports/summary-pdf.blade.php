@@ -15,8 +15,11 @@
         .table th { background-color: #f8f9fa; border: 1px solid #ddd; padding: 8px; text-align: left; }
         .table td { border: 1px solid #ddd; padding: 8px; }
         .section-title { background-color: #e9ecef; padding: 8px; margin: 15px 0 10px 0; font-weight: bold; }
+        .section-subtitle { color: #666; font-size: 11px; margin: -8px 0 10px 0; padding: 0 8px; }
         .footer { margin-top: 30px; text-align: center; color: #666; font-size: 10px; }
         .no-data { text-align: center; padding: 20px; color: #999; font-style: italic; }
+        .text-end { text-align: right; }
+        .text-center { text-align: center; }
     </style>
 </head>
 <body>
@@ -62,31 +65,131 @@
         </tr>
     </table>
 
-    <!-- Sales by Date -->
-    <div class="section-title">Sales by Date Range</div>
-    @if(count($salesData['salesByDate']) > 0)
+    <!-- Adaptive Sales Summary -->
+    <div class="section-title">
+        @if($daysDiff <= 1)
+            Hourly Sales
+        @elseif($daysDiff <= 31)
+            Daily Sales
+        @elseif($daysDiff <= 365)
+            Monthly Sales
+        @else
+            Yearly Sales
+        @endif
+    </div>
+    <div class="section-subtitle">
+        {{ $startDate->format('M d, Y') }} - {{ $endDate->format('M d, Y') }}
+        @if($daysDiff <= 1)
+            (24 Hours)
+        @elseif($daysDiff <= 7)
+            ({{ ceil($daysDiff) }} Days)
+        @elseif($daysDiff <= 31)
+            ({{ ceil($daysDiff / 7) }} Weeks)
+        @elseif($daysDiff <= 365)
+            ({{ ceil($daysDiff / 30.44) }} Months)
+        @else
+            ({{ ceil($daysDiff / 365.25) }} Years)
+        @endif
+    </div>
+    
+    @if($salesData['salesSummary']->count() > 0)
     <table class="table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Transactions</th>
-                <th>Total Revenue</th>
-                <th>Average per Transaction</th>
+                <th>
+                    @if($daysDiff <= 1)
+                        Hour
+                    @elseif($daysDiff <= 31)
+                        Date
+                    @elseif($daysDiff <= 365)
+                        Month
+                    @else
+                        Year
+                    @endif
+                </th>
+                <th class="text-center">Transactions</th>
+                <th class="text-end">Revenue</th>
+                <th class="text-end">Avg. per Transaction</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($salesData['salesByDate'] as $sale)
+            @foreach($salesData['salesSummary'] as $sale)
             <tr>
-                <td>{{ \Carbon\Carbon::parse($sale->date)->format('M d, Y') }}</td>
-                <td>{{ $sale->transaction_count }}</td>
-                <td>₱{{ number_format($sale->total_revenue, 2) }}</td>
-                <td>₱{{ number_format($sale->total_revenue / $sale->transaction_count, 2) }}</td>
+                <td>
+                    @if($daysDiff <= 1)
+                        {{ $sale->period }}
+                    @elseif($daysDiff <= 31)
+                        {{ \Carbon\Carbon::parse($sale->period)->format('M d') }}
+                    @elseif($daysDiff <= 365)
+                        {{ $sale->period }}
+                    @else
+                        {{ $sale->period }}
+                    @endif
+                </td>
+                <td class="text-center">{{ $sale->transaction_count }}</td>
+                <td class="text-end">₱{{ number_format($sale->total_revenue, 0) }}</td>
+                <td class="text-end">₱{{ $sale->transaction_count > 0 ? number_format($sale->total_revenue / $sale->transaction_count, 0) : 0 }}</td>
             </tr>
             @endforeach
         </tbody>
+        @if($salesData['salesSummary']->count() > 1)
+        <tfoot style="background-color: #f8f9fa;">
+            <tr>
+                <td class="fw-bold">Total/Average</td>
+                <td class="text-center fw-bold">{{ $salesData['salesSummary']->sum('transaction_count') }}</td>
+                <td class="text-end fw-bold">₱{{ number_format($salesData['salesSummary']->sum('total_revenue'), 0) }}</td>
+                <td class="text-end fw-bold">
+                    ₱{{ $salesData['salesSummary']->sum('transaction_count') > 0 ? 
+                        number_format($salesData['salesSummary']->sum('total_revenue') / $salesData['salesSummary']->sum('transaction_count'), 0) : 0 }}
+                </td>
+            </tr>
+        </tfoot>
+        @endif
     </table>
     @else
     <div class="no-data">No sales data for this period</div>
+    @endif
+
+    <!-- Payment Methods Analysis -->
+    <div class="section-title">Payment Methods Analysis</div>
+    @if(isset($salesData['paymentMethods']) && count($salesData['paymentMethods']) > 0)
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Payment Method</th>
+                <th class="text-center">Transactions</th>
+                <th class="text-end">Total Amount</th>
+                <th class="text-end">Avg. per Transaction</th>
+                <th class="text-center">Percentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php
+                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
+                $totalTransactions = $salesData['paymentMethods']->sum('transaction_count');
+            @endphp
+            @foreach($salesData['paymentMethods'] as $payment)
+            <tr>
+                <td>{{ $payment->payment_method }}</td>
+                <td class="text-center">{{ $payment->transaction_count }}</td>
+                <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
+                <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
+                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
+            </tr>
+            @endforeach
+            @if($totalAmount > 0)
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+                <td>Total</td>
+                <td class="text-center">{{ $totalTransactions }}</td>
+                <td class="text-end">₱{{ number_format($totalAmount, 2) }}</td>
+                <td class="text-end">₱{{ number_format($totalAmount / $totalTransactions, 2) }}</td>
+                <td class="text-center">100%</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
+    @else
+    <div class="no-data">No payment methods data for this period</div>
     @endif
 
     <!-- Top Products by Quantity -->
@@ -96,18 +199,18 @@
         <thead>
             <tr>
                 <th>Product</th>
-                <th>Quantity Sold</th>
-                <th>Revenue</th>
-                <th>Avg Price</th>
+                <th class="text-center">Quantity Sold</th>
+                <th class="text-end">Revenue</th>
+                <th class="text-end">Avg Price</th>
             </tr>
         </thead>
         <tbody>
             @foreach($salesData['topProductsByQuantity'] as $product)
             <tr>
                 <td>{{ $product->name }}</td>
-                <td>{{ $product->total_quantity }}</td>
-                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
-                <td>₱{{ number_format($product->avg_price, 2) }}</td>
+                <td class="text-center">{{ $product->total_quantity }}</td>
+                <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
+                <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -123,18 +226,18 @@
         <thead>
             <tr>
                 <th>Product</th>
-                <th>Quantity</th>
-                <th>Revenue</th>
-                <th>Avg Price</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-end">Revenue</th>
+                <th class="text-end">Avg Price</th>
             </tr>
         </thead>
         <tbody>
             @foreach($salesData['topProductsByRevenue'] as $product)
             <tr>
                 <td>{{ $product->name }}</td>
-                <td>{{ $product->total_quantity }}</td>
-                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
-                <td>₱{{ number_format($product->avg_price, 2) }}</td>
+                <td class="text-center">{{ $product->total_quantity }}</td>
+                <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
+                <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -150,65 +253,34 @@
         <thead>
             <tr>
                 <th>Category</th>
-                <th>Revenue</th>
-                <th>Quantity</th>
-                <th>Transactions</th>
+                <th class="text-end">Revenue</th>
+                <th class="text-center">Quantity</th>
+                <th class="text-center">Transactions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($salesData['categoryAnalysis'] as $category)
             <tr>
                 <td>{{ $category->category_name }}</td>
-                <td>₱{{ number_format($category->total_revenue, 2) }}</td>
-                <td>{{ $category->total_quantity }}</td>
-                <td>{{ $category->transaction_count }}</td>
+                <td class="text-end">₱{{ number_format($category->total_revenue, 2) }}</td>
+                <td class="text-center">{{ $category->total_quantity }}</td>
+                <td class="text-center">{{ $category->transaction_count }}</td>
             </tr>
             @endforeach
         </tbody>
+        @if(count($salesData['categoryAnalysis']) > 1)
+        <tfoot style="background-color: #f8f9fa;">
+            <tr>
+                <td class="fw-bold">Total</td>
+                <td class="text-end fw-bold">₱{{ number_format($salesData['categoryAnalysis']->sum('total_revenue'), 2) }}</td>
+                <td class="text-center fw-bold">{{ $salesData['categoryAnalysis']->sum('total_quantity') }}</td>
+                <td class="text-center fw-bold">{{ $salesData['categoryAnalysis']->sum('transaction_count') }}</td>
+            </tr>
+        </tfoot>
+        @endif
     </table>
     @else
     <div class="no-data">No category sales data for this period</div>
-    @endif
-
-    <!-- Payment Methods Analysis -->
-    <div class="section-title">Payment Methods Analysis</div>
-    @if(isset($salesData['paymentMethods']) && count($salesData['paymentMethods']) > 0)
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Payment Method</th>
-                <th>Transactions</th>
-                <th>Total Amount</th>
-                <th>Average per Transaction</th>
-                <th>Percentage</th>
-            </tr>
-        </thead>
-        <tbody>
-            @php
-                $totalAmount = $salesData['paymentMethods']->sum('total_amount');
-            @endphp
-            @foreach($salesData['paymentMethods'] as $payment)
-            <tr>
-                <td>{{ $payment->payment_method }}</td>
-                <td>{{ $payment->transaction_count }}</td>
-                <td>₱{{ number_format($payment->total_amount, 2) }}</td>
-                <td>₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
-                <td>{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
-            </tr>
-            @endforeach
-            @if($totalAmount > 0)
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-                <td>Total</td>
-                <td>{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
-                <td>₱{{ number_format($totalAmount, 2) }}</td>
-                <td>₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
-                <td>100%</td>
-            </tr>
-            @endif
-        </tbody>
-    </table>
-    @else
-    <div class="no-data">No payment methods data for this period</div>
     @endif
 
     <div class="footer">
