@@ -33,10 +33,10 @@ return new class extends Migration
                   ->onDelete('set null');
 
             $table->string('email')->unique();
-            //$table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('password_changed')->default(false);
-            //$table->rememberToken();
+            $table->rememberToken();
             $table->timestamps();
         });
 
