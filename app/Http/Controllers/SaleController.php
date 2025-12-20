@@ -87,6 +87,15 @@ class SaleController extends Controller
         return $pdf->stream("receipt-{$sale->id}.pdf");
     }
 
+    public function printReceipt($id)
+    {
+        $sale = Sale::with(['user', 'items.product', 'payment'])
+            ->findOrFail($id);
+
+        return view('pos.receipt-print', compact('sale'));
+    }
+
+
     public function details($id)
     {
         $sale = Sale::with(['user', 'items.product', 'payment'])

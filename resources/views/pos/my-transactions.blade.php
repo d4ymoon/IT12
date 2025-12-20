@@ -180,7 +180,7 @@
                                 <th>Items</th>
                                 <th>Total Amount</th>
                                 <th>Payment</th>
-                                <th style="Width: 350px">Actions</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -214,7 +214,6 @@
                                     </td>
                                     <td>
                  
-
                                         <button class="btn btn-outline-info btn-sm btn-action data-id="{{ $sale->id }}"
                                                 title="View Details"
                                                 onclick="event.stopPropagation(); loadSaleDetails({{ $sale->id }})">
@@ -224,7 +223,7 @@
                                         <button class="btn btn-outline-success btn-sm"
                                                 title="Print Receipt"
                                                 onclick="event.stopPropagation(); printReceipt({{ $sale->id }});">
-                                            <i class="bi bi-printer"></i> Print Receipt
+                                            <i class="bi bi-printer"></i>
                                         </button>
                                     
                                         <a href="{{ route('pos.receipt.pdf', $sale->id) }}" 
@@ -232,7 +231,7 @@
                                            target="_blank"
                                            title="Download PDF"
                                            onclick="event.stopPropagation()">
-                                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                                            <i class="bi bi-file-earmark-pdf"></i>
                                         </a>
                                     </td>
                                     
@@ -346,10 +345,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a href="#" class="btn btn-success" id="printReceiptBtn" target="_blank">
-                    <i class="bi bi-receipt me-1"></i> Reprint Receipt
-                </a>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="printReceiptBtn">
+                    <i class="bi bi-printer me-1"></i> Reprint Receipt
+                </button>
             </div>
         </div>
     </div>
@@ -429,8 +428,10 @@
                 }
                 
                 // Print button
-                document.getElementById('printReceiptBtn').href = `/pos/receipt/${sale.id}/pdf`;
-                
+                document.getElementById('printReceiptBtn').onclick = function () {
+                    printReceipt(saleId);
+                };
+
                 // Show modal
                 const modal = new bootstrap.Modal(document.getElementById('viewSaleModal'));
                 modal.show();

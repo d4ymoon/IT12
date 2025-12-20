@@ -99,6 +99,7 @@ Route::middleware(['auth.simple'])->group(function () {
         Route::get('/sales/{id}/receipt', [SaleController::class, 'receipt'])->name('sales.receipt');
         Route::get('/sales/{id}/details', [SaleController::class, 'details'])->name('sales.details');
         
+        Route::get('/sales/receipt/print/{id}', [SaleController::class, 'printReceipt'])->name('sales.receipt.print');
 
         Route::get('/product-prices', [ProductPriceController::class, 'index'])->name('product-prices.index');
         Route::post('/product-prices/update', [ProductPriceController::class, 'update'])->name('product-prices.update');
@@ -131,9 +132,7 @@ Route::middleware(['auth.simple'])->group(function () {
 
     Route::get('/pos/my-transactions', [POSController::class, 'myTransactions'])->name('pos.my-transactions');
     Route::get('/pos/sale/{id}/details', [POSController::class, 'saleDetails'])->name('pos.sale.details');
-    Route::get('/receipt/print/{id}', [POSController::class, 'printReceipt'])
-    ->name('receipt.print');
-
+    Route::get('/receipt/print/{id}', [POSController::class, 'printReceipt'])->name('receipt.print');
 
     // Account settings - both can access
     Route::get('/account/settings', [AccountSettingsController::class, 'edit'])->name('account.settings');

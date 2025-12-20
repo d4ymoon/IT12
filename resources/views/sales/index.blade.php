@@ -180,8 +180,13 @@
                             <button class="btn btn-sm btn-outline-info btn-action view-sale" data-id="{{ $sale->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <a href="{{ route('sales.receipt', $sale->id) }}" class="btn btn-sm btn-outline-success btn-action" title="Print Receipt" target="_blank">
-                                <i class="bi bi-receipt"></i>
+                            <button class="btn btn-sm btn-outline-success btn-action"
+                                    title="Print Receipt"
+                                    onclick="printSaleReceipt({{ $sale->id }})">
+                                <i class="bi bi-printer"></i>
+                            </button>
+                            <a href="{{ route('sales.receipt', $sale->id) }}" class="btn btn-sm btn-outline-secondary btn-action" title="Download PDF" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i>
                             </a>
                         </td>
                     </tr>
@@ -304,10 +309,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <a href="#" class="btn btn-success" id="printReceiptBtn" target="_blank">
-                        <i class="bi bi-receipt me-1"></i> Print Receipt
-                    </a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" id="printReceiptBtn">
+                        <i class="bi bi-printer me-1"></i> Reprint Receipt
+                    </button>
                 </div>
             </div>
         </div>
@@ -422,7 +427,9 @@
                         }
                         
                         // Update print receipt button
-                        document.getElementById('printReceiptBtn').href = `/sales/${sale.id}/receipt`;
+                        document.getElementById('printReceiptBtn').onclick = () => {
+                            printSaleReceipt(sale.id);
+                        };
                         
                         // Show modal
                         const modal = new bootstrap.Modal(document.getElementById('viewSaleModal'));
@@ -449,6 +456,41 @@
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }, 3000);
+        }
+
+        function printSaleReceipt(id) {
+            const url = "{{ route('sales.receipt.print', ['id' => '__ID__']) }}"
+                .replace('__ID__', id);
+
+            const win = window.open(
+                url,
+                '_blank',
+                'width=600,height=600,top=100,left=100,scrollbars=yes'
+            );
+
+            if (!win) {
+                alert('Popup blocked. Please allow popups for this site.');
+                return;
+            }
+
+            // Grey overlay (same UX as POS)
+            const overlay = document.createElement('div');
+            overlay.style = `
+                position:fixed;
+                inset:0;
+                background:rgba(0,0,0,.3);
+                z-index:1050;
+            `;
+            document.body.appendChild(overlay);
+
+            win.onload = () => win.print();
+
+            const timer = setInterval(() => {
+                if (win.closed) {
+                    clearInterval(timer);
+                    overlay.remove();
+                }
+            }, 300);
         }
     </script>
     @endpush
