@@ -270,26 +270,24 @@
                                 <div class="mb-3">
                                     <label for="editContactNo" class="form-label">Contact Number</label>
                                     <input type="text" class="form-control" id="editContactNo" name="contactNo" 
-                                           maxlength="11" placeholder="Enter contact number" 
-                                           pattern="[0-9]{0,11}"
-                                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
+                                        maxlength="11" placeholder="Enter contact number" 
+                                        pattern="[0-9]{0,11}"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11)">
                                 </div>
                                 <div class="mb-3">
                                     <label for="editRole" class="form-label">Role <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="editRole" name="role" required
-                                        @if(session('user_id') == $user->id) disabled @endif>
+                                    <select class="form-select" id="editRole" name="role" required>
                                         <option value="">Select Role</option>
                                         @foreach($roles as $role)
-                                            <option value="{{ $role }}" 
-                                                @if(old('role', $user->role) == $role) selected @endif>
+                                            <option value="{{ $role }}">
                                                 {{ $role }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    @if(session('user_id') == $user->id)
+                                    <div id="roleHelpText" class="form-text" style="display: none;">
                                         <small class="text-muted">You cannot change your own role.</small>
-                                    @endif
-                                </div>                                
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

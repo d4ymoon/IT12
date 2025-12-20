@@ -257,6 +257,44 @@
                     </div>
                 </div>
             </div>
+
+            @if(session('user_role') == 'Administrator')
+            <!-- Backup & Restore -->
+            <div class="card settings-card">
+                <div class="card-header settings-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-hdd-network me-2"></i>Database Backup & Restore
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Backup Button -->
+                    <div class="mb-3">
+                        <form action="{{ route('database.backup') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-download me-2"></i>Backup Database
+                            </button>
+                        </form>
+                    </div>
+
+                    <hr>
+
+                    <!-- Restore Form -->
+                    <form action="{{ route('database.restore') }}" method="POST" enctype="multipart/form-data"
+                        onsubmit="return confirm('WARNING. This will overwrite all current data. Continue?')">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="backup_file" class="form-label">Restore from backup (.sql)</label>
+                            <input type="file" class="form-control" id="backup_file" name="backup_file" accept=".sql" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="bi bi-upload me-2"></i>Restore Database
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
         </div>
     </div>
     @endif

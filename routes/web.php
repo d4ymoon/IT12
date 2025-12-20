@@ -11,6 +11,7 @@ use App\Http\Controllers\StockInController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\InventoryReportController;
 use App\Http\Controllers\ReportController;
@@ -107,6 +108,9 @@ Route::middleware(['auth.simple'])->group(function () {
 
         Route::resource('returns', ReturnController::class);
         Route::get('/returns/get-sale/{saleId}', [ReturnController::class, 'getSaleDetails'])->name('returns.get-sale-details');
+
+        Route::post('/settings/backup', [DatabaseController::class, 'backup'])->name('database.backup');
+        Route::post('/settings/restore', [DatabaseController::class, 'restore'])->name('database.restore');
     });
 
     // Both admin and employee can access these
