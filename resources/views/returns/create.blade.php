@@ -124,12 +124,12 @@
                                     <!-- REMOVED CHECKBOX COLUMN HEADER -->
                                     <th>Product</th>
                                     <th>SKU</th>
-                                    <th>Original Price</th>
+                                    <th class="text-end">Original Price</th>
                                     <th>Quantity Sold</th>
                                     <th>Already Returned</th>
                                     <th>Return Quantity</th>
                                     <th>Condition</th>
-                                    <th>Refund Amount</th>
+                                    <th class="text-end">Refund Amount</th>
                                 </tr>
                             </thead>
                             <tbody id="return-items-tbody">
@@ -374,7 +374,7 @@ $(document).ready(function() {
                             <input type="hidden" name="items[${index}][sale_item_id]" value="${item.id}">
                         </td>
                         <td>${item.product_sku}</td>
-                        <td>₱${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
                         <td>${item.quantity_sold}</td>
                         <td>${item.already_returned}</td>
                         <td>
@@ -394,8 +394,8 @@ $(document).ready(function() {
                                 <option value="damaged">Damaged</option>
                             </select>
                         </td>
-                        <td>
-                            $<span class="line-refund-amount">0.00</span>
+                        <td class="text-end">
+                            ₱<span class="line-refund-amount">0.00</span>
                             <input type="hidden" name="items[${index}][refund_amount]" class="line-refund-input" value="0">
                         </td>
                     </tr>

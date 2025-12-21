@@ -309,6 +309,14 @@
                 display: flex !important;
             }
 
+            .sidebar .nav .nav {
+                padding-left: 0 !important;
+            }
+            
+            .sidebar .nav .nav .nav-item .nav-link {
+                padding-left: 15px !important;
+            }
+            
             .sidebar .dropdown-menu.show {
                 position: fixed !important;
                 left: 80px !important;

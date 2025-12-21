@@ -103,7 +103,7 @@ class SalesReportController extends Controller
         
         // Only paginate for web view, not for PDF
         if ($paginate) {
-            $detailedSales = $detailedSales->paginate(10);
+            $detailedSales = $detailedSales->paginate(10, ['*'], 'detailed_sales_page');
         } else {
             $detailedSales = $detailedSales->get();
         }

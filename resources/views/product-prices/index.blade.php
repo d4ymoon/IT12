@@ -127,8 +127,8 @@
                     <tr>
                         <th>SKU</th>
                         <th>Product Name</th>
-                        <th>Cost Price</th>
-                        <th>Retail Price</th>
+                        <th class="text-end">Cost Price</th>
+                        <th class="text-end">Retail Price</th>
                         <th>Margin (%)</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
@@ -149,7 +149,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="text-end">
                             @if($product->latestStockInItem)
                                 <span class="fw-semibold text-primary">
                                     ₱{{ number_format($product->latestStockInItem->actual_unit_cost, 2) }}
@@ -162,7 +162,7 @@
                                 <span class="no-price">N/A</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="text-end">
                             @if($product->latestProductPrice)
                                 <span class="fw-bold text-success">₱{{ number_format($product->latestProductPrice->retail_price, 2) }}</span>
                             @else

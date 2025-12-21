@@ -182,7 +182,7 @@
                         <th>Items</th>
                         <th>Processed By</th>
                         <th>Quantity Change</th>
-                        <th>Financial Impact</th>
+                        <th class="text-end">Financial Impact</th>
                         <th>Adjustment Date</th>
                         <th>Actions</th>
                     </tr>
@@ -218,7 +218,7 @@
                         <td class="{{ $totalQtyChange < 0 ? 'no-negative' : ($totalQtyChange > 0 ? 'no-positive' : '') }}">
                             {{ $totalQtyChange > 0 ? '+' : '' }}{{ $totalQtyChange }}
                         </td>
-                        <td class="{{ $totalFinancialImpact < 0 ? 'no-negative' : ($totalFinancialImpact > 0 ? 'no-positive' : '') }}">
+                        <td class="{{ $totalFinancialImpact < 0 ? 'no-negative' : ($totalFinancialImpact > 0 ? 'no-positive' : '') }} text-end">
                             ₱{{ number_format($totalFinancialImpact, 2) }}
                         </td>
                         <td>{{ $adjustment->adjustment_date->format('M d, Y h:i A') }}</td>
@@ -440,8 +440,8 @@
                                 <td class="${item.quantity_change < 0 ? 'no-negative' : (item.quantity_change > 0 ? 'no-positive' : '')}">
                                     ${item.quantity_change > 0 ? '+' : ''}${item.quantity_change}
                                 </td>
-                                <td>₱${parseFloat(item.unit_cost_at_adjustment).toFixed(2)}</td>
-                                <td class="${itemTotalValue < 0 ? 'no-negative' : (itemTotalValue > 0 ? 'no-positive' : '')}">
+                                <td style="text-align: right;">₱${parseFloat(item.unit_cost_at_adjustment).toFixed(2)}</td>
+                                <td style="text-align: right;" class="${itemTotalValue < 0 ? 'no-negative' : (itemTotalValue > 0 ? 'no-positive' : '')}">
                                     ₱${parseFloat(itemTotalValue).toFixed(2)}
                                 </td>
                             `;
@@ -453,7 +453,7 @@
                         document.getElementById('viewTotalQtyChange').className = tableTotalQty < 0 ? 'no-negative' : (tableTotalQty > 0 ? 'no-positive' : '');
                         
                         document.getElementById('viewTotalValue').textContent = '₱' + parseFloat(tableTotalValue).toFixed(2);
-                        document.getElementById('viewTotalValue').className = tableTotalValue < 0 ? 'no-negative' : (tableTotalValue > 0 ? 'no-positive' : '');
+                        document.getElementById('viewTotalValue').className = `text-end ${tableTotalValue < 0 ? 'no-negative' : (tableTotalValue > 0 ? 'no-positive' : '')}`;
                         
                         const modal = new bootstrap.Modal(document.getElementById('viewAdjustmentModal'));
                         modal.show();

@@ -137,7 +137,7 @@
                         <th>Received By</th>
                         <th>Items</th>
                         <th>Total Quantity</th>
-                        <th>Total Cost</th>
+                        <th class="text-end">Total Cost</th>
                         <th>Stock-In Date</th>
                         <th>Actions</th>
                     </tr>
@@ -150,7 +150,7 @@
                         <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $stockIn->items->count() }}</td>
                         <td>{{ $stockIn->items->sum('quantity_received') }}</td>
-                        <td>₱{{ number_format($stockIn->items->sum(function($item) { return $item->quantity_received * $item->actual_unit_cost; }), 2) }}</td>
+                        <td class="text-end">₱{{ number_format($stockIn->items->sum(function($item) { return $item->quantity_received * $item->actual_unit_cost; }), 2) }}</td>
                         <td>{{ $stockIn->stock_in_date->format('M d, Y h:i A') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-stock-in" data-id="{{ $stockIn->id }}" title="View Details">
@@ -237,8 +237,8 @@
                                         <th>Product</th>
                                         <th>Supplier</th>
                                         <th>Quantity</th>
-                                        <th>Unit Cost</th>
-                                        <th>Total Cost</th>
+                                        <th class="text-end">Unit Cost</th>
+                                        <th class="text-end">Total Cost</th>
                                     </tr>
                                 </thead>
                                 <tbody id="viewItemsTable">
@@ -337,8 +337,8 @@
                                 <td>${item.product.name}</td>
                                 <td>${item.supplier ? item.supplier.supplier_name : 'N/A'}</td> 
                                 <td>${item.quantity_received}</td>
-                                <td>₱${parseFloat(item.actual_unit_cost).toFixed(2)}</td>
-                                <td>₱${parseFloat(totalCost).toFixed(2)}</td>
+                                <td class="text-end">₱${parseFloat(item.actual_unit_cost).toFixed(2)}</td>
+                                <td class="text-end">₱${parseFloat(totalCost).toFixed(2)}</td>
                             `;
                             itemsTable.appendChild(row);
                         });

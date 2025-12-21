@@ -31,7 +31,7 @@ class InventoryReportController extends Controller
                 DB::raw('(products.quantity_in_stock * COALESCE(products.latest_unit_cost, 0)) as stock_value')
             )
             ->orderBy('products.quantity_in_stock')
-            ->paginate(15); 
+            ->paginate(10, ['*'], 'stock_levels_page');
 
         // Low Stock Alerts
         $lowStockAlerts = DB::table('products')
@@ -50,7 +50,7 @@ class InventoryReportController extends Controller
                 'products.latest_unit_cost'
             )
             ->orderBy('products.quantity_in_stock')
-            ->paginate(10);
+            ->paginate(10, ['*'], 'low_stock_page');
 
         // Stock Adjustments (latest 20)
         $adjustments = DB::table('stock_adjustments')
@@ -169,7 +169,7 @@ class InventoryReportController extends Controller
                 ->groupBy('products.id', 'products.name', 'categories.name', 'products.quantity_in_stock', 'products.latest_unit_cost')
                 ->havingRaw('last_sale_date IS NULL OR last_sale_date < ?', [now()->subMonths(6)])
                 ->orderByDesc('stock_value')
-                ->paginate(10);
+                ->paginate(10, ['*'], 'dead_stock_page'); 
 
         return [
             'stockLevels' => $stockLevels,

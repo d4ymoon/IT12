@@ -151,7 +151,7 @@
                         <th>Return ID</th>
                         <th>Sale ID</th>
                         <th>Return Reason</th>
-                        <th>
+                        <th class="text-end">
                             Total Refund
                             @if($sort == 'total_refund_amount')
                                 <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} ms-1"></i>
@@ -174,7 +174,7 @@
                         <td>{{ $return->id }}</td>
                         <td>{{ $return->sale_id }}</td>
                         <td>{{ $return->return_reason }}</td>
-                        <td class="text-danger">-₱{{ number_format($return->total_refund_amount, 2) }}</td>
+                        <td class="text-end">₱{{ number_format($return->total_refund_amount, 2) }}</td>
                         <td>{{ $return->returnItems->count() }} item(s)</td>
                         <td>{{ $return->user->f_name ?? 'N/A' }}</td>
                         <td>{{ $return->created_at->format('M d, Y h:i A') }}</td>
@@ -268,7 +268,7 @@
                                     <th>SKU</th>
                                     <th>Quantity</th>
                                     <th>Unit Price</th>
-                                    <th>Total Refund</th>
+                                    <th class="text-end">Total Refund</th>
                                     <th>Condition</th>
                                     <th>Action</th>
                                 </tr>
@@ -379,8 +379,8 @@
                                 <td>${item.product.name}</td>
                                 <td>${item.product.sku}</td>
                                 <td>${item.quantity_returned}</td>
-                                <td>₱${parseFloat(item.refunded_price_per_unit).toFixed(2)}</td>
-                                <td>₱${parseFloat(item.total_line_refund).toFixed(2)}</td>
+                                <td class="text-end">₱${parseFloat(item.refunded_price_per_unit).toFixed(2)}</td>
+                                <td class="text-end">₱${parseFloat(item.total_line_refund).toFixed(2)}</td>
                                 <td>${item.inventory_adjusted ? 'Resaleable' : 'Damaged'}</td>
                                 <td>${item.inventory_adjusted ? 'Restocked' : 'Scrapped/Loss'}</td>
                             `;

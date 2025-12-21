@@ -17,7 +17,7 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-box text-primary me-2"></i>Total Products
                 </h6>
-                <h3 class="fw-bold text-primary mb-0 text-end">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
+                <h3 class="fw-bold text-primary mb-0 text-start">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
             </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-layers text-success me-2"></i>Total Quantity
                 </h6>
-                <h3 class="fw-bold text-success mb-0 text-end">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
+                <h3 class="fw-bold text-success mb-0 text-start">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
             </div>
         </div>
     </div>
@@ -47,8 +47,8 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-exclamation-triangle text-warning me-2"></i>Low Stock Items
                 </h6>
-                <h3 class="fw-bold text-warning mb-0 text-end">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
-                <small class="text-muted text-end d-block">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
+                <h3 class="fw-bold text-warning mb-0 text-start">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
+                <small class="text-muted text-start d-block">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
             </div>
         </div>
     </div>
@@ -58,8 +58,8 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-repeat text-info me-2"></i>Turnover Rate
                 </h6>
-                <h3 class="fw-bold text-info mb-0 text-end">{{ $inventoryData['inventoryTurnover']['turnover_rate'] ?? 0 }}x</h3>
-                <small class="text-muted text-end d-block">{{ $inventoryData['inventoryTurnover']['period'] ?? '' }}</small>
+                <h3 class="fw-bold text-info mb-0 text-start">{{ $inventoryData['inventoryTurnover']['turnover_rate'] ?? 0 }}x</h3>
+                <small class="text-muted text-start d-block">{{ $inventoryData['inventoryTurnover']['period'] ?? '' }}</small>
             </div>
         </div>
     </div>
@@ -86,7 +86,7 @@
                                 <th>Category</th>
                                 <th>Current Stock</th>
                                 <th>Reorder Level</th>
-                                <th>Unit Cost</th>
+                                <th class="text-end">Unit Cost</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -97,7 +97,7 @@
                                 <td>{{ $product->category_name }}</td>
                                 <td>{{ $product->quantity_in_stock }}</td>
                                 <td>{{ $product->reorder_level }}</td>
-                                <td>₱{{ number_format($product->latest_unit_cost, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>
                                 <td>
                                     @if($product->quantity_in_stock == 0)
                                         <span class="fw-bold text-danger">Out of Stock</span>
@@ -148,8 +148,8 @@
                                 <th>Product</th>
                                 <th>Date</th>
                                 <th>Qty Received</th>
-                                <th>Unit Cost</th>
-                                <th>Total Cost</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Total Cost</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -158,8 +158,8 @@
                                 <td>{{ $movement->name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($movement->stock_in_date)->format('M d, Y') }}</td>
                                 <td>{{ $movement->quantity_received }}</td>
-                                <td>₱{{ number_format($movement->actual_unit_cost, 2) }}</td>
-                                <td>₱{{ number_format($movement->total_cost, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($movement->actual_unit_cost, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($movement->total_cost, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -193,7 +193,7 @@
                                 <th>Category</th>
                                 <th>Products</th>
                                 <th>Total Quantity</th>
-                                <th>Total Value</th>
+                                <th class="text-end">Total Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -202,7 +202,7 @@
                                 <td>{{ $valuation->category_name }}</td>
                                 <td>{{ $valuation->product_count }}</td>
                                 <td>{{ $valuation->total_quantity }}</td>
-                                <td>₱{{ number_format($valuation->total_value, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($valuation->total_value, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -343,8 +343,8 @@
                                 <th>Product</th>
                                 <th>SKU</th>
                                 <th>Qty Sold</th>
-                                <th>Revenue</th>
-                                <th>Avg Price</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Avg Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -353,8 +353,8 @@
                                 <td>{{ $product->name }}</td>
                                 <td><small class="text-muted">{{ $product->sku }}</small></td>
                                 <td>{{ $product->total_quantity_sold }}</td>
-                                <td>₱{{ number_format($product->total_revenue, 2) }}</td>
-                                <td>₱{{ number_format($product->avg_selling_price, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->avg_selling_price, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -388,7 +388,7 @@
                                 <th>Product</th>
                                 <th>Category</th>
                                 <th>Current Stock</th>
-                                <th>Stock Value</th>
+                                <th class="text-end">Stock Value</th>
                                 <th>Last Sale</th>
                             </tr>
                         </thead>
@@ -398,7 +398,7 @@
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->category_name }}</td>
                                 <td>{{ $product->quantity_in_stock }}</td>
-                                <td>₱{{ number_format($product->stock_value, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
                                     @if($product->last_sale_date)
                                         {{ \Carbon\Carbon::parse($product->last_sale_date)->format('M d, Y') }}
@@ -446,8 +446,8 @@
                                 <th>Category</th>
                                 <th>Current Stock</th>
                                 <th>Reorder Level</th>
-                                <th>Unit Cost</th>
-                                <th>Stock Value</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Stock Value</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -458,8 +458,8 @@
                                 <td>{{ $product->category_name }}</td>
                                 <td>{{ $product->quantity_in_stock }}</td>
                                 <td>{{ $product->reorder_level }}</td>
-                                <td>₱{{ number_format($product->latest_unit_cost, 2) }}</td>
-                                <td>₱{{ number_format($product->stock_value, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>
+                                <td class="text-end">₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
                                     @if($product->quantity_in_stock == 0)
                                         <span class="fw-bold text-danger">Out of Stock</span>

@@ -178,7 +178,7 @@
                                 <th>Sale ID</th>
                                 <th>Time</th>
                                 <th>Items</th>
-                                <th>Total Amount</th>
+                                <th class="text-end">Total Amount</th>
                                 <th>Payment</th>
                                 <th>Actions</th>
                             </tr>
@@ -204,7 +204,7 @@
                                     </td>
                                     <td>{{ $sale->sale_date->format('h:i A') }}</td>
                                     <td>{{ $itemCount }} {{ $itemCount == 1 ? 'item' : 'items' }}</td>
-                                    <td class="fw-bold text-success">
+                                    <td class="fw-bold text-success text-end">
                                         ₱{{ number_format($total, 2) }}
                                     </td>
                                     <td>

@@ -108,6 +108,11 @@
         margin-bottom: 6px;
     }
 
+    .summary-row.small {
+        font-size: 13px;
+        color: #6c757d;
+    }
+
     .summary-row input {
         max-width: 150px;
     }
@@ -193,10 +198,19 @@
             </div>
         </div>
     
-        <!-- Total -->
+        <!-- Subtotal & VAT -->
         <div class="summary-card mt-3">
-            <div class="summary-row">
-                <span class="total-label">Total</span>
+            <div class="summary-row" style="font-size: 13px; color: #6c757d;">
+                <span>Subtotal:</span>
+                <span id="subtotalDisplay">₱0.00</span>
+            </div>
+            <div class="summary-row" style="font-size: 13px; color: #6c757d;">
+                <span>VAT (12%):</span>
+                <span id="vatDisplay">₱0.00</span>
+            </div>
+            <hr class="my-2">
+            <div class="summary-row" style="font-size: 14px; font-weight: bold;">
+                <span class="total-label">Total:</span>
                 <span class="total-display" id="totalDisplay">₱0.00</span>
             </div>
         </div>
@@ -299,8 +313,9 @@
             this.items = JSON.parse(localStorage.getItem('posItems')) || [];
             this.total = 0;
             this.init();
-             this.renderItems();
-        this.updateTotal();
+            this.renderItems();
+            this.updateTotal();
+            this.restorePaymentMethod();
         }
 
         init() {
@@ -479,10 +494,32 @@
 
         updateTotal() {
             this.total = this.items.reduce((sum, item) => sum + item.unit_price * item.quantity_sold, 0);
+
+            const subtotal = this.total / 1.12; 
+            const vat = this.total - subtotal;  
+
+            document.getElementById('subtotalDisplay').textContent = `₱${subtotal.toFixed(2)}`;
+            document.getElementById('vatDisplay').textContent = `₱${vat.toFixed(2)}`;
             document.getElementById('totalDisplay').textContent = `₱${this.total.toFixed(2)}`;
             document.getElementById('digitalAmountInfo').textContent = `Amount: ₱${this.total.toFixed(2)}`;
             this.calculateChange();
             this.updateCompleteButton();
+        }
+
+        restorePaymentMethod() {
+            const savedMethod = localStorage.getItem('posPaymentMethod') || 'Cash';
+            
+            // Find and check the radio button
+            const radioButton = document.querySelector(`input[name="paymentMethod"][value="${savedMethod}"]`);
+            if (radioButton) {
+                radioButton.checked = true;
+                // Trigger the change event to update UI
+                this.handlePaymentMethodChange(savedMethod);
+            } else {
+                // Default to Cash if saved method doesn't exist
+                document.querySelector('input[name="paymentMethod"][value="Cash"]').checked = true;
+                this.handlePaymentMethodChange('Cash');
+            }
         }
 
         setQuantity(index, value) {
@@ -627,7 +664,9 @@
         resetCart() {
             this.items = [];
             this.total = 0;
-                localStorage.removeItem('posItems'); // clear cart
+            localStorage.removeItem('posItems'); // clear cart
+            document.querySelector('input[name="paymentMethod"][value="Cash"]').checked = true;
+            this.handlePaymentMethodChange('Cash'); 
             document.getElementById('productSearch').value = '';
             document.getElementById('customerName').value = '';
             document.getElementById('customerContact').value = '';
