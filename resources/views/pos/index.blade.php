@@ -241,6 +241,11 @@
         <button class="btn btn-success btn-lg w-100 mt-3" id="completeSale" disabled>
             Complete Sale
         </button>
+        <!-- Cancel Sale -->
+        <button class="btn btn-danger btn-lg w-100 mt-2" id="cancelSale">
+            Cancel Sale
+        </button>
+
     </div>
     
 </div>
@@ -291,9 +296,11 @@
     class POSSystem {
 
         constructor() {
-            this.items = [];
+            this.items = JSON.parse(localStorage.getItem('posItems')) || [];
             this.total = 0;
             this.init();
+             this.renderItems();
+        this.updateTotal();
         }
 
         init() {
@@ -336,6 +343,16 @@
             });
 
             document.getElementById('completeSale').addEventListener('click', () => this.processPayment());
+
+            document.getElementById('cancelSale').addEventListener('click', () => this.cancelSale());
+        }
+
+        cancelSale() {
+            if (!this.items.length) return; // nothing to cancel
+
+            if (!confirm("Are you sure you want to cancel this sale? All items will be removed.")) return;
+
+            this.resetCart();
         }
 
         setExactAmount() {
@@ -429,9 +446,8 @@
             }
         }
 
-        renderItems() {
+       renderItems() {
             const itemsList = document.getElementById('itemsList');
-
             let html = '';
             if (this.items.length === 0) {
                 html += '<div class="text-center text-muted py-4">No items added yet</div>';
@@ -456,6 +472,9 @@
             }
 
             itemsList.innerHTML = html;
+
+            // Persist to localStorage
+            localStorage.setItem('posItems', JSON.stringify(this.items));
         }
 
         updateTotal() {
@@ -534,6 +553,7 @@
 
         updateCompleteButton() {
             const btn = document.getElementById('completeSale');
+                const cancelBtn = document.getElementById('cancelSale');
             const method = document.querySelector('input[name="paymentMethod"]:checked').value;
             const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
             const refNo = document.getElementById('referenceNo').value;
@@ -547,6 +567,7 @@
             }
 
             btn.disabled = !valid;
+                cancelBtn.disabled = this.items.length === 0;
         }
 
         async processPayment() {
@@ -606,6 +627,7 @@
         resetCart() {
             this.items = [];
             this.total = 0;
+                localStorage.removeItem('posItems'); // clear cart
             document.getElementById('productSearch').value = '';
             document.getElementById('customerName').value = '';
             document.getElementById('customerContact').value = '';

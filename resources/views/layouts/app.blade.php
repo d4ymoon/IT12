@@ -292,7 +292,37 @@
                 margin: 8px 10px;
                 text-align: center;
             }
+
+            .sidebar .sidebar-user-info {
+                display: none !important; /* Hide the name */
+            }
             
+            .sidebar .user-avatar {
+                margin-right: 0 !important;
+                margin-left: 0 !important;
+                width: 40px !important;
+                height: 40px !important;
+                min-width: 40px !important;
+                min-height: 40px !important;
+                flex-shrink: 0;
+                /* Ensure avatar is visible */
+                display: flex !important;
+            }
+
+            .sidebar .dropdown-menu.show {
+                position: fixed !important;
+                left: 80px !important;
+                transform: none !important;
+                margin-top: 0 !important;
+                z-index: 1051 !important;
+                min-width: 200px;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                width: calc(100vw - 80px);
+            }
+
             .main-iframe {
                 margin-left: 80px;
                 width: calc(100vw - 80px);

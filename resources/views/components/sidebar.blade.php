@@ -19,7 +19,7 @@
             <!-- Dashboard - Admin Only -->
             @if(session('user_role') == 'Administrator')
             <li class="nav-item">
-                <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}">
+                <a href="/dashboard" class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" title="Dashboard">
                     <i class="bi bi-speedometer2 me-3"></i>
                     <span>Dashboard</span>
                 </a>
@@ -45,33 +45,33 @@
             @if(session('user_role') == 'Administrator')
             <!-- Products Menu -->
             <li class="nav-item">
-                <a href="#collapseInventory" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventory">
+                <a href="#collapseInventory" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventory" title="Product Management">
                     <i class="bi bi-boxes me-3"></i>
-                    <span class="pe-2">Products</span>
+                    <span class="pe-2">Product Management</span>
                     <i class="bi bi-chevron-down ms-auto chevron"></i> 
                 </a>
                 <div class="collapse {{ request()->is('products*') || request()->is('product-prices*') || request()->is('categories*') || request()->is('suppliers*') ? 'show' : '' }}" id="collapseInventory">
                     <ul class="nav flex-column ps-3">
                         <li class="nav-item">
-                            <a href="{{ route('products.index') }}" class="nav-link {{ request()->is('products*') ? 'active' : '' }}">
+                            <a href="{{ route('products.index') }}" class="nav-link {{ request()->is('products*') ? 'active' : '' }}" title="Products">
                                 <i class="bi bi-box-seam me-3"></i>
                                 <span>Products</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('product-prices.index') }}" class="nav-link {{ request()->is('product-prices*') ? 'active' : '' }}">
+                            <a href="{{ route('product-prices.index') }}" class="nav-link {{ request()->is('product-prices*') ? 'active' : '' }}" title="Product Prices">
                                 <i class="bi bi-cash-stack me-3"></i>
                                 <span>Product Prices</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('categories.index') }}" class="nav-link {{ request()->is('categories*') ? 'active' : '' }}">
+                            <a href="{{ route('categories.index') }}" class="nav-link {{ request()->is('categories*') ? 'active' : '' }}" title="Categories">
                                 <i class="bi bi-funnel me-3"></i>
                                 <span>Categories</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->is('suppliers*') ? 'active' : '' }}">
+                            <a href="{{ route('suppliers.index') }}" class="nav-link {{ request()->is('suppliers*') ? 'active' : '' }}" title="Suppliers">
                                 <i class="bi bi-truck me-3"></i>
                                 <span>Suppliers</span>
                             </a>
@@ -82,7 +82,7 @@
 
             <!-- Inventory Management -->
             <li class="nav-item">
-                <a href="#collapseInventoryOps" class="nav-link collapsed pe-1" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps">
+                <a href="#collapseInventoryOps" class="nav-link collapsed pe-1" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps" title="Inventory Management">
                     <i class="bi bi-box-seam me-3"></i>
                     <span class="pe-2">Inventory Management</span>
                     <i class="bi bi-chevron-down ms-auto chevron"></i>
@@ -90,19 +90,19 @@
                 <div class="collapse {{ request()->is('stock-ins*') || request()->is('stock-adjustments*') || request()->is('returns*') ? 'show' : '' }}" id="collapseInventoryOps">
                     <ul class="nav flex-column ps-3">
                         <li class="nav-item">
-                            <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('stock-ins*') ? 'active' : '' }}">
+                            <a href="{{ route('stock-ins.index') }}" class="nav-link {{ request()->is('stock-ins*') ? 'active' : '' }}" title="Stock In">
                                 <i class="bi bi-box-arrow-in-down me-3"></i>
                                 <span>Stock In</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('stock-adjustments.index') }}" class="nav-link {{ request()->is('stock-adjustments*') ? 'active' : '' }}">
+                            <a href="{{ route('stock-adjustments.index') }}" class="nav-link {{ request()->is('stock-adjustments*') ? 'active' : '' }}" title="Stock Adjustments">
                                 <i class="bi bi-sliders me-3"></i>
                                 <span>Stock Adjustments</span>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}">
+                            <a href="{{ route('returns.index') }}" class="nav-link {{ request()->is('returns*') ? 'active' : '' }}" title="Returns">
                                 <i class="bi bi-arrow-counterclockwise me-3"></i>
                                 <span>Returns</span>
                             </a>
@@ -114,25 +114,25 @@
             <!-- Reports -->
             <li class="nav-item">
                 <a href="#collapseReports" class="nav-link {{ request()->is('reports*', 'sales*') ? '' : 'collapsed' }}" 
-                    data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*', 'sales*') ? 'true' : 'false' }}" aria-controls="collapseReports">
+                    data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->is('reports*', 'sales*') ? 'true' : 'false' }}" aria-controls="collapseReports" title="Reports">
                     <i class="bi bi-file-text me-3"></i> <span class="pe-2">Reports</span> <i class="bi bi-chevron-down ms-auto chevron"></i> 
                 </a>
                 <div class="collapse {{ request()->is('reports*', 'sales*') ? 'show' : '' }}" id="collapseReports">
                     <ul class="nav flex-column ps-3">
                         <li class="nav-item">
-                            <a href="{{ route('reports.sales.index') }}" class="nav-link {{ request()->is('reports/sales*') ? 'active' : '' }}">
+                            <a href="{{ route('reports.sales.index') }}" class="nav-link {{ request()->is('reports/sales*') ? 'active' : '' }}" title="Sales Reports">
                                 <i class="bi bi-graph-up me-3"></i>
                                 <span>Sales Reports</span>
                             </a>                            
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('reports.inventory.index') }}" class="nav-link {{ request()->is('reports/inventory*') ? 'active' : '' }}">
+                            <a href="{{ route('reports.inventory.index') }}" class="nav-link {{ request()->is('reports/inventory*') ? 'active' : '' }}" title="Inventory Reports">
                                 <i class="bi bi-box-seam me-3"></i>
                                 <span>Inventory Reports</span>
                             </a>                            
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}">
+                            <a href="{{ route('sales.index') }}" class="nav-link {{ request()->is('sales*') ? 'active' : '' }}" title="Transaction History">
                                 <i class="bi bi-receipt me-3"></i>
                                 <span>Transaction History</span>
                             </a>                            
@@ -143,7 +143,7 @@
 
              <!-- User Management -->
              <li class="nav-item">
-                <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}">
+                <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}" title="Users">
                     <i class="bi bi-people me-3"></i>
                     <span>Users</span>
                 </a>
