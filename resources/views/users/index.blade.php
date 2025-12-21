@@ -2,6 +2,14 @@
 @section('title', 'Users - ATIN Admin')
 @push('styles')
 <link href="{{ asset('css/page-style.css') }}" rel="stylesheet">
+<style>
+    select[readonly] {
+        pointer-events: none;
+        touch-action: none;
+        background-color: #f8f9fa !important;
+        opacity: 1;
+        }
+</style>
 @endpush
 @section('content')
     @include('components.alerts')
@@ -109,7 +117,7 @@
                             <strong>{{ $user->username }}</strong>
                         </td>
                         <td>{{ $user->full_name }}</td>
-                        <td>{{ $user->email }}</td>
+                        <td class="text-truncate" style="max-width: 100px;">{{ $user->email }}</td>
                         <td>{{ $user->contactNo ?? 'N/A' }}</td>
                         <td class="primary">{{ $user->role }}</td>
                         <td>
@@ -553,10 +561,13 @@
                         document.getElementById('editRole').value = user.role;
 
                         // Disable role select if editing self
+                        const roleSelect = document.getElementById('editRole');
                         if(user.id === {{ session('user_id') }}) {
-                            document.getElementById('editRole').disabled = true;
+                            roleSelect.setAttribute('readonly', true);
+                            document.getElementById('roleHelpText').style.display = 'block';
                         } else {
-                            document.getElementById('editRole').disabled = false;
+                            roleSelect.removeAttribute('readonly');
+                            document.getElementById('roleHelpText').style.display = 'none';
                         }
 
                         document.getElementById('editUserForm').action = `/users/${userId}`;

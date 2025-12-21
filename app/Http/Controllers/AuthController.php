@@ -39,6 +39,7 @@ class AuthController extends Controller
                 'user_name'  => $user->f_name . ' ' . $user->l_name,
                 'user_role'  => $user->role, 
                 'username'   => $user->username,
+                'session_timeout' => $user->session_timeout,
             ]);
 
             if ($user->password_changed == false) {

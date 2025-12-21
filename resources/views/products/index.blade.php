@@ -164,7 +164,7 @@
                         <th>Product Name</th>
                         <th>Model</th>
                         <th>Category</th>
-                        <th>Stock</th>
+                        <th >Stock</th>
                         <th>Supplier</th>
                         <th>Actions</th>
                     </tr>
@@ -200,7 +200,7 @@
                                 </small>
                             @endif
                         </td>                        
-                        <td>
+                        <td class="text-truncate" style="max-width: 150px;">
                             @if($product->defaultSupplier)
                                 <span class="fw-semibold">{{ $product->defaultSupplier->supplier_name }}</span>
                             @else

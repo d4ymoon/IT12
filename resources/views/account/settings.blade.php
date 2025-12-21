@@ -4,16 +4,21 @@
 
 @push('styles')
 <style>
-        .settings-card {
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: none;
-            margin-bottom: 20px;
-        }
+    .settings-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
 
     .admin-note {
-        background-color: #fff3cd;
         border-left: 4px solid #ffc107;
+            font-size: 0.8rem; /* smaller text */
+    }
+
+    .settings-header .card-title {
+        font-size: 1rem; /* smaller than default */
+        font-weight: 600;  /* optional: keep it slightly bold */
     }
 </style>
 @endpush
@@ -102,7 +107,6 @@
                                 @error('contactNo')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <div class="form-text">Maximum 11 digits</div>
                             </div>
 
                             <!-- Email -->
@@ -197,6 +201,8 @@
                     </form>
                 </div>
             </div>
+
+          
         </div>
 
         <!-- System Information & Admin-Managed Fields -->
@@ -208,53 +214,80 @@
                         <i class="bi bi-info-circle me-2"></i>System Information
                     </h5>
                 </div>
+
                 <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <small class="text-muted">User ID:</small>
-                            <span class="fw-semibold">{{ $user->id }}</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                    <!-- System Info -->
+                    <div class="list-group list-group-flush mb-3">
+                        <div class="list-group-item d-flex justify-content-between px-0">
                             <small class="text-muted">Username:</small>
                             <span class="fw-semibold">{{ $user->username }}</span>
                         </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div class="list-group-item d-flex justify-content-between px-0">
                             <small class="text-muted">Role:</small>
                             <span class="fw-semibold">{{ $user->role }}</span>
                         </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <small class="text-muted">Account Status:</small>
-                            <span class="fw-semibold">{{ $user->is_active ? 'Active' : 'Inactive' }}</span>
-                        </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <small class="text-muted">Account created:</small>
+                        <div class="list-group-item d-flex justify-content-between px-0">
+                            <small class="text-muted">Account Created:</small>
                             <span class="fw-semibold">{{ $user->created_at->format('M d, Y') }}</span>
                         </div>
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <small class="text-muted">Last Updated:</small>
-                            <span class="fw-semibold">{{ $user->updated_at->format('M d, Y') }}</span>
-                        </div>
+                    </div>
+
+                    <!-- Admin Managed Note (Secondary Info) -->
+                    <div class="admin-note p-2 rounded d-flex align-items-center">
+                        <i class="bi bi-tools text-warning me-2 fs-6"></i>
+                        <small class="text-dark mb-0">Username & role only editable by administrators.</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Admin-Managed Fields Note -->
-            <div class="card settings-card">
-                <div class="card-body admin-note">
-                    <div class="d-flex">
-                        <i class="bi bi-tools text-warning me-3" style="font-size: 1.5rem;"></i>
-                        <div>
-                            <h6 class="fw-bold text-warning mb-2">Admin-Managed Fields</h6>
-                            <p class="small mb-2">The following fields can only be modified by administrators:</p>
-                            <ul class="small mb-0">
-                                <li><strong>Username</strong> - Your unique login identifier</li>
-                                <li><strong>User Role</strong> - Your system permissions and access level</li>
-                            </ul>
-                            <p class="small mt-2 mb-0">
-                                Contact your system administrator if you need changes to these fields.
-                            </p>
+              <!-- Session Timeout Settings -->
+            <div class="card settings-card mt-3">
+                <div class="card-header settings-header">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock me-2"></i>Session Timeout Settings
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="sessionForm" action="{{ route('session.timeout.update') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="session_timeout" class="form-label">Auto-logout after inactivity:</label>
+                            <select name="timeout" id="session_timeout" class="form-select">
+                                @php
+                                    // Get current timeout from session (which comes from database on login)
+                                    $currentTimeout = session('session_timeout', 600);
+                                @endphp
+                                
+                                <option value="300" {{ $currentTimeout == 300 ? 'selected' : '' }}>5 minutes</option>
+                                <option value="600" {{ $currentTimeout == 600 ? 'selected' : '' }}>10 minutes (default)</option>
+                                <option value="1800" {{ $currentTimeout == 1800 ? 'selected' : '' }}>30 minutes</option>
+                                <option value="3600" {{ $currentTimeout == 3600 ? 'selected' : '' }}>1 hour</option>
+                                <option value="7200" {{ $currentTimeout == 7200 ? 'selected' : '' }}>2 hours</option>
+                                <option value="14400" {{ $currentTimeout == 14400 ? 'selected' : '' }}>4 hours</option>
+                                <option value="28800" {{ $currentTimeout == 28800 ? 'selected' : '' }}>8 hours</option>
+                                <option value="0" {{ $currentTimeout == 0 ? 'selected' : '' }}>Never auto-logout</option>
+                            </select>
+                            
+                            <div class="form-text mt-2">
+                                <i class="bi bi-info-circle"></i>
+                                Current setting: 
+                                @if($currentTimeout == 0)
+                                    <span class="text-success fw-bold">Never auto-logout</span>
+                                @elseif($currentTimeout == 60)
+                                    <span class="fw-bold">1 minute</span>
+                                @else
+                                    <span class="fw-bold">{{ round($currentTimeout / 60) }} minutes</span>
+                                @endif
+                                <br>
+                            </div>
                         </div>
-                    </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-2"></i>Save Setting
+                            </button>
+                        </div>
+                    </form>       
                 </div>
             </div>
 
@@ -276,9 +309,7 @@
                             </button>
                         </form>
                     </div>
-
                     <hr>
-
                     <!-- Restore Form -->
                     <form action="{{ route('database.restore') }}" method="POST" enctype="multipart/form-data"
                         onsubmit="return confirm('WARNING. This will overwrite all current data. Continue?')">
@@ -293,8 +324,7 @@
                     </form>
                 </div>
             </div>
-            @endif
-
+            @endif   
         </div>
     </div>
     @endif

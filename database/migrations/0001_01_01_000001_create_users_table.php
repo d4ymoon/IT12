@@ -36,6 +36,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('password_changed')->default(false);
+            $table->integer('session_timeout')->default(600);
             $table->rememberToken();
             $table->timestamps();
         });

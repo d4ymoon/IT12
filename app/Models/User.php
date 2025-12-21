@@ -29,7 +29,8 @@ class User extends Authenticatable
         'disabled_by_user_id',
         'email',
         'password',
-        'password_changed'
+        'password_changed',
+        'session_timeout'
     ];
 
     /**
@@ -43,7 +44,11 @@ class User extends Authenticatable
     ];
 
     protected $appends = ['full_name']; 
-
+    
+     protected $attributes = [
+        'session_timeout' => 600, // Default 10 minutes
+    ];
+    
     /**
      * Get the attributes that should be cast.
      *
@@ -59,6 +64,7 @@ class User extends Authenticatable
             'date_disabled' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'session_timeout' => 'integer',
         ];
     }
 

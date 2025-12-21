@@ -18,17 +18,30 @@ class CheckSessionActivity
     {
         Log::info('=== CHECK SESSION MIDDLEWARE RUNNING ===');
     
-    $timeout = 10 * 60; // 10 minutes in seconds
-    $lastActivity = session('last_activity');
+        // Get timeout from session or use default (10 minutes)
+        $timeout = session('session_timeout', 10 * 60); // Default 10 minutes
+        
+        Log::info("Session timeout setting: {$timeout} seconds (" . ($timeout/60) . " minutes)");
     
-    if ($lastActivity && (time() - $lastActivity > $timeout)) {
-        Log::info('=== EXPIRING SESSION ===');
-        session()->flush();
-        return redirect('/login')->with('message', 'Session expired due to inactivity.');
-    }
-    
-    session(['last_activity' => time()]);
-    
-    return $next($request);
+        // If timeout is 0, disable session expiration
+        if ($timeout === 0) {
+            Log::info('=== SESSION TIMEOUT DISABLED BY USER ===');
+            session(['last_activity' => time()]);
+            return $next($request);
+        }
+        
+        $lastActivity = session('last_activity');
+        
+        if ($lastActivity && (time() - $lastActivity > $timeout)) {
+            Log::info('=== EXPIRING SESSION ===');
+            Log::info("Timeout: {$timeout}s, Last activity: {$lastActivity}, Current: " . time());
+            session()->flush();
+            return redirect('/login')->with('message', 'Session expired due to inactivity.');
+        }
+        
+        // Update last activity time
+        session(['last_activity' => time()]);
+        
+        return $next($request);
     }
 }
