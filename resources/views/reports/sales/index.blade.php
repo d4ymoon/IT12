@@ -3,9 +3,9 @@
 @section('title', 'ATIN - Sales Reports')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold" style="color: #06448a;">
-        <i class="bi bi-graph-up me-2"></i>Sales Reports
+<div class="d-flex justify-content-between align-items-center mb-4" style="padding-top: 16px;">
+    <h2 class="fw-bold">
+        <i class="bi bi-graph-up me-2 pt-3"></i>Sales Reports
     </h2>
 </div>
 
@@ -311,7 +311,7 @@
     
     <div class="col-md-4 mb-3">
         <div class="card report-card">
-            <div class="card-header bg-info text-white">
+            <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Top 10 Products by Revenue</h5>
             </div>
             <div class="card-body">
@@ -351,7 +351,7 @@
 
     <div class="col-md-4 mb-3">
         <div class="card report-card">
-            <div class="card-header bg-warning text-white">
+            <div class="card-header bg-success text-white">
                 <h5 class="mb-0">Sales by Category</h5>
             </div>
             <div class="card-body">
@@ -392,7 +392,7 @@
    <!-- Detailed Sales Table -->
     <div class="col-12 mb-4">
         <div class="card report-card">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">Detailed Sales Transactions</h5>
                     <small>Individual sales records for the selected period</small>

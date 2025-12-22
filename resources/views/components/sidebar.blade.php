@@ -82,7 +82,7 @@
 
             <!-- Inventory Management -->
             <li class="nav-item">
-                <a href="#collapseInventoryOps" class="nav-link collapsed pe-1" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps" title="Inventory Management">
+                <a href="#collapseInventoryOps" class="nav-link collapsed" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseInventoryOps" title="Inventory Management">
                     <i class="bi bi-box-seam me-3"></i>
                     <span class="pe-2">Inventory Management</span>
                     <i class="bi bi-chevron-down ms-auto chevron"></i>

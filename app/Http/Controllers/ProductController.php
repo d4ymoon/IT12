@@ -119,7 +119,7 @@ class ProductController extends Controller
                 }
                 
                 // Generate unique filename
-                 $originalName = pathinfo($request->file('image')->getClientOriginalName(), PATHINFO_FILENAME);
+                $originalName = pathinfo($request->file('image')->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $request->file('image')->getClientOriginalExtension();
                 $filename = time() . '_' . $originalName . '_' . uniqid() . '.' . $extension;
                 

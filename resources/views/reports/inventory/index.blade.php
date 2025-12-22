@@ -3,8 +3,8 @@
 @section('title', 'ATIN - Inventory Reports')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold" style="color: #06448a;">
+<div class="d-flex justify-content-between align-items-center mb-4" style="padding-top: 16px;">
+    <h2 class="fw-bold">
         <i class="bi bi-box-seam me-2"></i>Inventory Reports
     </h2>
 </div>
@@ -430,7 +430,7 @@
     <!-- Complete Stock Levels Table -->
     <div class="col-12 mb-4">
         <div class="card report-card">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Complete Stock Levels</h5>
                 <button type="button" class="btn btn-outline-light btn-sm" onclick="exportStockLevelsCSV()">
                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
