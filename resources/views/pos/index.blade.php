@@ -610,6 +610,10 @@
         async processPayment() {
             if (this.items.length === 0) return alert("No items in cart!");
 
+            if (!confirm("Are you sure you want to complete this sale?")) {
+                return; // User cancelled
+            }
+
             const method = document.querySelector('input[name="paymentMethod"]:checked').value;
             const tendered = parseFloat(document.getElementById('amountTendered').value) || this.total;
             const refNo = document.getElementById('referenceNo').value;

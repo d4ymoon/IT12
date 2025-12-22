@@ -312,7 +312,7 @@
                     <hr>
                     <!-- Restore Form -->
                     <form action="{{ route('database.restore') }}" method="POST" enctype="multipart/form-data"
-                        onsubmit="return confirm('WARNING. This will overwrite all current data. Continue?')">
+                    onsubmit="return confirmRestore()">
                         @csrf
                         <div class="mb-3">
                             <label for="backup_file" class="form-label">Restore from backup (.sql)</label>
@@ -321,6 +321,10 @@
                         <button type="submit" class="btn btn-danger w-100">
                             <i class="bi bi-upload me-2"></i>Restore Database
                         </button>
+                        <small class="text-danger mt-1 d-block">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                            WARNING: This will DELETE ALL current product images!
+                        </small>
                     </form>
                 </div>
             </div>
@@ -386,5 +390,15 @@
             }, 5000);
         });
     });
+
+    function confirmRestore() {
+        return confirm(
+            '⚠️ CRITICAL WARNING ⚠️\n\n' +
+            '1. This will overwrite ALL current database data\n' +
+            '2. ALL product images will be DELETED\n' +
+            '3. This action cannot be undone\n\n' +
+            'Are you absolutely sure you want to continue?'
+        );
+    }
 </script>
 @endpush

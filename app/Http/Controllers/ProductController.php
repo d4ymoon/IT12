@@ -119,7 +119,9 @@ class ProductController extends Controller
                 }
                 
                 // Generate unique filename
-                $filename = time() . '_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
+                 $originalName = pathinfo($request->file('image')->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $request->file('image')->getClientOriginalExtension();
+                $filename = time() . '_' . $originalName . '_' . uniqid() . '.' . $extension;
                 
                 // Move file to public directory
                 $request->file('image')->move($directory, $filename);
@@ -203,7 +205,9 @@ class ProductController extends Controller
                 }
                 
                 // Generate unique filename
-                $filename = time() . '_' . uniqid() . '.' . $request->file('image')->getClientOriginalExtension();
+                $originalName = pathinfo($request->file('image')->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $request->file('image')->getClientOriginalExtension();
+                $filename = time() . '_' . $originalName . '_' . uniqid() . '.' . $extension;
                 
                 // Move file to public directory
                 $request->file('image')->move($directory, $filename);
