@@ -161,8 +161,8 @@
                         <th>Sale ID</th>
                         <th>Date & Time</th>
                         <th>Cashier</th>
-                        <th>Items</th>
-                        <th>Total Amount</th>
+                        <th class="text-end">Items</th>
+                        <th class="text-end">Total Amount</th>
                         <th>Payment Method</th>
                         <th>Actions</th>
                     </tr>
@@ -173,8 +173,8 @@
                         <td><strong>#{{ $sale->id }}</strong></td>
                         <td>{{ $sale->sale_date->format('M d, Y h:i A') }}</td>
                         <td>{{ $sale->user->f_name ?? '' }} {{ $sale->user->l_name ?? 'N/A' }}</td>
-                        <td>{{ $sale->items->count() }} items</td>
-                        <td class="fw-bold text-success">₱{{ number_format($sale->items->sum(function($item) { return $item->quantity_sold * $item->unit_price; }), 2) }}</td>
+                        <td class="text-end">{{ $sale->items->count() }} items</td>
+                        <td class="fw-bold text-success text-end">₱{{ number_format($sale->items->sum(function($item) { return $item->quantity_sold * $item->unit_price; }), 2) }}</td>
                         <td>{{ $sale->payment->payment_method }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-sale" data-id="{{ $sale->id }}" title="View Details">

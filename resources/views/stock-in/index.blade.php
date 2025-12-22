@@ -134,10 +134,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Reference No</th>
-                        <th>Received By</th>
-                        <th>Items</th>
-                        <th>Total Quantity</th>
+                        <th class="text-end">Items</th>
+                        <th class="text-end">Total Quantity</th>
                         <th class="text-end">Total Cost</th>
+                        <th>Received By</th>
                         <th>Stock-In Date</th>
                         <th>Actions</th>
                     </tr>
@@ -147,10 +147,10 @@
                     <tr>
                         <td>{{ $stockIn->id }}</td>
                         <td>{{ $stockIn->reference_no ?? 'N/A' }}</td>
-                        <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
-                        <td>{{ $stockIn->items->count() }}</td>
-                        <td>{{ $stockIn->items->sum('quantity_received') }}</td>
+                        <td class="text-end">{{ $stockIn->items->count() }}</td>
+                        <td class="text-end">{{ $stockIn->items->sum('quantity_received') }}</td>
                         <td class="text-end">₱{{ number_format($stockIn->items->sum(function($item) { return $item->quantity_received * $item->actual_unit_cost; }), 2) }}</td>
+                        <td>{{ $stockIn->receivedBy ? $stockIn->receivedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $stockIn->stock_in_date->format('M d, Y h:i A') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-stock-in" data-id="{{ $stockIn->id }}" title="View Details">

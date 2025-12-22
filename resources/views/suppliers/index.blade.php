@@ -96,7 +96,7 @@
                         <th>Supplier Name</th>
                         <th>Contact No.</th>
                         <th>Address</th>
-                        <th>Products</th>
+                        <th class="text-end">Products</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -109,7 +109,7 @@
                         <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
                             {{ $supplier->address ?? 'N/A' }}
                         </td>
-                        <td>{{ $supplier->products_count ?? $supplier->products->count() }}</td>
+                        <td class="text-end">{{ $supplier->products_count ?? $supplier->products->count() }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-supplier" data-id="{{ $supplier->id }}" title="View Details">
                                 <i class="bi bi-eye"></i>

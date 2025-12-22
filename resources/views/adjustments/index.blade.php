@@ -179,10 +179,10 @@
                         <th>ID</th>
                         <th>Type</th>
                         <th>Reason</th>
-                        <th>Items</th>
-                        <th>Processed By</th>
-                        <th>Quantity Change</th>
+                        <th class="text-end">Items</th>
+                        <th class="text-end">Quantity Change</th>
                         <th class="text-end">Financial Impact</th>
+                        <th>Processed By</th>
                         <th>Adjustment Date</th>
                         <th>Actions</th>
                     </tr>
@@ -213,14 +213,14 @@
                                 {{ Str::limit($adjustment->reason_notes, 10) }}
                             </span>
                         </td>
-                        <td>{{ $adjustment->items->count() }}</td>
-                        <td>{{ $adjustment->processedBy ? $adjustment->processedBy->full_name : 'Unknown User' }}</td>
-                        <td class="{{ $totalQtyChange < 0 ? 'no-negative' : ($totalQtyChange > 0 ? 'no-positive' : '') }}">
+                        <td class="text-end">{{ $adjustment->items->count() }}</td>
+                        <td class="text-end {{ $totalQtyChange < 0 ? 'no-negative' : ($totalQtyChange > 0 ? 'no-positive' : '') }}">
                             {{ $totalQtyChange > 0 ? '+' : '' }}{{ $totalQtyChange }}
                         </td>
                         <td class="{{ $totalFinancialImpact < 0 ? 'no-negative' : ($totalFinancialImpact > 0 ? 'no-positive' : '') }} text-end">
                             ₱{{ number_format($totalFinancialImpact, 2) }}
                         </td>
+                        <td>{{ $adjustment->processedBy ? $adjustment->processedBy->full_name : 'Unknown User' }}</td>
                         <td>{{ $adjustment->adjustment_date->format('M d, Y h:i A') }}</td>
                         <td>
                             <button class="btn btn-sm btn-outline-info btn-action view-adjustment" data-id="{{ $adjustment->id }}" title="View Details">

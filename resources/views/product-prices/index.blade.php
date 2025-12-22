@@ -129,7 +129,7 @@
                         <th>Product Name</th>
                         <th class="text-end">Cost Price</th>
                         <th class="text-end">Retail Price</th>
-                        <th>Margin (%)</th>
+                        <th class="text-end">Margin (%)</th>
                         <th>Last Updated</th>
                         <th>Actions</th>
                     </tr>
@@ -169,7 +169,7 @@
                                 <span class="no-price">N/A</span>
                             @endif
                         </td>
-                        <td>
+                        <td class="text-end">
                             @if($product->latestProductPrice && $product->latestStockInItem && $product->latestStockInItem->actual_unit_cost > 0)
                                 @php
                                     $cost = $product->latestStockInItem->actual_unit_cost;

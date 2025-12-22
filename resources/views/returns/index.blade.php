@@ -157,7 +157,7 @@
                                 <i class="bi bi-arrow-{{ $direction == 'asc' ? 'up' : 'down' }} ms-1"></i>
                             @endif
                         </th>
-                        <th>Items Returned</th>
+                        <th class="text-end">Items Returned</th>
                         <th>Processed By</th>
                         <th>
                             Return Date
@@ -175,7 +175,7 @@
                         <td>{{ $return->sale_id }}</td>
                         <td>{{ $return->return_reason }}</td>
                         <td class="text-end">₱{{ number_format($return->total_refund_amount, 2) }}</td>
-                        <td>{{ $return->returnItems->count() }} item(s)</td>
+                        <td class="text-end">{{ $return->returnItems->count() }} item(s)</td>
                         <td>{{ $return->user->f_name ?? 'N/A' }}</td>
                         <td>{{ $return->created_at->format('M d, Y h:i A') }}</td>
                         <td>

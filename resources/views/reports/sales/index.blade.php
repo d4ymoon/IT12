@@ -54,7 +54,7 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-receipt text-primary me-2"></i>Total Transactions
                 </h6>
-                <h3 class="fw-bold text-primary mb-0 text-start">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</h3>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $salesData['summaryStats']->total_transactions ?? 0 }}</h3>
             </div>
         </div>
     </div>
@@ -62,9 +62,9 @@
         <div class="card report-card border-success h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-box-seam text-success me-2"></i>Items Sold
+                    <i class="bi bi-box-seam text-primary me-2"></i>Items Sold
                 </h6>
-                <h3 class="fw-bold text-success mb-0 text-start">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</h3>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $salesData['summaryStats']->total_items_sold ?? 0 }}</h3>
             </div>
         </div>
     </div>
@@ -72,9 +72,9 @@
         <div class="card report-card border-info h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <span class="text-info me-2 fs-5">₱</span>Gross Revenue
+                    <span class="text-success me-2 fs-5">₱</span>Gross Revenue
                 </h6>
-                <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</h3>
+                <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($salesData['summaryStats']->gross_revenue ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -103,9 +103,9 @@
         <div class="card report-card border-warning h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-calculator text-warning me-2"></i>Average Transaction
+                    <i class="bi bi-calculator text-success me-2"></i>Average Transaction
                 </h6>
-                <h3 class="fw-bold text-warning mb-0 text-end">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</h3>
+                <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($salesData['summaryStats']->avg_transaction_value ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -164,7 +164,7 @@
                                         Year
                                     @endif
                                 </th>
-                                <th style="width: 120px;" class="text-center">Transactions</th>
+                                <th style="width: 120px;" class="text-end">Transactions</th>
                                 <th class="text-end">Revenue</th>
                                 <th class="text-end">Average</th>
                             </tr>
@@ -183,7 +183,7 @@
                                         {{ $sale->period }} <!-- e.g., "2024" -->
                                     @endif
                                 </td>
-                                <td class="text-center">{{ $sale->transaction_count }}</td>
+                                <td class="text-end">{{ $sale->transaction_count }}</td>
                                 <td class="text-end">₱{{ number_format($sale->total_revenue, 0) }}</td>
                                 <td class="text-end">₱{{ $sale->transaction_count > 0 ? number_format($sale->total_revenue / $sale->transaction_count, 0) : 0 }}</td>
                             </tr>
@@ -227,10 +227,10 @@
                         <thead>
                             <tr>
                                 <th>Payment Method</th>
-                                <th class="text-center">Transactions</th>
+                                <th class="text-end">Transactions</th>
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-end">Average per Transaction</th>
-                                <th class="text-center">Percentage</th>
+                                <th class="text-end">Percentage</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -240,19 +240,19 @@
                             @foreach($salesData['paymentMethods'] as $payment)
                             <tr>
                                 <td>{{ $payment->payment_method }}</td>
-                                <td class="text-center">{{ $payment->transaction_count }}</td>
+                                <td class="text-end">{{ $payment->transaction_count }}</td>
                                 <td class="text-end">₱{{ number_format($payment->total_amount, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($payment->total_amount / $payment->transaction_count, 2) }}</td>
-                                <td class="text-center">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
+                                <td class="text-end">{{ $totalAmount > 0 ? number_format(($payment->total_amount / $totalAmount) * 100, 2) : 0 }}%</td>
                             </tr>
                             @endforeach
                             @if($totalAmount > 0)
                             <tr class="table-light">
                                 <td class="fw-bold">Total</td>
-                                <td class="text-center fw-bold">{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
+                                <td class="text-end fw-bold">{{ $salesData['paymentMethods']->sum('transaction_count') }}</td>
                                 <td class="text-end fw-bold">₱{{ number_format($totalAmount, 2) }}</td>
                                 <td class="text-end fw-bold">₱{{ number_format($totalAmount / $salesData['paymentMethods']->sum('transaction_count'), 2) }}</td>
-                                <td class="text-center fw-bold">100%</td>
+                                <td class="text-end fw-bold">100%</td>
                             </tr>
                             @endif
                         </tbody>
@@ -281,7 +281,7 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th class="text-center">Quantity Sold</th>
+                                <th class="text-end">Qty Sold</th>
                                 <th class="text-end">Revenue</th>
                                 <th class="text-end">Avg Price</th>
                             </tr>
@@ -290,7 +290,7 @@
                             @foreach($salesData['topProductsByQuantity'] as $product)
                             <tr>
                                 <td>{{ $product->name }}</td>
-                                <td class="text-center">{{ $product->total_quantity }}</td>
+                                <td class="text-end">{{ $product->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
                             </tr>
@@ -321,7 +321,7 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Qty Sold</th>
                                 <th class="text-end">Revenue</th>
                                 <th class="text-end">Avg Price</th>
                             </tr>
@@ -330,7 +330,7 @@
                             @foreach($salesData['topProductsByRevenue'] as $product)
                             <tr>
                                 <td>{{ $product->name }}</td>
-                                <td class="text-center">{{ $product->total_quantity }}</td>
+                                <td class="text-end">{{ $product->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
                             </tr>
@@ -362,8 +362,8 @@
                             <tr>
                                 <th>Category</th>
                                 <th class="text-end">Revenue</th>
-                                <th class="text-center">Quantity</th>
-                                <th class="text-center">Transactions</th>
+                                <th class="text-end">Qty Sold</th>
+                                <th class="text-end">Transactions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -371,8 +371,8 @@
                             <tr>
                                 <td>{{ $category->category_name }}</td>
                                 <td class="text-end">₱{{ number_format($category->total_revenue, 2) }}</td>
-                                <td class="text-center">{{ $category->total_quantity }}</td>
-                                <td class="text-center">{{ $category->transaction_count }}</td>
+                                <td class="text-end">{{ $category->total_quantity }}</td>
+                                <td class="text-end">{{ $category->transaction_count }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -414,7 +414,7 @@
                                 <th>Sale ID</th>
                                 <th>Date & Time</th>
                                 <th >Cashier</th>
-                                <th class="text-center">Items Sold</th>
+                                <th class="text-end">Items Sold</th>
                                 <th class="text-end">Total Amount</th>
                                 <th class="text-center">Payment Method</th>
                                 <th>Actions</th>
@@ -426,7 +426,7 @@
                                 <td><strong>#{{ $sale->id }}</strong></td>
                                 <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y h:i A') }}</td>
                                 <td>{{ $sale->f_name ?? 'N/A' }} {{ $sale->l_name ?? '' }}</td>
-                                <td class="text-center">{{ $sale->items_count }} items</td>
+                                <td class="text-end">{{ $sale->items_count }} items</td>
                                 <td class="text-end">₱{{ number_format($sale->total_amount, 2) }}</td>
                                 <td class="text-center">{{ $sale->payment_method ?? 'N/A' }}</td>
                                 <td>

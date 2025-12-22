@@ -45,7 +45,11 @@ class AuthController extends Controller
             if ($user->password_changed == false) {
                 session(['show_default_password_modal' => true]);
             }
+            $request->replace(['password' => '', 'password_confirmation' => '']);
 
+             $request->request->remove('password');
+        $request->request->remove('password_confirmation');
+        
             if ($user->role === 'Administrator') {
                 return redirect('/dashboard')
                     ->with('success', 'Welcome back, ' . $user->f_name . '!');

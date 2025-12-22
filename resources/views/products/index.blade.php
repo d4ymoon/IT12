@@ -15,6 +15,15 @@
     .out-of-stock {
         background-color: #f8d7da !important;
     }
+.btn-outline-warning {
+    color: #b45309;          /* darker amber */
+    border-color: #b45309;
+}
+
+.btn-outline-warning:hover {
+    background-color: #b45309;
+    color: #fff;
+}
 </style>
 @endpush
 @section('content')
@@ -164,7 +173,7 @@
                         <th>Product Name</th>
                         <th>Model</th>
                         <th>Category</th>
-                        <th >Stock</th>
+                        <th class="text-end">Stock</th>
                         <th>Supplier</th>
                         <th>Actions</th>
                     </tr>
@@ -186,7 +195,7 @@
                             {{ $product->model ?? 'N/A' }}
                         </td>                        
                         <td>{{ $product->category->name }}</td>
-                        <td>
+                        <td class="text-end">
                             <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
                                 {{ $product->quantity_in_stock }}
                             </span>

@@ -142,7 +142,7 @@
         <h4 class="mb-3">Checkout</h4>
         
         <!-- Product Search -->
-        <div class="mb-3">
+        <div class="mb-5">
             <input type="text" 
                 class="form-control search-input" 
                 id="productSearch" 

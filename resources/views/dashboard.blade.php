@@ -92,7 +92,7 @@
                         <span class="stat-label">Total Transactions</span>
                         <i class="bi bi-receipt" style="font-size: 1.2rem; opacity: 0.8;"></i>
                     </div>
-                    <div class="stat-value text-start" style="font-size: 1.6rem; font-weight: bold;">
+                    <div class="stat-value text-end" style="font-size: 1.6rem; font-weight: bold;">
                         {{ number_format($totalTransactions, 0) }}
                     </div>
                 </div>
@@ -170,27 +170,27 @@
                 @endphp
                 
                 @if($filter === 'today')
-                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'hourly' ? 'active' : '' }}" 
+                <button type="button" class="btn btn-outline-light {{ ($currentChartType ?? '') === 'hourly' ? 'active' : '' }}" 
                         data-type="hourly">By Hour</button>
                 @endif
                 
                 @if(!in_array($filter, ['today']))
-                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'daily' ? 'active' : '' }}" 
+                <button type="button" class="btn btn-outline-light {{ ($currentChartType ?? '') === 'daily' ? 'active' : '' }}" 
                         data-type="daily">By Day</button>
                 @endif
                 
                 @if(!in_array($filter, ['today', 'this_week']))
-                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'weekly' ? 'active' : '' }}" 
+                <button type="button" class="btn btn-outline-light {{ ($currentChartType ?? '') === 'weekly' ? 'active' : '' }}" 
                         data-type="weekly">By Week</button>
                 @endif
                 
                 @if(!in_array($filter, ['today', 'this_week', 'this_month', 'last_month']))
-                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'monthly' ? 'active' : '' }}" 
+                <button type="button" class="btn btn-outline-light {{ ($currentChartType ?? '') === 'monthly' ? 'active' : '' }}" 
                         data-type="monthly">By Month</button>
                 @endif
                 
                 @if(in_array($filter, ['all_time']))
-                <button type="button" class="btn btn-outline-primary {{ ($currentChartType ?? '') === 'yearly' ? 'active' : '' }}" 
+                <button type="button" class="btn btn-outline-light {{ ($currentChartType ?? '') === 'yearly' ? 'active' : '' }}" 
                         data-type="yearly">By Year</button>
                 @endif
             </div>
@@ -286,8 +286,8 @@
                                 <tr>
                                     <th>Product</th>
                                     <th>Category</th>
-                                    <th>Current Stock</th>
-                                    <th>Reorder Level</th>
+                                    <th class="text-end">Current Stock</th>
+                                    <th class="text-end">Reorder Level</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -296,8 +296,8 @@
                                     <tr class="{{ $product->current_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
                                         <td>{{ $product->name }}</td>
                                         <td>{{ $product->category_name }}</td>
-                                        <td>{{ $product->current_stock }}</td>
-                                        <td>{{ $product->reorder_level }}</td>
+                                        <td class="text-end">{{ $product->current_stock }}</td>
+                                        <td class="text-end">{{ $product->reorder_level }}</td>
                                         <td>
                                             @if($product->current_stock == 0)
                                                 <span class="fw-bold text-danger">Out of Stock</span>
@@ -391,31 +391,31 @@
                         </a>
                     </div>
                     <div class="col-md-2 col-4 mb-3">
-                        <a href="{{ route('products.create') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                        <a href="{{ route('products.create') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
                             <i class="bi bi-plus-circle fs-4 mb-2"></i>
                             <span>Add Product</span>
                         </a>
                     </div>
                     <div class="col-md-2 col-4 mb-3">
-                        <a href="{{ route('stock-ins.create') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                        <a href="{{ route('stock-ins.create') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
                             <i class="bi bi-box-arrow-in-down fs-4 mb-2"></i>
                             <span>Stock In</span>
                         </a>
                     </div>
                     <div class="col-md-2 col-4 mb-3">
-                        <a href="{{ route('stock-adjustments.create') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                        <a href="{{ route('stock-adjustments.create') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
                             <i class="bi bi-sliders fs-4 mb-2"></i>
                             <span>Adjust Stock</span>
                         </a>
                     </div>
                     <div class="col-md-2 col-4 mb-3">
-                        <a href="{{ route('reports.sales.index') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                        <a href="{{ route('reports.sales.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
                             <i class="bi bi-graph-up fs-4 mb-2"></i>
                             <span>Sales Reports</span>
                         </a>
                     </div>
                     <div class="col-md-2 col-4 mb-3">
-                        <a href="{{ route('reports.inventory.index') }}" class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                        <a href="{{ route('reports.inventory.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
                             <i class="bi bi-box-seam fs-4 mb-2"></i>
                             <span>Inventory Reports</span>
                         </a>

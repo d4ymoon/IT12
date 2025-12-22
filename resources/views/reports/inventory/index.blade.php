@@ -17,7 +17,7 @@
                 <h6 class="card-title text-muted mb-1">
                     <i class="bi bi-box text-primary me-2"></i>Total Products
                 </h6>
-                <h3 class="fw-bold text-primary mb-0 text-start">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $inventoryData['summaryStats']->total_products ?? 0 }}</h3>
             </div>
         </div>
     </div>
@@ -25,9 +25,30 @@
         <div class="card report-card border-success h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-layers text-success me-2"></i>Total Quantity
+                    <i class="bi bi-layers text-primary me-2"></i>Total Quantity
                 </h6>
-                <h3 class="fw-bold text-success mb-0 text-start">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $inventoryData['summaryStats']->total_quantity ?? 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-primary h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <span class="text-success me-2 fs-5">₱</span>Inventory Value
+                </h6>
+                <h3 class="fw-bold text-success mb-0 text-end">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card report-card border-danger h-100">
+            <div class="card-body">
+                <h6 class="card-title text-muted mb-1">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>Low Stock Items
+                </h6>
+                <h3 class="fw-bold text-danger mb-0 text-end">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
+                <small class="text-muted text-end d-block">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
             </div>
         </div>
     </div>
@@ -35,31 +56,10 @@
         <div class="card report-card border-info h-100">
             <div class="card-body">
                 <h6 class="card-title text-muted mb-1">
-                    <span class="text-info me-2 fs-5">₱</span>Inventory Value
+                    <i class="bi bi-repeat text-primary me-2"></i>Turnover Rate
                 </h6>
-                <h3 class="fw-bold text-info mb-0 text-end">₱{{ number_format($inventoryData['summaryStats']->total_inventory_value ?? 0, 2) }}</h3>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card report-card border-warning h-100">
-            <div class="card-body">
-                <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Low Stock Items
-                </h6>
-                <h3 class="fw-bold text-warning mb-0 text-start">{{ $inventoryData['summaryStats']->low_stock_count ?? 0 }}</h3>
-                <small class="text-muted text-start d-block">{{ $inventoryData['summaryStats']->out_of_stock_count ?? 0 }} out of stock</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="card report-card border-info h-100">
-            <div class="card-body">
-                <h6 class="card-title text-muted mb-1">
-                    <i class="bi bi-repeat text-info me-2"></i>Turnover Rate
-                </h6>
-                <h3 class="fw-bold text-info mb-0 text-start">{{ $inventoryData['inventoryTurnover']['turnover_rate'] ?? 0 }}x</h3>
-                <small class="text-muted text-start d-block">{{ $inventoryData['inventoryTurnover']['period'] ?? '' }}</small>
+                <h3 class="fw-bold text-primary mb-0 text-end">{{ $inventoryData['inventoryTurnover']['turnover_rate'] ?? 0 }}x</h3>
+                <small class="text-muted text-end d-block">{{ $inventoryData['inventoryTurnover']['period'] ?? '' }}</small>
             </div>
         </div>
     </div>
@@ -68,11 +68,11 @@
 <div class="row">
     <div class="col-12 mb-3">
         <div class="card report-card">
-            <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0">Low Stock Alerts</h5>
                 </div>
-                <button type="button" class="btn btn-outline-light btn-sm" onclick="exportLowStockCSV()">
+                <button type="button" class="btn btn-outline-dark btn-sm" onclick="exportLowStockCSV()">
                     <i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV
                 </button>
             </div>
@@ -84,8 +84,8 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Category</th>
-                                <th>Current Stock</th>
-                                <th>Reorder Level</th>
+                                <th class="text-end">Current Stock</th>
+                                <th class="text-end">Reorder Level</th>
                                 <th class="text-end">Unit Cost</th>
                                 <th>Status</th>
                             </tr>
@@ -95,8 +95,8 @@
                             <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->category_name }}</td>
-                                <td>{{ $product->quantity_in_stock }}</td>
-                                <td>{{ $product->reorder_level }}</td>
+                                <td class="text-end">{{ $product->quantity_in_stock }}</td>
+                                <td class="text-end">{{ $product->reorder_level }}</td>
                                 <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>
                                 <td>
                                     @if($product->quantity_in_stock == 0)
@@ -147,7 +147,7 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Date</th>
-                                <th>Qty Received</th>
+                                <th class="text-end">Qty Received</th>
                                 <th class="text-end">Unit Cost</th>
                                 <th class="text-end">Total Cost</th>
                             </tr>
@@ -157,7 +157,7 @@
                             <tr>
                                 <td>{{ $movement->name }}</td>
                                 <td>{{ \Carbon\Carbon::parse($movement->stock_in_date)->format('M d, Y') }}</td>
-                                <td>{{ $movement->quantity_received }}</td>
+                                <td class="text-end">{{ $movement->quantity_received }}</td>
                                 <td class="text-end">₱{{ number_format($movement->actual_unit_cost, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($movement->total_cost, 2) }}</td>
                             </tr>
@@ -191,8 +191,8 @@
                         <thead>
                             <tr>
                                 <th>Category</th>
-                                <th>Products</th>
-                                <th>Total Quantity</th>
+                                <th class="text-end">Products</th>
+                                <th class="text-end">Total Quantity</th>
                                 <th class="text-end">Total Value</th>
                             </tr>
                         </thead>
@@ -200,8 +200,8 @@
                             @foreach($inventoryData['valuationReport'] as $valuation)
                             <tr>
                                 <td>{{ $valuation->category_name }}</td>
-                                <td>{{ $valuation->product_count }}</td>
-                                <td>{{ $valuation->total_quantity }}</td>
+                                <td class="text-end">{{ $valuation->product_count }}</td>
+                                <td class="text-end">{{ $valuation->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($valuation->total_value, 2) }}</td>
                             </tr>
                             @endforeach
@@ -240,7 +240,7 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Product</th>
-                                <th>Change</th>
+                                <th class="text-end">Change</th>
                                 <th>Type</th>
                                 <th>Processed By</th>
                             </tr>
@@ -250,7 +250,7 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($adj->adjustment_date)->format('M d, Y') }}</td>
                                 <td>{{ $adj->product_name }}</td>
-                                <td>
+                                <td class="text-end">
                                     @if($adj->quantity_change > 0)
                                         <span class="text-success fw-bold">+{{ $adj->quantity_change }}</span>
                                     @else
@@ -291,7 +291,7 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Product</th>
-                                <th>Qty Returned</th>
+                                <th class="text-end">Qty Returned</th>
                                 <th>Stock Impact</th>
                                 <th>Reason</th>
                             </tr>
@@ -301,12 +301,12 @@
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($ret->created_at)->format('M d, Y') }}</td>
                                 <td>{{ $ret->product_name }}</td>
-                                <td>{{ $ret->quantity_returned }}</td>
+                                <td class="text-end">{{ $ret->quantity_returned }}</td>
                                 <td>
                                     @if($ret->inventory_adjusted)
-                                        <span class="badge bg-success">Added Back</span>
+                                        <span class="text-success">Added Back</span>
                                     @else
-                                        <span class="badge bg-danger">Not Added (Loss)</span>
+                                        <span class="text-danger">Not Added (Loss)</span>
                                     @endif
                                 </td>
                                 <td>{{ $ret->return_reason }}</td>
@@ -342,7 +342,7 @@
                             <tr>
                                 <th>Product</th>
                                 <th>SKU</th>
-                                <th>Qty Sold</th>
+                                <th class="text-end">Qty Sold</th>
                                 <th class="text-end">Revenue</th>
                                 <th class="text-end">Avg Price</th>
                             </tr>
@@ -352,7 +352,7 @@
                             <tr>
                                 <td>{{ $product->name }}</td>
                                 <td><small class="text-muted">{{ $product->sku }}</small></td>
-                                <td>{{ $product->total_quantity_sold }}</td>
+                                <td class="text-end">{{ $product->total_quantity_sold }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->avg_selling_price, 2) }}</td>
                             </tr>
@@ -387,7 +387,7 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Category</th>
-                                <th>Current Stock</th>
+                                <th class="text-end">Current Stock</th>
                                 <th class="text-end">Stock Value</th>
                                 <th>Last Sale</th>
                             </tr>
@@ -397,7 +397,7 @@
                             <tr class="dead-stock">
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->category_name }}</td>
-                                <td>{{ $product->quantity_in_stock }}</td>
+                                <td class="text-end">{{ $product->quantity_in_stock }}</td>
                                 <td class="text-end">₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
                                     @if($product->last_sale_date)
@@ -444,8 +444,8 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Category</th>
-                                <th>Current Stock</th>
-                                <th>Reorder Level</th>
+                                <th class="text-end">Current Stock</th>
+                                <th class="text-end">Reorder Level</th>
                                 <th class="text-end">Unit Cost</th>
                                 <th class="text-end">Stock Value</th>
                                 <th>Status</th>
@@ -456,8 +456,8 @@
                             <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : ($product->quantity_in_stock <= $product->reorder_level ? 'low-stock' : '') }}">
                                 <td>{{ $product->name }}</td>
                                 <td>{{ $product->category_name }}</td>
-                                <td>{{ $product->quantity_in_stock }}</td>
-                                <td>{{ $product->reorder_level }}</td>
+                                <td class="text-end">{{ $product->quantity_in_stock }}</td>
+                                <td class="text-end">{{ $product->reorder_level }}</td>
                                 <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
@@ -514,6 +514,19 @@
     }
     .out-of-stock {
         background-color: rgba(220, 53, 69, 0.1);
+    }
+       .btn-outline-warning {
+        color: #b45309 !important;
+        border-color: #b45309 !important;
+    }
+
+    .btn-outline-warning:hover {
+        background-color: #b45309 !important;
+        color: #fff !important;
+    }
+
+    .text-warning {
+        color: #b45309 !important;
     }
 </style>
 @endpush

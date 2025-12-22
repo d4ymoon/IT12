@@ -96,7 +96,7 @@
                         <span class="stat-label text-muted">Today's Sales</span>
                         <i class="bi bi-cash-stack text-muted"></i>
                     </div>
-                    <div class="stat-value text-end     fw-bold text-success">
+                    <div class="stat-value text-end fw-bold text-success">
                         ₱{{ number_format($todaySummary, 2) }}
                     </div>
                 </div>
@@ -111,7 +111,7 @@
                         <span class="stat-label text-muted">Transactions</span>
                         <i class="bi bi-receipt text-muted"></i>
                     </div>
-                    <div class="stat-value fw-bold text-dark">
+                    <div class="stat-value text-end fw-bold text-dark">
                         {{ $totalSalesToday }}
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                         <span class="stat-label text-muted">Items Sold</span>
                         <i class="bi bi-box-seam text-muted"></i>
                     </div>
-                    <div class="stat-value fw-bold text-dark">
+                    <div class="stat-value text-end fw-bold text-dark">
                         {{ $totalItemsToday }}
                     </div>
                 </div>
@@ -177,7 +177,7 @@
                             <tr>
                                 <th>Sale ID</th>
                                 <th>Time</th>
-                                <th>Items</th>
+                                <th class="text-end">Items</th>
                                 <th class="text-end">Total Amount</th>
                                 <th>Payment</th>
                                 <th>Actions</th>
@@ -203,7 +203,7 @@
                                         </div>
                                     </td>
                                     <td>{{ $sale->sale_date->format('h:i A') }}</td>
-                                    <td>{{ $itemCount }} {{ $itemCount == 1 ? 'item' : 'items' }}</td>
+                                    <td class="text-end">{{ $itemCount }} {{ $itemCount == 1 ? 'item' : 'items' }}</td>
                                     <td class="fw-bold text-success text-end">
                                         ₱{{ number_format($total, 2) }}
                                     </td>
