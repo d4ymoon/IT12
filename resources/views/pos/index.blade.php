@@ -132,6 +132,106 @@
         flex: 1;
     }
 
+    /* Add to your existing styles */
+.select2-container .select2-selection--single {
+    height: 60px !important; /* Match your search input height */
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 58px !important;
+    font-size: 18px !important; /* Match your search input font size */
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 58px !important;
+}
+
+.select2-container--default .select2-selection--single {
+    border: 1px solid #dee2e6 !important;
+    border-radius: 0.375rem !important;
+}
+
+.select2-results__option {
+    padding: 10px !important;
+}
+
+.select2-search__field {
+    font-size: 18px !important; /* Match search font size */
+}
+
+/* Highlight low/out of stock products */
+.option-out-of-stock {
+    background-color: #ffe6e6 !important;
+    color: #dc3545 !important;
+}
+
+.option-low-stock {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.option-no-price {
+    background-color: #f8f9fa !important;
+    color: #6c757d !important;
+    font-style: italic;
+}
+
+/* Add to your existing styles */
+.select2-product-option {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.select2-product-option:last-child {
+    border-bottom: none;
+}
+
+.select2-product-option .text-muted {
+    font-size: 12px;
+}
+
+.select2-product-option .badge {
+    font-size: 11px;
+    padding: 3px 6px;
+}
+
+/* Stock badge colors */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Fix Select2 dropdown width */
+.select2-container--open .select2-dropdown {
+    min-width: 400px !important;
+    max-width: 600px !important;
+}
+
+/* Make Select2 results scrollable */
+.select2-results {
+    max-height: 300px !important;
+    overflow-y: auto !important;
+}
+
+/* Light gray background with dark text - most readable */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #f8f9fa !important;  /* Light gray */
+    color: #212529 !important;             /* Dark text */
+    border-left: 4px solid #007bff !important; /* Blue accent border */
+}
+
+.select2-container--default .select2-results__option--highlighted {
+    background-color: #e9ecef !important;  /* Slightly darker gray for hover */
+    color: #212529 !important;
+}
 </style>
 @endpush
 
@@ -143,11 +243,9 @@
         
         <!-- Product Search -->
         <div class="mb-5">
-            <input type="text" 
-                class="form-control search-input" 
-                id="productSearch" 
-                placeholder="Scan barcode, enter SKU, or type Model..."
-                autofocus>
+            <select class="form-control search-input" id="productSearch" autofocus>
+                <!-- Options will be loaded dynamically -->
+            </select>
             <div id="searchError" class="text-danger mt-2" style="display: none;"></div>
         </div>
 
@@ -190,11 +288,22 @@
         <div class="summary-card mt-3">
             <div class="summary-row">
                 <span>Customer Name:</span>
-                <input type="text" id="customerName" class="form-control form-control-sm" placeholder="Optional">
+                <input type="text" 
+                    id="customerName" 
+                    class="form-control form-control-sm" 
+                    placeholder="Optional"
+                    pattern="[A-Za-z\s]+"
+                    maxlength="50"
+                    title="Please enter letters only (no numbers or special characters)">
             </div>
             <div class="summary-row mt-2">
                 <span>Customer Contact:</span>
-                <input type="text" id="customerContact" class="form-control form-control-sm" placeholder="Optional">
+                <input type="tel" 
+                    id="customerContact" 
+                    class="form-control form-control-sm" 
+                    placeholder="Optional"
+                    maxlength="11"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </div>
         </div>
     
@@ -308,7 +417,6 @@
 @push('scripts')
 <script>
     class POSSystem {
-
         constructor() {
             this.items = JSON.parse(localStorage.getItem('posItems')) || [];
             this.total = 0;
@@ -321,6 +429,7 @@
         init() {
             this.setupEventListeners();
             this.startClock();
+            this.initSelect2();
         }
 
         startClock() {
@@ -334,134 +443,178 @@
             }, 1000);
         }
 
-        setupEventListeners() {
-            document.getElementById('productSearch').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') this.searchAndAddProduct();
-            });
-
-            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-                radio.addEventListener('change', (e) => this.handlePaymentMethodChange(e.target.value));
-            });
-
-            document.getElementById('amountTendered').addEventListener('input', () => {
-                this.calculateChange();
-                this.updateCompleteButton();
-            });
-
-            document.getElementById('exactBtn').addEventListener('click', () => {
-                this.setExactAmount();
-            });
-
-
-            document.getElementById('referenceNo').addEventListener('input', () => {
-                this.updateCompleteButton();
-            });
-
-            document.getElementById('completeSale').addEventListener('click', () => this.processPayment());
-
-            document.getElementById('cancelSale').addEventListener('click', () => this.cancelSale());
-        }
-
-        cancelSale() {
-            if (!this.items.length) return; // nothing to cancel
-
-            if (!confirm("Are you sure you want to cancel this sale? All items will be removed.")) return;
-
-            this.resetCart();
-        }
-
-        setExactAmount() {
-            const amountTenderedInput = document.getElementById('amountTendered');
-            amountTenderedInput.value = this.total.toFixed(2);
-            this.calculateChange();
-            this.updateCompleteButton();
-        }
-
-        async searchAndAddProduct() {
-            const searchInput = document.getElementById('productSearch');
-            const searchTerm = searchInput.value.trim();
-            const errorDiv = document.getElementById('searchError');
-
-            if (!searchTerm) return;
-
-            errorDiv.style.display = 'none';
-            searchInput.disabled = true;
-
-            try {
-                const response = await fetch('/pos/search-product', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        initSelect2() {
+            const self = this; // Store reference to 'this'
+            
+            $('#productSearch').select2({
+                placeholder: "Enter Barcode, SKU, Model...",
+                allowClear: true,
+                minimumInputLength: 1,
+                ajax: {
+                    url: '/pos/search-product',
+                    type: 'POST',
+                    dataType: 'json',
+                    delay: 300,
+                    data: function (params) {
+                        return {
+                            search_term: params.term,
+                            _token: '{{ csrf_token() }}'
+                        };
                     },
-                    body: JSON.stringify({ search_term: searchTerm })
-                });
-
-                const text = await response.text(); 
-                console.log(text);                   
-                const data = JSON.parse(text);   
-                
-                if (!data.success) {
-                    errorDiv.textContent = data.message;
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                // Add product to local cart (memory)
-                const product = data.products[0];
-                if (!product) {
-                    errorDiv.textContent = 'Product not found';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                // Check if product has a price
-                if (!product.latest_product_price) {
-                    errorDiv.textContent = 'Product has no price set';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                // Check if product is out of stock
-                if (product.quantity_in_stock <= 0) {
-                    errorDiv.textContent = 'Product out of stock';
-                    errorDiv.style.display = 'block';
-                    return;
-                }
-
-                // Add product to local cart (memory)
-                const existingIndex = this.items.findIndex(item => item.product.id === product.id);
-                if (existingIndex !== -1) {
-                    // Check if adding more would exceed stock
-                    const currentQty = this.items[existingIndex].quantity_sold;
-                    if (currentQty + 1 > product.quantity_in_stock) {
-                        errorDiv.textContent = `Cannot exceed available stock (${product.quantity_in_stock} remaining)`;
-                        errorDiv.style.display = 'block';
-                        return;
-                    }
-                    this.items[existingIndex].quantity_sold++;
-                } else {
-                    this.items.push({
-                        product: product,
-                        quantity_sold: 1,
-                        unit_price: parseFloat(product.latest_product_price.retail_price || 0)
-                    });
-                }
-
-                this.renderItems();
-                this.updateTotal();
-
-            } catch (err) {
-                errorDiv.textContent = err.message;
-                errorDiv.style.display = 'block';
-            } finally {
-                searchInput.value = '';
-                searchInput.focus();
-                searchInput.disabled = false;
-            }
+                    processResults: function (data) {
+                        if (!data.success) {
+                            console.error('Search error:', data.message);
+                            return { results: [] };
+                        }
+                        
+                        // Format results for Select2
+                        const results = data.products.map(product => ({
+                            id: product.id,
+                            text: product.text,
+                            name: product.name,
+                            model: product.model,
+                            sku: product.sku,
+                            barcode: product.barcode,
+                            stock: product.stock,
+                            price: product.price,
+                            has_price: product.has_price,
+                            stock_status: product.stock_status
+                        }));
+                        
+                        return {
+                            results: results,
+                            pagination: {
+                                more: false
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                templateResult: this.formatProductOption.bind(this),
+                templateSelection: this.formatProductSelection.bind(this)
+            }).on('select2:select', (e) => {
+                this.handleProductSelect(e.params.data);
+            }).on('select2:open', () => {
+                // Focus the search field inside Select2
+                setTimeout(() => {
+                    $('.select2-search__field').focus();
+                }, 100);
+            });
         }
 
-       renderItems() {
+        formatProductOption(product) {
+            if (!product.id) {
+                return product.text;
+            }
+            
+            // Determine stock badge class
+            let stockBadgeClass = '';
+            if (product.stock_status === 'out_of_stock') {
+                stockBadgeClass = 'badge bg-danger';
+            } else if (product.stock_status === 'low_stock') {
+                stockBadgeClass = 'badge bg-warning';
+            } else {
+                stockBadgeClass = 'badge bg-success';
+            }
+            
+            return $(`
+                <div class="select2-product-option">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>${product.name}</strong>
+                             <div class="text-muted small">
+                                SKU: ${product.sku}
+                                ${product.model ? ` | Model: ${product.model}` : ''}
+                                ${product.barcode ? ` | Barcode: ${product.barcode}` : ''}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div>Stock: <span class="${stockBadgeClass}">${product.stock}</span></div>
+                            <div>${product.has_price ? `₱${parseFloat(product.price).toFixed(2)}` : '<span class="text-danger">No Price</span>'}</div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        formatProductSelection(product) {
+            if (!product.id) {
+                return product.text;
+            }
+            
+            // Show a shorter version in the selection box
+            let text = `${product.name} [${product.sku}]`;
+            if (product.model) {
+                text += ` (${product.model})`;
+            }
+            
+            if (!product.has_price) {
+                text += ' - No Price';
+            }
+            
+            return text;
+        }
+
+        handleProductSelect(productData) {
+            const errorDiv = document.getElementById('searchError');
+            errorDiv.style.display = 'none';
+            
+            // Check if product has a price
+            if (!productData.has_price) {
+                errorDiv.textContent = 'Product has no price set. Please add a price in Product Management.';
+                errorDiv.style.display = 'block';
+                $('#productSearch').val(null).trigger('change');
+                return;
+            }
+
+            // Check if product is out of stock
+            if (productData.stock <= 0) {
+                errorDiv.textContent = 'Product out of stock';
+                errorDiv.style.display = 'block';
+                $('#productSearch').val(null).trigger('change');
+                return;
+            }
+
+            // Add product to cart
+            this.addProductToCart({
+                id: productData.id,
+                name: productData.name,
+                model: productData.model,
+                sku: productData.sku,
+                manufacturer_barcode: productData.barcode,
+                quantity_in_stock: productData.stock,
+                latest_product_price: {
+                    retail_price: productData.price
+                }
+            });
+
+            // Clear the selection
+            $('#productSearch').val(null).trigger('change');
+        }
+
+        addProductToCart(product) {
+            const existingIndex = this.items.findIndex(item => item.product.id === product.id);
+            if (existingIndex !== -1) {
+                // Check if adding more would exceed stock
+                const currentQty = this.items[existingIndex].quantity_sold;
+                if (currentQty + 1 > product.quantity_in_stock) {
+                    alert(`Cannot exceed available stock (${product.quantity_in_stock} remaining)`);
+                    return;
+                }
+                this.items[existingIndex].quantity_sold++;
+            } else {
+                this.items.push({
+                    product: product,
+                    quantity_sold: 1,
+                    unit_price: parseFloat(product.latest_product_price.retail_price || 0)
+                });
+            }
+
+            this.renderItems();
+            this.updateTotal();
+        }
+
+        renderItems() {
             const itemsList = document.getElementById('itemsList');
             let html = '';
             if (this.items.length === 0) {
@@ -469,10 +622,18 @@
             } else {
                 html += this.items.map((item, index) => `
                     <div class="item-row" style="display:flex; align-items:center; padding:5px 0; border-bottom:1px solid #eee;">
-                        <div style="flex:2">
-                            <strong>${item.product.name}</strong><br>
-                            <small class="text-muted">Model: ${item.product.model || 'N/A'}</small><br>
-                            <small class="text-muted">Stock: ${item.product.quantity_in_stock}</small>
+                        <div style="flex:2; min-width: 0;">
+                            <div style="font-weight: bold; word-break: break-word; margin-bottom: 4px;">
+                                ${item.product.name}
+                            </div>
+                            <div style="font-size: 13px; color: #6c757d; margin-bottom: 2px;">
+                                <span style="font-weight: 500;">SKU:</span> ${item.product.sku || 'N/A'}
+                                ${item.product.model ? `<br><span style="font-weight: 500;">Model:</span> <span style="word-break: break-word;">${item.product.model}</span>` : ''}
+                            </div>
+                            <div style="font-size: 12px; color: #6c757d;">
+                                <span style="font-weight: 500;">Stock:</span> ${item.product.quantity_in_stock}
+                                ${item.product.manufacturer_barcode ? `<br><span style="font-weight: 500;">Barcode:</span> ${item.product.manufacturer_barcode}` : ''}
+                            </div>
                         </div>
                         <div style="flex:1; text-align:center">
                             <input type="number" class="qty-input" min="1" step="1" value="${item.quantity_sold}" onchange="pos.setQuantity(${index}, this.value)">
@@ -487,14 +648,11 @@
             }
 
             itemsList.innerHTML = html;
-
-            // Persist to localStorage
             localStorage.setItem('posItems', JSON.stringify(this.items));
         }
 
         updateTotal() {
             this.total = this.items.reduce((sum, item) => sum + item.unit_price * item.quantity_sold, 0);
-
             const subtotal = this.total / 1.12; 
             const vat = this.total - subtotal;  
 
@@ -508,15 +666,11 @@
 
         restorePaymentMethod() {
             const savedMethod = localStorage.getItem('posPaymentMethod') || 'Cash';
-            
-            // Find and check the radio button
             const radioButton = document.querySelector(`input[name="paymentMethod"][value="${savedMethod}"]`);
             if (radioButton) {
                 radioButton.checked = true;
-                // Trigger the change event to update UI
                 this.handlePaymentMethodChange(savedMethod);
             } else {
-                // Default to Cash if saved method doesn't exist
                 document.querySelector('input[name="paymentMethod"][value="Cash"]').checked = true;
                 this.handlePaymentMethodChange('Cash');
             }
@@ -541,25 +695,39 @@
             this.updateTotal();
         }
 
-        updateQuantity(index, newQty) {
-            const maxStock = this.items[index].product.quantity_in_stock;
-            if (newQty < 1) return this.removeItem(index);
-
-            if (newQty > maxStock) {
-                alert(`Cannot sell more than ${maxStock} in stock`);
-                this.items[index].quantity_sold = maxStock;
-            } else {
-                this.items[index].quantity_sold = newQty;
-            }
-
-            this.renderItems();
-            this.updateTotal();
-        }
-
         removeItem(index) {
             this.items.splice(index, 1);
             this.renderItems();
             this.updateTotal();
+        }
+
+        setupEventListeners() {
+            // Payment method change
+            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+                radio.addEventListener('change', (e) => this.handlePaymentMethodChange(e.target.value));
+            });
+
+            // Amount tendered input
+            document.getElementById('amountTendered').addEventListener('input', () => {
+                this.calculateChange();
+                this.updateCompleteButton();
+            });
+
+            // Exact amount button
+            document.getElementById('exactBtn').addEventListener('click', () => {
+                this.setExactAmount();
+            });
+
+            // Reference number input
+            document.getElementById('referenceNo').addEventListener('input', () => {
+                this.updateCompleteButton();
+            });
+
+            // Complete sale button
+            document.getElementById('completeSale').addEventListener('click', () => this.processPayment());
+
+            // Cancel sale button
+            document.getElementById('cancelSale').addEventListener('click', () => this.cancelSale());
         }
 
         handlePaymentMethodChange(method) {
@@ -567,6 +735,17 @@
             document.getElementById('digitalFields').style.display = method === 'Cash' ? 'none' : 'block';
             document.getElementById('amountTendered').value = '';
             document.getElementById('referenceNo').value = '';
+            
+            // Save payment method to localStorage
+            localStorage.setItem('posPaymentMethod', method);
+            
+            this.updateCompleteButton();
+        }
+
+        setExactAmount() {
+            const amountTenderedInput = document.getElementById('amountTendered');
+            amountTenderedInput.value = this.total.toFixed(2);
+            this.calculateChange();
             this.updateCompleteButton();
         }
 
@@ -590,7 +769,7 @@
 
         updateCompleteButton() {
             const btn = document.getElementById('completeSale');
-                const cancelBtn = document.getElementById('cancelSale');
+            const cancelBtn = document.getElementById('cancelSale');
             const method = document.querySelector('input[name="paymentMethod"]:checked').value;
             const tendered = parseFloat(document.getElementById('amountTendered').value) || 0;
             const refNo = document.getElementById('referenceNo').value;
@@ -604,14 +783,14 @@
             }
 
             btn.disabled = !valid;
-                cancelBtn.disabled = this.items.length === 0;
+            cancelBtn.disabled = this.items.length === 0;
         }
 
         async processPayment() {
             if (this.items.length === 0) return alert("No items in cart!");
 
             if (!confirm("Are you sure you want to complete this sale?")) {
-                return; // User cancelled
+                return;
             }
 
             const method = document.querySelector('input[name="paymentMethod"]:checked').value;
@@ -650,11 +829,7 @@
 
                 // Show success modal
                 document.getElementById('successSaleId').textContent = data.sale.id;
-
-                // Show modal
-                const modal = new bootstrap.Modal(
-                    document.getElementById('saleSuccessModal')
-                );
+                const modal = new bootstrap.Modal(document.getElementById('saleSuccessModal'));
                 modal.show();
 
                 // Reset cart AFTER showing success
@@ -665,13 +840,20 @@
             }
         }
 
+        cancelSale() {
+            if (!this.items.length) return;
+
+            if (!confirm("Are you sure you want to cancel this sale? All items will be removed.")) return;
+
+            this.resetCart();
+        }
+
         resetCart() {
             this.items = [];
             this.total = 0;
-            localStorage.removeItem('posItems'); // clear cart
+            localStorage.removeItem('posItems');
             document.querySelector('input[name="paymentMethod"][value="Cash"]').checked = true;
-            this.handlePaymentMethodChange('Cash'); 
-            document.getElementById('productSearch').value = '';
+            this.handlePaymentMethodChange('Cash');
             document.getElementById('customerName').value = '';
             document.getElementById('customerContact').value = '';
             document.getElementById('amountTendered').value = '';
@@ -683,7 +865,9 @@
     }
 
     let pos;
-    document.addEventListener('DOMContentLoaded', () => { pos = new POSSystem(); });
+    document.addEventListener('DOMContentLoaded', () => { 
+        pos = new POSSystem(); 
+    });
 
     function printReceipt(id) {
         const url = "{{ route('receipt.print', ['id' => '__ID__']) }}".replace('__ID__', id);
@@ -699,7 +883,6 @@
             return;
         }
 
-        // Grey overlay (blocks clicks, clear UX)
         const overlay = document.createElement('div');
         overlay.id = 'printOverlay';
         overlay.style.cssText = `

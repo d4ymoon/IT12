@@ -93,8 +93,12 @@
                         <tbody>
                             @foreach($inventoryData['lowStockAlerts'] as $product)
                             <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : 'low-stock' }}">
-                                <td>{{ $product->name }}</td>
-                                <td>{{ $product->category_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $product->name }}
+                                </td>
+                                <td style="word-break: break-word; max-width: 120px; overflow-wrap: break-word;">
+                                    {{ $product->category_name }}
+                                </td>
                                 <td class="text-end">{{ $product->quantity_in_stock }}</td>
                                 <td class="text-end">{{ $product->reorder_level }}</td>
                                 <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>
@@ -155,7 +159,9 @@
                         <tbody>
                             @foreach($inventoryData['stockMovement'] as $movement)
                             <tr>
-                                <td>{{ $movement->name }}</td>
+                                 <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $movement->name }}
+                                </td>
                                 <td>{{ \Carbon\Carbon::parse($movement->stock_in_date)->format('M d, Y') }}</td>
                                 <td class="text-end">{{ $movement->quantity_received }}</td>
                                 <td class="text-end">₱{{ number_format($movement->actual_unit_cost, 2) }}</td>
@@ -199,7 +205,9 @@
                         <tbody>
                             @foreach($inventoryData['valuationReport'] as $valuation)
                             <tr>
-                                <td>{{ $valuation->category_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $valuation->category_name }}
+                                </td>
                                 <td class="text-end">{{ $valuation->product_count }}</td>
                                 <td class="text-end">{{ $valuation->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($valuation->total_value, 2) }}</td>
@@ -249,7 +257,9 @@
                             @foreach($inventoryData['stockAdjustments'] as $adj)
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($adj->adjustment_date)->format('M d, Y') }}</td>
-                                <td>{{ $adj->product_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $adj->product_name }}
+                                </td>
                                 <td class="text-end">
                                     @if($adj->quantity_change > 0)
                                         <span class="text-success fw-bold">+{{ $adj->quantity_change }}</span>
@@ -300,7 +310,9 @@
                             @foreach($inventoryData['returns'] as $ret)
                             <tr>
                                 <td>{{ \Carbon\Carbon::parse($ret->created_at)->format('M d, Y') }}</td>
-                                <td>{{ $ret->product_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $ret->product_name }}
+                                </td>
                                 <td class="text-end">{{ $ret->quantity_returned }}</td>
                                 <td>
                                     @if($ret->inventory_adjusted)
@@ -350,7 +362,9 @@
                         <tbody>
                             @foreach($inventoryData['bestSellers'] as $product)
                             <tr>
-                                <td>{{ $product->name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $product->name }}
+                                </td>
                                 <td><small class="text-muted">{{ $product->sku }}</small></td>
                                 <td class="text-end">{{ $product->total_quantity_sold }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
@@ -395,8 +409,12 @@
                         <tbody>
                             @foreach($inventoryData['deadStock'] as $product)
                             <tr class="dead-stock">
-                                <td>{{ $product->name }}</td>
-                                <td>{{ $product->category_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $product->name }}
+                                </td>
+                                <td style="word-break: break-word; max-width: 120px; overflow-wrap: break-word;">
+                                    {{ $product->category_name }}
+                                </td>
                                 <td class="text-end">{{ $product->quantity_in_stock }}</td>
                                 <td class="text-end">₱{{ number_format($product->stock_value, 2) }}</td>
                                 <td>
@@ -454,8 +472,12 @@
                         <tbody>
                             @foreach($inventoryData['stockLevels'] as $product)
                             <tr class="{{ $product->quantity_in_stock == 0 ? 'out-of-stock' : ($product->quantity_in_stock <= $product->reorder_level ? 'low-stock' : '') }}">
-                                <td>{{ $product->name }}</td>
-                                <td>{{ $product->category_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word;">
+                                    {{ $product->name }}
+                                </td>
+                                <td style="word-break: break-word; max-width: 120px; overflow-wrap: break-word;">
+                                    {{ $product->category_name }}
+                                </td>
                                 <td class="text-end">{{ $product->quantity_in_stock }}</td>
                                 <td class="text-end">{{ $product->reorder_level }}</td>
                                 <td class="text-end">₱{{ number_format($product->latest_unit_cost, 2) }}</td>

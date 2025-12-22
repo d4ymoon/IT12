@@ -443,9 +443,18 @@
                     
                     const productName = productSelect.select2('data')[0]?.text || 'Unknown Product';
                     const supplierName = supplierSelect.select2('data')[0]?.text || 'Unknown Supplier';
-                    summary += `<strong>Item ${index + 1}:</strong> ${productName}<br>`;
-                    summary += `Supplier: ${supplierName} | Qty: ${quantity} | Cost: ₱${cost} | Price: ₱${price}<br><br>`;
-                });
+                    summary += `
+                    <div style="margin-bottom: 10px;">
+                        <strong>Item ${index + 1}:</strong><br>
+                        <div style="word-break: break-word; margin-left: 10px;">
+                            <strong>Product:</strong> ${productName}<br>
+                            <strong>Supplier:</strong> ${supplierName}<br>
+                            <strong>Quantity:</strong> ${quantity}<br>
+                            <strong>Unit Cost:</strong> ₱${cost}<br>
+                            <strong>Retail Price:</strong> ₱${price}
+                        </div>
+                    </div>
+                `;});
         
                 document.getElementById('confirmationSummary').innerHTML = summary;
                 new bootstrap.Modal(document.getElementById('confirmationModal')).show();

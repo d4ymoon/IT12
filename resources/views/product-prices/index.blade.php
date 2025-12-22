@@ -126,6 +126,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>SKU</th>
+                        <th>Image</th>
                         <th>Product Name</th>
                         <th class="text-end">Cost Price</th>
                         <th class="text-end">Retail Price</th>
@@ -139,15 +140,13 @@
                     <tr class="{{ $showArchived ? 'archived-row' : '' }}">
                         <td>{{ $product->sku }}</td>
                         <td>
-                            <div class="d-flex align-items-center">
-                                <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="product-image me-2">
-                                <div>
-                                    <strong>{{ $product->name }}</strong>
-                                    @if($product->manufacturer_barcode)
-                                        <br><small class="text-muted">Barcode: {{ $product->manufacturer_barcode }}</small>
-                                    @endif
-                                </div>
-                            </div>
+                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="product-image">
+                        </td>
+                        <td class="text-truncate" style="max-width: 150px;">
+                            <strong>{{ $product->name }}</strong>
+                            @if($product->manufacturer_barcode)
+                                <br><small class="text-muted">{{ $product->manufacturer_barcode }}</small>
+                            @endif
                         </td>
                         <td class="text-end">
                             @if($product->latestStockInItem)
@@ -326,7 +325,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <h6 id="historyProductName" class="mb-3"></h6>
+                    <h6 id="historyProductName" class="mb-3" style="word-break: break-word; white-space: normal;"></h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered">
                             <thead class="table-light">

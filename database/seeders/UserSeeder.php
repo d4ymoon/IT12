@@ -21,7 +21,7 @@ class UserSeeder extends Seeder
             'email' => 'admin@atinhardware.com',
             'role' => 'Administrator',
             'is_active' => true,
-            'password' => Hash::make('admin1234'),
+            'password' => Hash::make('admin123'),
             'password_changed' => false,
         ]);
         

@@ -236,7 +236,7 @@
                                     <tr>
                                         <th>Product</th>
                                         <th>Supplier</th>
-                                        <th>Quantity</th>
+                                        <th class="text-end">Quantity</th>
                                         <th class="text-end">Unit Cost</th>
                                         <th class="text-end">Total Cost</th>
                                     </tr>
@@ -334,9 +334,9 @@
                             const row = document.createElement('tr');
                             const totalCost = item.quantity_received * item.actual_unit_cost;
                             row.innerHTML = `
-                                <td>${item.product.name}</td>
+                                <td style="word-break: break-word; white-space: normal; max-width: 200px;">${item.product.name}</td>
                                 <td>${item.supplier ? item.supplier.supplier_name : 'N/A'}</td> 
-                                <td>${item.quantity_received}</td>
+                                <td class="text-end">${item.quantity_received}</td>
                                 <td class="text-end">₱${parseFloat(item.actual_unit_cost).toFixed(2)}</td>
                                 <td class="text-end">₱${parseFloat(totalCost).toFixed(2)}</td>
                             `;

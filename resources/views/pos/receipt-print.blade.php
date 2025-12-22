@@ -147,7 +147,7 @@
                 <td class="col-item">
                     <span class="item-name">{{ $item->product->name ?? 'N/A' }}</span>
                     @if(isset($item->product->model) && $item->product->model)
-                        <br><small>Model: {{ $item->product->model }}</small>
+                        <br><small style="word-break: break-word; display: inline-block; max-width: 45mm;">Model: {{ $item->product->model }}</small>
                     @endif
                 </td>
                 <td class="col-total text-right">₱{{ number_format($item->quantity_sold * $item->unit_price, 2) }}</td>

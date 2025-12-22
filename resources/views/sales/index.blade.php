@@ -381,7 +381,10 @@
                             
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td style="padding-left: 16px;">${item.product ? item.product.name : 'N/A'}</td>
+                                <td style="padding-left: 16px;">
+                                    <div class="fw-medium" style="word-break: break-word;">${item.product ? item.product.name : 'N/A'}</div>
+                                    <small class="text-muted">${item.product ? (item.product.sku || '') : ''}</small>
+                                </td>
                                 <td class="text-center">${item.quantity_sold}</td>
                                 <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
                                 <td style="padding-right: 16px;" class="text-end">₱${itemTotal.toFixed(2)}</td>

@@ -369,9 +369,11 @@ $(document).ready(function() {
             if (item.max_returnable > 0) {
                 const row = `
                     <tr class="return-item-row" data-item-id="${item.id}">
-                        <td>
-                            ${item.product_name}
-                            <input type="hidden" name="items[${index}][sale_item_id]" value="${item.id}">
+                        <td style="word-break: break-word; min-width: 200px; max-width: 300px;">
+                            <div style="overflow-wrap: break-word;">
+                                ${item.product_name}
+                                <input type="hidden" name="items[${index}][sale_item_id]" value="${item.id}">
+                            </div>
                         </td>
                         <td>${item.product_sku}</td>
                         <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>

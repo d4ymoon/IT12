@@ -384,7 +384,7 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td style="padding-left: 16px;">
-                            <div class="fw-medium">${item.product ? item.product.name : 'N/A'}</div>
+                            <div class="fw-medium" style="word-break: break-word;">${item.product ? item.product.name : 'N/A'}</div>
                             <small class="text-muted">${item.product ? (item.product.sku || '') : ''}</small>
                         </td>
                         <td class="text-center">${item.quantity_sold}</td>

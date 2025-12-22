@@ -376,7 +376,9 @@
                         returnData.return_items.forEach(item => {
                             const row = itemsTable.insertRow();
                             row.innerHTML = `
-                                <td>${item.product.name}</td>
+                                <td style="word-break: break-word; max-width: 200px; overflow-wrap: break-word;">
+                                    ${item.product.name}
+                                </td>
                                 <td>${item.product.sku}</td>
                                 <td>${item.quantity_returned}</td>
                                 <td class="text-end">₱${parseFloat(item.refunded_price_per_unit).toFixed(2)}</td>

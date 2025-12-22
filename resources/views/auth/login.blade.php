@@ -95,20 +95,6 @@
                     {{ session('message') }}
                 </div>
             @endif
-            <div class="alert alert-info py-2 mb-3 permanent-alert">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <span class="fw-bold">Test Accounts:</span> 
-                <ul class="list-unstyled mb-0 mt-1 small">
-                    <li>
-                        <span class="">Admin:</span> 
-                        <span class="fw-bold">admin</span> / Password: <span class="fw-bold">admin1234</span>
-                    </li>
-                    <li>
-                        <span class="">Cashier:</span> 
-                        <span class="fw-bold">cashier</span> / Password: <span class="fw-bold">cash1234</span>
-                    </li>
-                </ul>
-            </div>
             <form method="POST" action="/login">
                 @csrf
                 

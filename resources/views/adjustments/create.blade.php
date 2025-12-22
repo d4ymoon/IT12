@@ -181,9 +181,9 @@
                                 <thead>
                                     <tr>
                                         <th>Product</th>
-                                        <th>Quantity Change</th>
-                                        <th>Unit Cost</th>
-                                        <th>Total Value</th>
+                                        <th class="text-end">Quantity Change</th>
+                                        <th class="text-end">Unit Cost</th>
+                                        <th class="text-end">Total Value</th>
                                     </tr>
                                 </thead>
                                 <tbody id="confirmationItems">
@@ -508,10 +508,14 @@
 
                         itemsHtml += `
                             <tr>
-                                <td>${productName}</td>
-                                <td class="${quantityClass}">${quantityDisplay}</td>
-                                <td>₱${parseFloat(unitCost).toFixed(2)}</td>
-                                <td class="${quantityNum < 0 ? 'negative-quantity' : 'positive-quantity'}">₱${totalValueNum.toFixed(2)}</td>
+                                 <td style="word-break: break-word; max-width: 250px;">
+                                    <div style="word-break: break-word; white-space: normal;">
+                                        ${productName}
+                                    </div>
+                                </td>
+                                <td class="text-end ${quantityClass}">${quantityDisplay}</td>
+                                <td class="text-end">₱${parseFloat(unitCost).toFixed(2)}</td>
+                                <td class=" text-end ${quantityNum < 0 ? 'negative-quantity' : 'positive-quantity'}">₱${totalValueNum.toFixed(2)}</td>
                             </tr>
                         `;
                     } else {

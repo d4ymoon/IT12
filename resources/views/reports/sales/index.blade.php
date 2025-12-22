@@ -289,7 +289,9 @@
                         <tbody>
                             @foreach($salesData['topProductsByQuantity'] as $product)
                             <tr>
-                                <td>{{ $product->name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word; line-height: 1.4;">
+                                    {{ $product->name }}
+                                </td>
                                 <td class="text-end">{{ $product->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
@@ -329,7 +331,9 @@
                         <tbody>
                             @foreach($salesData['topProductsByRevenue'] as $product)
                             <tr>
-                                <td>{{ $product->name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word; line-height: 1.4;">
+                                    {{ $product->name }}
+                                </td>
                                 <td class="text-end">{{ $product->total_quantity }}</td>
                                 <td class="text-end">₱{{ number_format($product->total_revenue, 2) }}</td>
                                 <td class="text-end">₱{{ number_format($product->avg_price, 2) }}</td>
@@ -369,7 +373,9 @@
                         <tbody>
                             @foreach($salesData['categoryAnalysis'] as $category)
                             <tr>
-                                <td>{{ $category->category_name }}</td>
+                                <td style="word-break: break-word; max-width: 150px; overflow-wrap: break-word; line-height: 1.4;">
+                                    {{ $category->category_name }}
+                                </td>
                                 <td class="text-end">₱{{ number_format($category->total_revenue, 2) }}</td>
                                 <td class="text-end">{{ $category->total_quantity }}</td>
                                 <td class="text-end">{{ $category->transaction_count }}</td>
@@ -687,7 +693,9 @@ function exportDetailedCSV() {
                             
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td style="padding-left: 16px;">${item.product ? item.product.name : 'N/A'}</td>
+                                 <td style="padding-left: 16px;">
+                                    <div class="fw-medium" style="word-break: break-word;">${item.product ? item.product.name : 'N/A'}</div>
+                                </td>
                                 <td class="text-center">${item.quantity_sold}</td>
                                 <td class="text-end">₱${parseFloat(item.unit_price).toFixed(2)}</td>
                                 <td style="padding-right: 16px;" class="text-end">₱${itemTotal.toFixed(2)}</td>

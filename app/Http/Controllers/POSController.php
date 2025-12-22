@@ -39,7 +39,6 @@ class POSController extends Controller
 
             $products = Product::with('latestProductPrice')
                 ->where('is_active', true)
-                ->whereHas('latestProductPrice') // ensures product has at least one price
                 ->where(function($query) use ($searchTerm) {
                     $query->where('name', 'like', '%' . $searchTerm . '%')
                         ->orWhere('sku', 'like', '%' . $searchTerm . '%')
@@ -48,7 +47,32 @@ class POSController extends Controller
                 })
                 ->orderBy('name')
                 ->limit(50)
-                ->get();
+                ->get()
+                ->map(function($product) {
+                    $hasPrice = !is_null($product->latestProductPrice);
+                    $stockStatus = $product->quantity_in_stock <= 0 ? 'out_of_stock' : 
+                                ($product->quantity_in_stock <= 10 ? 'low_stock' : 'in_stock');
+                    
+                    return [
+                        'id' => $product->id,
+                        'text' => $this->formatProductText($product),
+                        'name' => $product->name,
+                        'model' => $product->model,
+                        'sku' => $product->sku,
+                        'barcode' => $product->manufacturer_barcode,
+                        'stock' => $product->quantity_in_stock,
+                        'price' => $hasPrice ? $product->latestProductPrice->retail_price : null,
+                        'has_price' => $hasPrice,
+                        'stock_status' => $stockStatus,
+                        'data_attributes' => [
+                            'model' => $product->model,
+                            'barcode' => $product->manufacturer_barcode,
+                            'stock' => $product->quantity_in_stock,
+                            'price' => $hasPrice ? $product->latestProductPrice->retail_price : null,
+                            'has_price' => $hasPrice
+                        ]
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
@@ -56,13 +80,34 @@ class POSController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Return JSON with the error
             return response()->json([
                 'success' => false,
                 'products' => [],
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+
+    private function formatProductText($product)
+    {
+        $hasPrice = !is_null($product->latestProductPrice);
+        $price = $hasPrice ? '₱' . number_format($product->latestProductPrice->retail_price, 2) : 'No Price';
+        $stock = $product->quantity_in_stock;
+        
+        $text = $product->name;
+        $text .= " [" . $product->sku . "]";
+        
+        if ($product->model) {
+            $text .= " ({$product->model})";
+        }
+        
+        if ($product->manufacturer_barcode) {
+            $text .= " [{$product->manufacturer_barcode}]";
+        }
+        
+        $text .= " | Stock: {$stock} | Price: {$price}";
+        
+        return $text;
     }
 
     /**

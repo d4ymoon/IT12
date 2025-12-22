@@ -314,9 +314,9 @@
                                     <tr>
                                         <th>Product</th>
                                         <th>SKU</th>
-                                        <th>Quantity Change</th>
-                                        <th>Unit Cost</th>
-                                        <th>Total Value</th>
+                                        <th class="text-end">Quantity Change</th>
+                                        <th class="text-end">Unit Cost</th>
+                                        <th class="text-end">Total Value</th>
                                     </tr>
                                 </thead>
                                 <tbody id="viewItemsTable">
@@ -435,9 +435,13 @@
                             tableTotalValue += itemTotalValue;
                             
                             row.innerHTML = `
-                                <td>${item.product.name}</td>
+                                <td style="word-break: break-word; white-space: normal; max-width: 200px;">
+                                    <div style="word-break: break-word; line-height: 1.3;">
+                                        ${item.product.name}
+                                    </div>
+                                </td>
                                 <td>${item.product.sku}</td>
-                                <td class="${item.quantity_change < 0 ? 'no-negative' : (item.quantity_change > 0 ? 'no-positive' : '')}">
+                                <td class="text-end ${item.quantity_change < 0 ? 'no-negative' : (item.quantity_change > 0 ? 'no-positive' : '')}">
                                     ${item.quantity_change > 0 ? '+' : ''}${item.quantity_change}
                                 </td>
                                 <td style="text-align: right;">₱${parseFloat(item.unit_cost_at_adjustment).toFixed(2)}</td>
