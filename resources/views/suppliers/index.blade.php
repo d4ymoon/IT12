@@ -104,7 +104,8 @@
                     @forelse($suppliers as $supplier)
                     <tr>
                         <td>{{ $supplier->id }}</td>
-                        <td>{{ $supplier->supplier_name }}</td>
+                        <td class="text-truncate" style="max-width: 150px;">
+                            {{ $supplier->supplier_name }}</td>
                         <td>{{ $supplier->contactNO ?? 'N/A' }}</td>
                         <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->address }}">
                             {{ $supplier->address ?? 'N/A' }}

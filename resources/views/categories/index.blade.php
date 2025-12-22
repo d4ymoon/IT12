@@ -75,7 +75,8 @@
                     @forelse($categories as $category)
                     <tr>
                         <td>{{ $category->id }}</td>
-                        <td>{{ $category->name }}</td>
+                        <td class="text-truncate" style="max-width: 150px;">
+                            {{ $category->name }}</td>
                         <td>{{ $category->sku_prefix }}</td> 
                         <td class="description-cell" title="{{ $category->description }}">{{ $category->description ?? 'No description' }}</td>
                         <td>

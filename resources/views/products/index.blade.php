@@ -194,7 +194,8 @@
                         <td class="text-truncate" style="max-width: 100px;" title="{{ $product->model }}">
                             {{ $product->model ?? 'N/A' }}
                         </td>                        
-                        <td>{{ $product->category->name }}</td>
+                        <td class="text-truncate" style="max-width: 150px;">
+                            {{ $product->category->name }}</td>
                         <td class="text-end">
                             <span class="fw-semibold {{ $product->quantity_in_stock == 0 ? 'text-danger' : ($product->quantity_in_stock <= $product->reorder_level ? 'text-warning' : 'text-success') }}">
                                 {{ $product->quantity_in_stock }}
